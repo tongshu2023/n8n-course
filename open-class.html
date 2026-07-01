@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数字员工养成计划 · 免费公开课</title>
+<style>
+  :root{
+    --bg:#faf9f6; --bg2:#f2efe9; --bg3:#e9e5dc; --card:#ffffff; --line:#e8e3d9;
+    --txt:#1c1a16; --txt2:#7c746a; --brand:#e2590a; --brand2:#c24a00;
+    --ok:#1d8a4e; --gold:#9a6700; --blue:#2a6df4; --purple:#7c4dd6;
+    --shadow:0 1px 3px rgba(60,50,30,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+
+  /* ---- 大区块 ---- */
+  section{padding:80px 22px}
+  .inner{max-width:720px;margin:0 auto}
+
+  /* ---- 按钮 ---- */
+  .btn{display:inline-block;font-weight:600;font-size:17px;padding:16px 40px;border-radius:980px;text-decoration:none;
+    transition:.2s;border:none;cursor:pointer;font-family:inherit;letter-spacing:-.01em}
+  .btn-primary{background:var(--brand);color:#fff}
+  .btn-primary:hover{opacity:.86}
+  .btn-outline{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+  .btn-outline:hover{background:var(--brand);color:#fff}
+  .btn-big{font-size:19px;padding:18px 52px}
+
+  /* ===== Hero ===== */
+  #hero{background:linear-gradient(165deg, #fff8f4 0%, #faf9f6 40%, #f2efe9 100%);padding:100px 22px 90px;text-align:center}
+  #hero .hero-badge{display:inline-block;background:var(--brand);color:#fff;font-size:13px;font-weight:700;
+    padding:6px 18px;border-radius:980px;letter-spacing:.04em;margin-bottom:24px}
+  #hero h1{font-size:clamp(32px,6vw,56px);line-height:1.08;font-weight:700;letter-spacing:-.035em;margin-bottom:20px}
+  #hero h1 span{color:var(--brand)}
+  #hero .hero-sub{font-size:19px;color:var(--txt2);max-width:520px;margin:0 auto 36px;line-height:1.6}
+  #hero .hero-meta{font-size:14px;color:var(--txt2);margin-top:22px}
+
+  /* ---- 急迫感条 ---- */
+  .urgency-bar{background:var(--txt);color:#fff;text-align:center;padding:12px 22px;font-size:14px;font-weight:500;letter-spacing:.01em}
+  .urgency-bar strong{color:#ffd24a}
+
+  /* ---- 节标题 ---- */
+  .sec-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);margin-bottom:10px}
+  .sec-title{font-size:clamp(26px,5vw,38px);font-weight:700;letter-spacing:-.025em;line-height:1.15;margin-bottom:14px}
+  .sec-desc{font-size:16px;color:var(--txt2);max-width:560px;line-height:1.65;margin-bottom:40px}
+
+  /* ===== "你会亲手做出什么" ===== */
+  .demo-show{display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+    border-radius:20px;padding:36px 32px;box-shadow:var(--shadow)}
+  .demo-visual{flex-shrink:0;width:180px;height:180px;background:linear-gradient(135deg,#fff4ec,#f2efe9);
+    border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:72px}
+  .demo-text{flex:1;min-width:240px}
+  .demo-text h3{font-size:22px;font-weight:700;letter-spacing:-.015em;margin-bottom:12px}
+  .demo-flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:15px;color:var(--txt2);margin-bottom:16px}
+  .demo-node{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 16px;font-weight:500;color:var(--txt)}
+  .demo-arrow{color:var(--brand);font-size:18px;font-weight:700}
+  .demo-text p{font-size:15px;color:var(--txt2);line-height:1.6}
+
+  /* ===== 时间线 ===== */
+  .timeline{display:flex;flex-direction:column;gap:0}
+  .tl-item{display:flex;gap:20px;padding:22px 0;border-bottom:1px solid var(--line)}
+  .tl-item:last-child{border-bottom:none}
+  .tl-time{flex-shrink:0;width:90px;font-size:13px;font-weight:700;color:var(--brand);background:var(--bg2);
+    border-radius:10px;padding:6px 0;text-align:center;height:fit-content}
+  .tl-body{flex:1;min-width:0}
+  .tl-body h4{font-size:18px;font-weight:700;letter-spacing:-.01em;margin-bottom:4px}
+  .tl-body p{font-size:14.5px;color:var(--txt2);line-height:1.55}
+
+  /* ===== 真实案例卡片 ===== */
+  .case-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+  .case-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px;
+    box-shadow:0 1px 2px rgba(60,50,30,.03),0 10px 30px rgba(60,50,30,.06)}
+  .case-emoji{font-size:40px;margin-bottom:16px}
+  .case-card h4{font-size:19px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+  .case-card .pain{font-size:14px;color:var(--brand);font-weight:600;margin-bottom:4px}
+  .case-card .gain{font-size:14px;color:var(--ok);font-weight:600;margin-bottom:12px}
+  .case-card p{font-size:14.5px;color:var(--txt2);line-height:1.6}
+
+  /* ===== 五大能力 ===== */
+  .ability-row{display:flex;flex-direction:column;gap:16px;margin-top:20px}
+  .ability-item{display:flex;gap:16px;align-items:flex-start;padding:20px 22px;background:var(--bg2);
+    border:1px solid var(--line);border-radius:14px;transition:.15s}
+  .ability-num{flex-shrink:0;width:38px;height:38px;background:var(--txt);color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px}
+  .ability-item.highlight{background:#fff4ec;border-color:var(--brand)}
+  .ability-item.highlight .ability-num{background:var(--brand)}
+  .ability-body h4{font-size:16px;font-weight:700;margin-bottom:3px;letter-spacing:-.005em}
+  .ability-body p{font-size:14px;color:var(--txt2);line-height:1.55}
+  .ability-tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:6px;background:var(--brand);
+    color:#fff;margin-left:8px;vertical-align:2px;letter-spacing:.04em}
+
+  /* ===== 适合谁 ===== */
+  .who-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .who-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;
+    display:flex;gap:16px;align-items:flex-start;box-shadow:var(--shadow)}
+  .who-emoji{font-size:32px;flex-shrink:0}
+  .who-card h4{font-size:16px;font-weight:700;margin-bottom:4px;letter-spacing:-.005em}
+  .who-card p{font-size:14px;color:var(--txt2);line-height:1.5}
+
+  /* ===== 讲师 ===== */
+  .instructor{display:flex;gap:28px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+    border-radius:20px;padding:36px 32px;box-shadow:var(--shadow)}
+  .instructor-avatar{flex-shrink:0;width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,#ffd24a,#ff5d3b);
+    display:flex;align-items:center;justify-content:center;font-size:52px}
+  .instructor-text{flex:1;min-width:240px}
+  .instructor-text h3{font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-.015em}
+  .instructor-text .tagline{font-size:14px;color:var(--brand);font-weight:600;margin-bottom:12px}
+  .instructor-text p{font-size:15px;color:var(--txt2);line-height:1.65}
+
+  /* ===== 报名卡片 ===== */
+  .signup-card{background:var(--card);border:2px solid var(--brand);border-radius:22px;padding:40px 32px;
+    text-align:center;box-shadow:0 4px 30px rgba(226,89,10,.14)}
+  .signup-card h3{font-size:26px;font-weight:700;margin-bottom:8px;letter-spacing:-.02em}
+  .signup-card .price-box{margin:28px 0}
+  .price-original{font-size:18px;color:var(--txt2);text-decoration:line-through;margin-bottom:4px}
+  .price-now{font-size:42px;font-weight:800;color:var(--brand);letter-spacing:-.03em;line-height:1}
+  .price-now small{font-size:18px;font-weight:500}
+  .signup-info{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin:24px 0;font-size:14px;color:var(--txt2)}
+  .signup-info span{display:flex;align-items:center;gap:6px}
+  .signup-info .si-emoji{font-size:20px}
+  .seats-left{display:inline-block;background:#fff4ec;color:var(--brand);font-size:14px;font-weight:700;
+    padding:6px 18px;border-radius:980px;margin-bottom:24px}
+  .countdown{font-size:28px;font-weight:800;color:var(--txt);letter-spacing:-.02em;margin:8px 0 4px;font-variant-numeric:tabular-nums}
+
+  /* ===== 对比表 ===== */
+  .compare-table{width:100%;border-collapse:collapse;margin-top:24px;font-size:15px}
+  .compare-table th{text-align:left;padding:14px 18px;font-weight:700;font-size:13px;letter-spacing:.04em;color:var(--txt2);
+    border-bottom:2px solid var(--line)}
+  .compare-table td{padding:14px 18px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.55}
+  .compare-table tr td:first-child{font-weight:600;color:var(--txt)}
+  .compare-table .pain-col{color:var(--brand)}
+  .compare-table .easy-col{color:var(--ok)}
+  .check{color:var(--ok);font-weight:700}
+  .cross{color:var(--txt2)}
+
+  /* ===== 转化清单 ===== */
+  .checklist-section{background:var(--bg2);border-top:1px solid var(--line)}
+  .checklist-block{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 26px;margin-bottom:20px;box-shadow:var(--shadow)}
+  .checklist-block h4{font-size:18px;font-weight:700;margin-bottom:14px;letter-spacing:-.01em}
+  .checklist-block ul{margin:0;padding:0 0 0 20px}
+  .checklist-block li{font-size:14.5px;line-height:1.7;color:var(--txt2);margin-bottom:6px}
+  .checklist-block li b{color:var(--txt)}
+  .funnel-box{background:linear-gradient(135deg,#fff4ec,#fff);border:1px solid var(--brand);border-radius:18px;padding:28px 26px;margin-top:12px}
+  .funnel-steps{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+  .funnel-step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:600;text-align:center}
+  .funnel-arrow{color:var(--brand);font-size:20px;font-weight:700}
+
+  /* ===== Footer ===== */
+  footer{background:var(--txt);color:rgba(255,255,255,.55);text-align:center;padding:48px 22px}
+  footer p{font-size:13px;line-height:1.7}
+  footer a{color:rgba(255,255,255,.7)}
+
+  /* ===== Sticky CTA ===== */
+  .sticky-cta{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.88);
+    backdrop-filter:saturate(180%) blur(20px);border-top:1px solid var(--line);padding:14px 22px;
+    display:flex;justify-content:center;z-index:100}
+  .sticky-cta .btn{padding:14px 36px}
+
+  @media(max-width:640px){
+    section{padding:56px 18px}
+    #hero{padding:72px 18px 64px}
+    .demo-show{flex-direction:column;text-align:center;padding:28px 22px}
+    .demo-flow{justify-content:center}
+    .compare-table{font-size:13px}
+    .compare-table td,.compare-table th{padding:10px 10px}
+    .signup-info{flex-direction:column;gap:10px;align-items:center}
+    .instructor{flex-direction:column;text-align:center}
+    .tl-item{flex-direction:column;gap:10px}
+    .tl-time{width:fit-content}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 急迫感条 ===== -->
+<div class="urgency-bar">
+  限时公开课 · 仅剩 <strong id="seatsCount">47</strong> 个名额 · 扫码免费报名 ↓
+</div>
+
+<!-- ===== Hero ===== -->
+<section id="hero">
+  <div class="hero-badge">免费公开课</div>
+  <h1>1 小时,从零搭出<br>替你干活的 <span>AI 员工</span></h1>
+  <p class="hero-sub">不用写一行代码。现场带你在 n8n 里拖拽搭出一个能自动干活的工作流,亲眼看到"原来我真的可以"。</p>
+
+  <!-- 替换为真实报名链接 -->
+  <a href="#signup" class="btn btn-primary btn-big">免费报名,锁定名额</a>
+
+  <p class="hero-meta">时间:周六晚 20:00 - 21:00 &nbsp;|&nbsp; 形式:线上直播 &nbsp;|&nbsp; 回放保留 48h</p>
+</section>
+
+<!-- ===== 你会亲手做出什么 ===== -->
+<section>
+  <div class="inner">
+    <div class="sec-label">10 分钟动手</div>
+    <h2 class="sec-title">你会亲手做出什么</h2>
+    <p class="sec-desc">公开课不念 PPT。开场 10 分钟,所有人打开 n8n,跟着我拖三个积木,当场跑出一个真能用的自动化工作流。</p>
+
+    <div class="demo-show">
+      <div class="demo-visual"><img src="assets/wf01.png" alt="定时消息推送工作流" style="width:100%;max-width:480px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)" /></div>
+      <div class="demo-text">
+        <h3>你的第一个数字员工</h3>
+        <div class="demo-flow">
+          <span class="demo-node">⏰ 定时触发</span>
+          <span class="demo-arrow">→</span>
+          <span class="demo-node">📝 组装消息</span>
+          <span class="demo-arrow">→</span>
+          <span class="demo-node">📤 自动推送</span>
+        </div>
+        <p>效果:每天早上 9 点,手机自动弹出一条消息——"新的一天,加油"。全程不需要你碰手机。亲眼看到三个积木拖完、点一下就跑起来,你就知道自动化不是程序员专利了。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 公开课内容大纲 ===== -->
+<section style="background:var(--bg2)">
+  <div class="inner">
+    <div class="sec-label">60 分钟安排</div>
+    <h2 class="sec-title">公开课讲什么</h2>
+    <p class="sec-desc">不废话、不念概念。每一段都是真东西。</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-time">0-5 min</div>
+        <div class="tl-body">
+          <h4>钩子:"你每天花多少时间做重复的事?"</h4>
+          <p>群发消息、整理表格、查信息、复制粘贴……现场让你在心里算一笔账:这些重复活,每周偷走你多少小时?算完你就知道为什么你需要数字员工。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">5-15 min</div>
+        <div class="tl-body">
+          <h4>10 分钟,零代码搭出你的第一个数字员工</h4>
+          <p>所有人打开 n8n,跟着我拖三个积木(定时触发 → 组装消息 → 自动推送)。点一下执行,手机收到消息。亲眼看到"真的不用写代码、真的能跑"。这是整堂课最关键的十分钟——打破"我一定学不会"的心魔。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">15-30 min</div>
+        <div class="tl-body">
+          <h4>3 个真实案例:别人搭完数字员工,省了多少时间</h4>
+          <p>不讲理论,讲三个真人真事。每个="这人之前多痛苦 → 搭完数字员工后省了多少时间"。听完你就知道,你现在手头那些烦人的重复活,每一件都能交给数字员工。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">30-45 min</div>
+        <div class="tl-body">
+          <h4>揭秘:为什么大多数人学 AI 学不会?</h4>
+          <p>拆开 AI 时代的 5 大底层能力(思考/积累/表达/产品/执行),告诉你为什么大多数人卡在"跟着教程会、自己动手废"——他们练的是前面几层,而真正能省时间的"执行"层,没人教。正式课教的正是这块。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">45-55 min</div>
+        <div class="tl-body">
+          <h4>正式课介绍 + 学员成果 + 限时优惠</h4>
+          <p>看往期学员搭出来的真实数字员工(不是演示,是真在用的)。说清楚正式课教什么、怎么学、多久能学会。公开课专属优惠,仅限当晚。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-time">55-60 min</div>
+        <div class="tl-body">
+          <h4>Q&A + 报名</h4>
+          <p>你有任何担心——"我完全零基础行不行?""要花多少钱?""学完真能用吗?"——现场直接问,现场答。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3 个真实案例 ===== -->
+<section>
+  <div class="inner">
+    <div class="sec-label">真实案例</div>
+    <h2 class="sec-title">听听已经搭出来的人怎么说</h2>
+    <p class="sec-desc">以下三个案例,每个都是正式课学员的真实成果。不是"理论上能做到",是真有人天天在用。</p>
+
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="case-emoji"><img src="assets/wf04.png" alt="信息监控每日简报工作流" style="width:100%;max-width:400px;border-radius:10px;margin-bottom:10px" /></div>
+        <h4>从"3 小时刷资讯"变成"1 分钟读简报"</h4>
+        <div class="pain">之前的痛苦:每天早上打开十几个网站刷行业新闻,刷完一上午没了。信息焦虑 + 时间黑洞。</div>
+        <div class="gain">搭完数字员工后:每天早上 8 点,手机收到一条 AI 帮你读完所有资讯后写的简报,只看重点,1 分钟读完。</div>
+        <p>用的就是课上的成品 4——多源监控 + AI 蒸馏 + 定时推送。搭一次,以后每天自动跑。</p>
+      </div>
+      <div class="case-card">
+        <div class="case-emoji"><img src="assets/wf02.png" alt="AI智能写作助手工作流" style="width:100%;max-width:400px;border-radius:10px;margin-bottom:10px" /></div>
+        <h4>从"周报写到崩溃"变成"5 分钟审核发出"</h4>
+        <div class="pain">之前的痛苦:每周五下午对着空白文档发愁,回忆这周干了啥、写具体数据、调整格式——次次耗掉 2 小时。</div>
+        <div class="gain">搭完数字员工后:把本周的零散记录丢进去,AI 自动生成周报初稿。花 5 分钟审核、改几处,直接发出。</div>
+        <p>用的就是课上的成品 2——AI 写作助手。提示词调好了,每周复用同一个就行。</p>
+      </div>
+      <div class="case-card">
+        <div class="case-emoji"><img src="assets/wf05.png" alt="发票表单信息提取工作流" style="width:100%;max-width:400px;border-radius:10px;margin-bottom:10px" /></div>
+        <h4>从"一张张抄发票眼都花了"变成"丢进去秒出一张表"</h4>
+        <div class="pain">之前的痛苦:报销时手里一堆发票、收据,每张上的字都不一样。金额、日期、对方公司名一个个抄进 Excel,抄十张还行,抄一百张眼都花了还容易错。</div>
+        <div class="gain">搭完数字员工后:把发票文字丢进去,AI 自动认出金额/日期/对方名,排成一张干净 CSV。一百张也就几分钟的事。</div>
+        <p>用的就是课上的成品 5——信息提取。你也搭得出来。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+</section>
+
+<!-- ===== 互动:算算你能省多少时间 ===== -->
+<section style="background:linear-gradient(135deg,#faf9f6 0%,#fff5f0 100%)">
+  <div class="inner">
+    <div class="sec-label">互动体验</div>
+    <h2 class="sec-title">算算你每天多少时间可以省下来</h2>
+    <p class="sec-desc">填入你每天重复做的事,看看自动化能帮你每年省多少小时。</p>
+
+    <div id="calc-app" style="max-width:560px;margin:28px auto 0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:32px 28px;box-shadow:0 2px 12px rgba(60,50,30,.06)">
+      <div id="calc-items">
+        <div class="calc-row" style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+          <input class="calc-task" placeholder="例:每天复制客户消息到表格" style="flex:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--txt);font-family:inherit" />
+          <input class="calc-mins" type="number" placeholder="分钟/天" min="1" max="480" style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-size:15px;color:var(--txt);font-family:inherit;text-align:center" />
+          <span style="font-size:13px;color:var(--txt2);white-space:nowrap">分钟/天</span>
+        </div>
+      </div>
+      <button onclick="addCalcRow()" style="display:block;width:100%;background:var(--bg2);border:1px dashed var(--line);border-radius:12px;padding:10px;font-size:14px;color:var(--txt2);cursor:pointer;margin-bottom:22px;font-family:inherit;transition:.15s" onmouseover="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseout="this.style.borderColor='var(--line)';this.style.color='var(--txt2)'">+ 添加一项重复任务</button>
+
+      <div id="calc-result" style="text-align:center;padding:20px 0 0;border-top:1px solid var(--line);display:none">
+        <div style="font-size:13px;color:var(--txt2);margin-bottom:4px">你每年可以省下</div>
+        <div style="font-size:52px;font-weight:800;color:var(--brand);line-height:1;letter-spacing:-.03em" id="calc-hours">0</div>
+        <div style="font-size:18px;font-weight:600;color:var(--txt);margin-bottom:6px">小时</div>
+        <div style="font-size:14px;color:var(--txt2);line-height:1.6" id="calc-detail"></div>
+        <div style="margin-top:18px;font-size:15px;font-weight:600;color:var(--txt)">这些时间够你<span style="color:var(--brand)">学完整门课程还绰绰有余</span></div>
+      </div>
+
+      <button onclick="calcSavings()" style="display:block;width:100%;background:var(--brand);color:#fff;border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:600;cursor:pointer;margin-top:4px;font-family:inherit;transition:.15s" onmouseover="this.style.opacity='0.86'" onmouseout="this.style.opacity='1'">🔢 立即计算</button>
+      <p style="text-align:center;font-size:12px;color:var(--lock);margin-top:10px">数据仅在你的浏览器计算,不上传</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===== 揭秘:为什么学不会 ===== -->
+<section style="background:var(--bg2)">
+  <div class="inner">
+    <div class="sec-label">能力框架</div>
+    <h2 class="sec-title">为什么大多数人学 AI 学不会?</h2>
+    <p class="sec-desc">不是不够聪明,是练错了层。AI 时代的底层能力有五层,层层递进。大多数人卡在前四层,而真正能大规模省时间的第五层——没人教。</p>
+
+    <div class="ability-row">
+      <div class="ability-item">
+        <div class="ability-num">1</div>
+        <div class="ability-body">
+          <h4>思考 — 把 AI 当外脑</h4>
+          <p>你跟 AI 聊天、问问题。它帮你理思路,但你还是亲手干活。大多数人的起点。</p>
+        </div>
+      </div>
+      <div class="ability-item">
+        <div class="ability-num">2</div>
+        <div class="ability-body">
+          <h4>积累 — 把经验攒成 AI 能读的仓库</h4>
+          <p>把散落各处的资料整理成 AI 可调用的知识库。有用,但不是最省时间的。</p>
+        </div>
+      </div>
+      <div class="ability-item">
+        <div class="ability-num">3</div>
+        <div class="ability-body">
+          <h4>表达 — 用 AI 写文案、做图、剪视频</h4>
+          <p>一个人配 AI,顶一个内容小团队。但产出还是要你亲手操作。</p>
+        </div>
+      </div>
+      <div class="ability-item">
+        <div class="ability-num">4</div>
+        <div class="ability-body">
+          <h4>产品 — 不写代码,把想法做成工具</h4>
+          <p>用 AI 帮你写代码做网页/小程序。很酷,但离日常省时间有距离。</p>
+        </div>
+      </div>
+      <div class="ability-item highlight">
+        <div class="ability-num">5</div>
+        <div class="ability-body">
+          <h4>执行 — 用数字员工自动干活 <span class="ability-tag">这门课教的</span></h4>
+          <p>从"亲手做每件事"升级成"招一批员工,你只看结果做判断"。群发消息、整理表格、监控信息、写周报——统统交给工作流自动跑。这层是杠杆比最高的,也是自学最容易卡死的。</p>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:28px;font-size:15px;color:var(--txt2);line-height:1.6;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 24px">
+      <b style="color:var(--txt)">自学"执行"层,卡在哪?</b> 不是卡在"看不懂",是卡在——环境部署踩坑没人问、数据格式不对抓瞎、AI 返回的结果乱不知道调哪、报错了不知道从哪排查。这些坑自己趟一遍要几个月;有人带你踩平,两周就跨过去了。
+    </p>
+  </div>
+</section>
+
+<!-- ===== 谁适合听 ===== -->
+<section>
+  <div class="inner">
+    <div class="sec-label">适合谁</div>
+    <h2 class="sec-title">这堂课适合你吗?</h2>
+    <div class="who-grid" style="margin-top:28px">
+      <div class="who-card">
+        <div class="who-emoji">💼</div>
+        <div>
+          <h4>每天被重复杂事淹没的上班族</h4>
+          <p>群发消息、整理表格、写周报、查信息——这些活不该你亲自做。学会让数字员工替你干,把时间腾出来做真正重要的事。</p>
+        </div>
+      </div>
+      <div class="who-card">
+        <div class="who-emoji">🚀</div>
+        <div>
+          <h4>想做副业但总觉得"没时间"的人</h4>
+          <p>不是没时间,是时间被杂事吃光了。把重复活自动化以后,你每天能多出 2 小时——拿去学新技能、做副业、陪家人都行。</p>
+        </div>
+      </div>
+      <div class="who-card">
+        <div class="who-emoji">👩‍💼</div>
+        <div>
+          <h4>小老板 / 自由职业者</h4>
+          <p>你一个人就是一个团队。客户消息、订单录入、报表统计——雇不起人又忙不过来。数字员工 24 小时干活、不要社保、不请假。</p>
+        </div>
+      </div>
+      <div class="who-card">
+        <div class="who-emoji">🎓</div>
+        <div>
+          <h4>想学 AI 但被"编程门槛"吓退的人</h4>
+          <p>你以为学 AI 得先学 Python?不用。n8n 是拖拽搭积木,完全零代码。这堂公开课 10 分钟就能让你亲眼确认:你真的可以。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 讲师介绍 ===== -->
+<section style="background:var(--bg2)">
+  <div class="inner">
+    <div class="sec-label">谁来讲</div>
+    <h2 class="sec-title">关于讲师</h2>
+    <div class="instructor" style="margin-top:28px">
+      <div class="instructor-avatar">🧑‍🏫</div>
+      <div class="instructor-text">
+        <h3>天欣</h3>
+        <p class="tagline">《数字员工养成计划》主理人 · n8n 深度实践者</p>
+        <p>不是理论派,是真动手派。自己用 n8n 搭过几十条工作流,踩过所有零基础会踩的坑,然后把踩平的路径做成这门课。讲课风格:不说黑话、不念概念,讲完你当场就能做出来。信条:搞清楚"我到底要自动化什么"比学一百个节点更有用。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 报名区域 ===== -->
+<section id="signup">
+  <div class="inner">
+    <div class="signup-card">
+      <div class="seats-left">公开课专属,仅限当晚报名</div>
+      <h3>1 小时免费公开课<br>从零搭出替你干活的 AI 员工</h3>
+      <div class="price-box">
+        <div class="price-original">公开课:免费</div>
+        <div class="price-now">免费</div>
+      </div>
+      <div class="signup-info">
+        <span><span class="si-emoji">📅</span> 周六晚 20:00-21:00</span>
+        <span><span class="si-emoji">💻</span> 线上直播(有回放,保留 48h)</span>
+        <span><span class="si-emoji">🎁</span> 到场送《n8n 新手排错手册》</span>
+      </div>
+
+      <!-- 替换为真实报名链接 -->
+      <a href="#" class="btn btn-primary btn-big">扫码报名,锁定名额</a>
+
+      <p style="margin-top:16px;font-size:13px;color:var(--txt2)">报名后加微信,课前拉群。公开课当晚报名正式课享专属优惠。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 正式课介绍 + 对比表 ===== -->
+<section style="background:var(--bg2)">
+  <div class="inner">
+    <div class="sec-label">公开课后</div>
+    <h2 class="sec-title">学完公开课,你还将获得</h2>
+    <p class="sec-desc">公开课只是开胃菜。正式课带你一关一关亲自搭出 6 个真能用的数字员工。</p>
+
+    <h3 style="font-size:20px;font-weight:700;margin:32px 0 16px;letter-spacing:-.015em">自学 vs. 跟课:差别有多大?</h3>
+    <div style="overflow-x:auto">
+    <table class="compare-table">
+      <thead>
+        <tr><th></th><th class="pain-col">自己摸索</th><th class="easy-col">跟着课程走</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>起步</td>
+          <td class="pain-col">不知道装什么、怎么装,第一步就卡住</td>
+          <td class="easy-col">两条路(本地/云端)选一条,5 分钟跑起来</td>
+        </tr>
+        <tr>
+          <td>学什么</td>
+          <td class="pain-col">B 站刷几十个视频,不知道哪个有用</td>
+          <td class="easy-col">28 关闯关路径,从易到难,搭出 6 个成品</td>
+        </tr>
+        <tr>
+          <td>踩坑</td>
+          <td class="pain-col">一个报错查一下午,还不知道搜对关键词没</td>
+          <td class="easy-col">每章配排错卡,提前演练常见坑,撞上了能自救</td>
+        </tr>
+        <tr>
+          <td>写提示词</td>
+          <td class="pain-col">"帮我写个周报"——AI 吐一堆没法用的</td>
+          <td class="easy-col">教你怎么把需求说清楚+调格式,60 分初稿变 90 分成品</td>
+        </tr>
+        <tr>
+          <td>数据引用</td>
+          <td class="pain-col">表达式老写错,90% 的问题出在这</td>
+          <td class="easy-col">第二章专门讲数据怎么流、字段怎么引用,学透这一关跨过最大门槛</td>
+        </tr>
+        <tr>
+          <td>排错能力</td>
+          <td class="pain-col">一出错整个流程崩,不知道从哪排查</td>
+          <td class="easy-col">教排错三件套(备用方案/重试/单步调试),流程扛得住出错</td>
+        </tr>
+        <tr>
+          <td>有没有人问</td>
+          <td class="pain-col"><span class="cross">靠自己搜</span></td>
+          <td class="easy-col"><span class="check">有班级群,卡住了有人答</span></td>
+        </tr>
+        <tr>
+          <td>学完结果</td>
+          <td class="pain-col">看了一堆教程,一个能用的都没搭出来</td>
+          <td class="easy-col">6 个在跑的数字员工 + 一套能迁移的底层能力</td>
+        </tr>
+        <tr>
+          <td>时间</td>
+          <td class="pain-col">自己摸索 3-6 个月还不一定出活</td>
+          <td class="easy-col">跟着课程 6 周,每周两次课,亲手搭出 6 个成品</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <div style="text-align:center;margin-top:40px">
+      <p style="font-size:15px;color:var(--txt2);margin-bottom:18px">公开课当晚报名正式课,享专属优惠。具体价格现场公布。</p>
+      <!-- 替换为真实报名链接 -->
+      <a href="#signup" class="btn btn-primary btn-big">先报名公开课,到场再说</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 转化准备清单 ===== -->
+<section class="checklist-section">
+  <div class="inner">
+    <div class="sec-label">执行清单</div>
+    <h2 class="sec-title" style="margin-bottom:0">转化准备清单</h2>
+    <p class="sec-desc" style="margin-bottom:28px">公开课不是讲完就完了。以下是课前、课中、课后要做的事,照着做,转化率翻倍。</p>
+
+    <div class="checklist-block">
+      <h4>课前准备(公开课前 3 天完成)</h4>
+      <ul>
+        <li><b>学员提前装好 n8n:</b>发一条群公告,两条路二选一——① 本地版:下载 Docker Desktop + 跑一条命令装好 n8n;② 云版:注册 n8n Cloud 免费试用。附图文指南,确保 80% 的人课前进来了。</li>
+        <li><b>"防卡群"提前建好:</b>报名后加微信拉群,课前 24h 在群里帮装不上的人排障。如果课前就卡在安装,公开课他全程跟不上。</li>
+        <li><b>公开课倒计时提醒:</b>课前 24h 群公告、课前 1h 群提醒、课前 10min 直播链接群发。三条消息缺一条到场率至少掉 20%。</li>
+        <li><b>准备好直播设备:</b>屏幕共享能看清 n8n 界面 + 声音清楚 + 备好回放录制。Demo 环节卡顿是转化杀手。</li>
+      </ul>
+    </div>
+
+    <div class="checklist-block">
+      <h4>课中要做的事(直播 60 分钟内)</h4>
+      <ul>
+        <li><b>0-5min 钩子提问:</b>"你现在每天花多少时间做重复的事?在弹幕里打一个数字(小时)。"弹幕刷起来 = 参与感拉满 + 给你后续转化素材(你看,大家都这样)。</li>
+        <li><b>5-15min 动手环节是命门:</b>语速放慢、每一步等 30 秒让大家跟上。让人现场说"我跑通了"——弹幕见证比你说一万句"不用代码"都有用。</li>
+        <li><b>15-30min 案例要配截图:</b>每一个案例亮出真实的 n8n 工作流截图 + 手机收到的结果截图。两屏同框,眼见为实。</li>
+        <li><b>45-55min 报价前先亮结果:</b>不要上来就报价格。先展示往期学员搭的成品(最好让学员本人录 30 秒视频),再亮价格。顺序是:结果→课程内容→价格→优惠。</li>
+        <li><b>全程至少 3 次提醒加微信:</b>"还在犹豫的同学先加我微信,课后发你今天的回放和《n8n 新手排错手册》。"加微信 = 进了转化漏斗。</li>
+      </ul>
+    </div>
+
+    <div class="checklist-block">
+      <h4>课后跟进(48h 内要做的转化动作)</h4>
+      <ul>
+        <li><b>当天 22:00 前:</b>群发回放链接 + 《n8n 新手排错手册》PDF + 正式课大纲。附一句:"今天没跟上的同学看回放,卡在哪一步直接微信问我。"</li>
+        <li><b>次日 10:00:</b>私聊每一个加了微信但没报名的——"昨天公开课感觉怎么样?有没有哪步没跟上?"不直接推销,先帮他解决一个具体问题。解决完他自然问课程。</li>
+        <li><b>次日 20:00:</b>群发一条"昨天公开课最常被问的 3 个问题"——Q1:完全零基础行不行? Q2:n8n 免费吗? Q3:学完真能用吗?——附详细回答。这条的打开率是纯推销的 3 倍。</li>
+        <li><b>48h 节点:</b>限时优惠截止提醒。"公开课专属优惠今晚 24:00 截止,之后恢复原价。还想报的抓紧。"——紧迫感是真账,不是套路。</li>
+      </ul>
+    </div>
+
+    <div class="checklist-block">
+      <h4>限时优惠策略建议</h4>
+      <ul>
+        <li><b>优惠要有真 deadline:</b>公开课当晚到第二天 24:00,之后恢复原价。不要无限期打折——那等于没有折扣。</li>
+        <li><b>建议优惠幅度:</b>公开课专属减 100-200 元,或送额外 1 对 1 答疑一次。幅度不用大,但要有"仅限今晚"的稀缺感。</li>
+        <li><b>不要免费送正式课:</b>免费来的不会珍惜。哪怕收 9.9 元,也比免费更能筛选出真想学的人。</li>
+        <li><b>早鸟额外加码:</b>公开课结束 1 小时内付款,再送《prompt 工程速查表》(其实就是整理好的提示词模板合集,成本为零,感知价值高)。</li>
+        <li><b>防退款策略:</b>第一周内不满意可退——这条说出来反而增加信任。大部分人过了第一周就不退了。</li>
+      </ul>
+    </div>
+
+    <div class="funnel-box">
+      <h4 style="text-align:center;font-weight:700;font-size:18px;letter-spacing:-.01em;margin-bottom:8px">转化漏斗一览</h4>
+      <p style="text-align:center;font-size:14px;color:var(--txt2);margin-bottom:8px">每一步漏掉的人都可能是想买但没被接住的人。</p>
+      <div class="funnel-steps">
+        <div class="funnel-step">公开课参加<br><small style="color:var(--txt2);font-weight:400">到场率 100%</small></div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">加微信<br><small style="color:var(--txt2);font-weight:400">目标 60%+</small></div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">48h 内跟进<br><small style="color:var(--txt2);font-weight:400">每个都私聊</small></div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">付定金/全款<br><small style="color:var(--txt2);font-weight:400">目标转化 15-25%</small></div>
+        <div class="funnel-arrow">→</div>
+        <div class="funnel-step">入正式课<br><small style="color:var(--txt2);font-weight:400">6 周闯关</small></div>
+      </div>
+      <p style="text-align:center;font-size:13px;color:var(--txt2);margin-top:16px">漏斗关键节点:① 加微信(不加=彻底丢了) ② 48h 私聊(不问=默认不买)。这两个动作做扎实了,转化率至少翻倍。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer>
+  <p>《数字员工养成计划》· 零基础 AI 自动化闯关课程</p>
+  <p style="margin-top:8px">公开课免费 · 正式课详情请加微信咨询</p>
+  <p style="margin-top:14px;font-size:12px;opacity:.5">把重复活交给数字员工,你只做真正重要的判断。</p>
+</footer>
+
+<!-- ===== 底部悬浮 CTA ===== -->
+<div class="sticky-cta" id="stickyCta">
+  <!-- 替换为真实报名链接 -->
+  <a href="#signup" class="btn btn-primary">免费报名,锁定名额</a>
+</div>
+
+<!-- ===== 名额倒计时 JS ===== -->
+<script>
+// 模拟剩余名额(每次刷新随机 35-50,制造稀缺感但不过度)
+(function(){
+  var seats = document.getElementById('seatsCount');
+  if(seats){
+    var n = Math.floor(Math.random()*16)+35; // 35-50
+    seats.textContent = n;
+  }
+})();
+
+// 底部 CTA 显示逻辑:滚动超过一屏才显示
+(function(){
+  var cta = document.getElementById('stickyCta');
+  if(!cta) return;
+  var ticking = false;
+  function update(){
+    if(window.scrollY > window.innerHeight*0.6){
+      cta.style.display = 'flex';
+    } else {
+      cta.style.display = 'none';
+    }
+    ticking = false;
+  }
+  cta.style.display = 'none';
+  window.addEventListener('scroll',function(){
+    if(!ticking){ requestAnimationFrame(update); ticking = true; }
+  });
+  update();
+})
+
+function addCalcRow(){
+  var d=document.createElement("div");
+  d.className="calc-row";
+  d.style.cssText="display:flex;gap:12px;align-items:center;margin-bottom:14px";
+  d.innerHTML='<input class="calc-task" placeholder="例如:每天群发消息" style="flex:2;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:15px;color:var(--txt);font-family:inherit" /><input class="calc-mins" type="number" placeholder="分钟/天" min="1" max="480" style="flex:1;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 10px;font-size:15px;color:var(--txt);font-family:inherit;text-align:center" /><span style="font-size:13px;color:var(--txt2);white-space:nowrap">分钟/天</span><button onclick="this.parentElement.remove();calcSavings()" style="background:none;border:none;color:var(--lock);cursor:pointer;font-size:14px;padding:4px" title="删除">&times;</button>';
+  document.getElementById("calc-items").appendChild(d);
+}
+function calcSavings(){
+  var rows=document.querySelectorAll(".calc-row");
+  var total=0, tasks=[];
+  rows.forEach(function(r){
+    var t=r.querySelector(".calc-task").value.trim();
+    var m=parseInt(r.querySelector(".calc-mins").value)||0;
+    if(m>0){ total+=m; if(t) tasks.push(t); }
+  });
+  var res=document.getElementById("calc-result");
+  if(total===0){ res.style.display="none"; return; }
+  res.style.display="block";
+  var dailyH=(total/60).toFixed(1);
+  var weeklyH=(total*7/60).toFixed(1);
+  var yearlyH=Math.round(total*365/60);
+  var yearlyDays=Math.round(yearlyH/8);
+  document.getElementById("calc-hours").textContent=yearlyH;
+  var detail="每天 "+total+" 分钟 = 每周 "+weeklyH+" 小时 = 每年约 "+yearlyDays+" 个工作日";
+  if(tasks.length) detail+="\n你列出的 "+tasks.length+" 件事,都可以交给数字员工";
+  document.getElementById("calc-detail").textContent=detail;
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,95 @@
+{
+  "name": "01 定时消息推送 · 人生第一个自动化工作流",
+  "nodes": [
+    {
+      "id": "note-01",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [60, 40],
+      "parameters": {
+        "content": "## 📬 定时消息推送（第 1-2 节课成品）\n\n**它做什么**：每天早上 9 点，自动给你的企微/飞书群发一条消息。\n\n**上手三步**：\n1. 在企业微信群（或飞书群）里添加「群机器人」，复制 webhook 地址\n2. 双击「推送到群机器人」节点，把 URL 换成你的 webhook 地址\n3. 右上角把工作流切到 Active —— 完成！\n\n**举一反三**：把消息内容换成任何你想定时收到的东西——待办提醒、喝水提醒、下班打卡提醒。",
+        "height": 340,
+        "width": 380
+      }
+    },
+    {
+      "id": "trigger-01",
+      "name": "每天早上9点",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [480, 200],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "set-01",
+      "name": "组装消息内容",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 200],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-text",
+              "name": "content",
+              "type": "string",
+              "value": "=早上好！今天是 {{ $now.format('yyyy年MM月dd日 cccc') }}。\n新的一天，从一条自动化消息开始 💪"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "http-01",
+      "name": "推送到群机器人",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [920, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "YOUR_WEBHOOK_URL_HERE",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ msgtype: 'text', text: { content: $json.content } }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "每天早上9点": {
+      "main": [
+        [
+          {
+            "node": "组装消息内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装消息内容": {
+      "main": [
+        [
+          {
+            "node": "推送到群机器人",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

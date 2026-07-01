@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>N8N 闯关 · 10 分钟搭出你的第一个数字员工</title>
+<style>
+  /* ── 暖橙炭黑色系，和童叔站/console 一脉 ── */
+  :root{
+    --bg0:#faf9f6; --bg1:#ffffff; --bg2:#f2efe9; --bg3:#e9e5dc;
+    --line:#e8e3d9; --ink:#1c1a16; --ink2:#7c746a; --ink3:#aba79e;
+    --orange:#e2590a; --orange-d:#c24a00;
+    --green:#1d8a4e; --green-bg:#eefaf2;
+    --yellow:#9a6700; --red:#d70015;
+    --seg1:#1d8a4e; --seg2:#9a6700; --seg3:#d70015;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg0);color:var(--ink);line-height:1.6;overflow-x:hidden}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* ── 顶栏 ── */
+  header{background:linear-gradient(180deg,var(--bg1),var(--bg0));border-bottom:1px solid var(--line);
+    padding:14px 0;position:sticky;top:0;z-index:50}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{font-weight:700;font-size:17px;letter-spacing:.3px}
+  .brand .dot{color:var(--orange)}
+  .nstep{font-size:13px;color:var(--ink2);background:var(--bg2);border:1px solid var(--line);
+    padding:5px 12px;border-radius:20px}
+  .nstep b{color:var(--orange)}
+
+  /* ── 章节地图（三段式可视化）── */
+  .mapbar{background:var(--bg1);border-bottom:1px solid var(--line);padding:12px 0}
+  .map{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .seg-label{font-size:11px;color:var(--ink3);margin-right:4px;white-space:nowrap}
+  .lvl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;border:1.5px solid var(--line);background:var(--bg2);
+    color:var(--ink3);cursor:default;position:relative;transition:.2s}
+  .lvl.done{color:#fff}
+  .lvl.s1.done,.lvl.s1.cur{background:var(--seg1);border-color:var(--seg1);color:#fff}
+  .lvl.s2.done,.lvl.s2.cur{background:var(--seg2);border-color:var(--seg2);color:#1a1a1a}
+  .lvl.s3.done,.lvl.s3.cur{background:var(--seg3);border-color:var(--seg3);color:#fff}
+  .lvl.cur{box-shadow:0 0 0 3px rgba(232,137,58,.25);transform:scale(1.08)}
+  .lvl.locked{opacity:.45}
+  .seg-divider{width:1px;height:22px;background:var(--line);margin:0 8px}
+  .seg-tag{font-size:10px;padding:2px 7px;border-radius:10px;white-space:nowrap}
+  .seg-tag.t1{background:var(--green-bg);color:var(--seg1)}
+  .seg-tag.t2{background:#2a2414;color:var(--seg2)}
+  .seg-tag.t3{background:#2a1815;color:var(--seg3)}
+
+  /* ── 主体两栏 ── */
+  .stage{display:grid;grid-template-columns:380px 1fr;gap:20px;padding:22px 0 60px}
+  @media(max-width:880px){.stage{grid-template-columns:1fr}}
+
+  .panel{background:var(--bg1);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .lvl-seg{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;margin-bottom:10px}
+  .lvl-title{font-size:21px;font-weight:700;margin-bottom:8px;line-height:1.3}
+  .lvl-goal{font-size:14px;color:var(--ink2);background:var(--bg2);border-left:3px solid var(--orange);
+    padding:10px 12px;border-radius:0 8px 8px 0;margin-bottom:16px}
+  .guide-h{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin:18px 0 10px}
+  .step{display:flex;gap:10px;margin-bottom:10px;font-size:14px;color:var(--ink2)}
+  .step .n{flex:0 0 22px;height:22px;border-radius:50%;background:var(--bg3);color:var(--orange);
+    font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .step.fade{opacity:.5}
+  .hint-note{font-size:12.5px;color:var(--ink3);font-style:italic;margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+
+  /* ── 画布 ── */
+  .canvas-wrap{background:var(--bg1);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .canvas-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg2)}
+  .canvas-top .t{font-size:13px;color:var(--ink2);font-weight:600}
+  .palette{display:flex;gap:8px;flex-wrap:wrap}
+  .pal-btn{font-size:12.5px;background:var(--bg3);border:1px solid var(--line);color:var(--ink);
+    padding:6px 11px;border-radius:8px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px}
+  .pal-btn:hover{border-color:var(--orange);background:#3a3326}
+  .pal-btn .ic{font-size:14px}
+
+  .canvas{position:relative;height:340px;background:
+    radial-gradient(circle,var(--line) 1px,transparent 1px);background-size:22px 22px;
+    background-color:var(--bg0);overflow:auto}
+  svg.edges{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1}
+  .node{position:absolute;width:148px;background:var(--bg2);border:1.5px solid var(--line);
+    border-radius:10px;padding:10px 11px;cursor:grab;z-index:2;user-select:none;transition:border-color .15s}
+  .node:active{cursor:grabbing}
+  .node.sel{border-color:var(--orange);box-shadow:0 0 0 2px rgba(232,137,58,.25)}
+  .node .nh{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+  .node .nh .ic{font-size:15px}
+  .node .nsub{font-size:11px;color:var(--ink3);margin-top:3px;word-break:break-all}
+  .node .port{position:absolute;width:12px;height:12px;border-radius:50%;background:var(--bg3);
+    border:2px solid var(--orange);top:50%;transform:translateY(-50%)}
+  .node .port.out{right:-7px;cursor:crosshair}
+  .node .port.in{left:-7px}
+  .node .port.out:hover{background:var(--orange)}
+  .node.trigger{border-color:#4a7a8a}
+  .node.trigger .nh .ic{color:#6bb3c9}
+
+  .canvas-foot{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line);background:var(--bg2)}
+  .btn{font-size:14px;font-weight:600;padding:9px 18px;border-radius:9px;border:none;cursor:pointer;transition:.15s}
+  .btn-run{background:var(--orange);color:#1a1208}
+  .btn-run:hover{background:var(--orange-d)}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink2)}
+  .btn-ghost:hover{border-color:var(--ink3);color:var(--ink)}
+  .foot-msg{font-size:13px;color:var(--ink3);margin-left:auto}
+
+  /* ── 输出/反馈 ── */
+  .out{margin-top:16px;background:var(--bg1);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .out-h{font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  pre.json{background:var(--bg0);border:1px solid var(--line);border-radius:10px;padding:14px;
+    font-family:"SF Mono","Cascadia Code",Consolas,monospace;font-size:13px;color:#cfe6c8;
+    overflow:auto;white-space:pre-wrap;line-height:1.55}
+  .verdict{margin-top:14px;padding:14px 16px;border-radius:10px;font-size:14px;display:none}
+  .verdict.show{display:block}
+  .verdict.pass{background:var(--green-bg);border:1px solid var(--green);color:#bfe6c4}
+  .verdict.fail{background:#2a1815;border:1px solid var(--red);color:#f0c4bc}
+  .verdict .vt{font-weight:700;font-size:15px;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+  .verdict .info{font-size:12.5px;color:var(--ink2);margin-top:8px;padding-top:8px;border-top:1px dashed rgba(255,255,255,.12)}
+  .next-row{margin-top:14px;display:flex;gap:10px;align-items:center}
+  .btn-next{background:var(--green);color:#0d1a0f;display:none}
+  .btn-next.show{display:inline-block}
+
+  /* ── 字段配置弹层 ── */
+  .cfg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
+  .cfg.show{display:flex}
+  .cfg-box{background:var(--bg1);border:1px solid var(--line);border-radius:14px;padding:22px;width:340px}
+  .cfg-box h4{font-size:15px;margin-bottom:6px}
+  .cfg-box p{font-size:12.5px;color:var(--ink3);margin-bottom:14px}
+  .cfg-row{display:flex;gap:8px;margin-bottom:9px}
+  .cfg-row input{flex:1;background:var(--bg0);border:1px solid var(--line);color:var(--ink);
+    padding:8px 10px;border-radius:7px;font-size:13px}
+  .cfg-row input:focus{outline:none;border-color:var(--orange)}
+  .cfg-acts{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+
+  footer{border-top:1px solid var(--line);padding:24px 0;text-align:center;color:var(--ink3);font-size:12px}
+  .badge-design{display:inline-block;background:var(--bg2);border:1px solid var(--line);border-radius:8px;
+    padding:8px 14px;margin:4px;font-size:12px;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<header><div class="wrap"><div class="topbar">
+  <div class="brand">N8N 闯关<span class="dot">.</span> <span style="color:var(--ink3);font-weight:400;font-size:13px">从 Hello World 到数字员工</span></div>
+  <div class="nstep">距离「数字员工」还差 <b id="stepsLeft">5</b> 个阶段</div>
+</div></div></header>
+
+<div class="mapbar"><div class="wrap"><div class="map" id="map">
+  <span class="seg-tag t1">前段·全引导 降摩擦给首胜</span>
+  <span class="seg-divider"></span>
+  <span class="seg-tag t2">中段·半引导 撤支架</span>
+  <span class="seg-divider"></span>
+  <span class="seg-tag t3">后段·空白画布 真项目</span>
+</div></div></div>
+
+<div class="wrap"><div class="stage">
+
+  <!-- 左：关卡说明 -->
+  <div class="panel" id="lvlPanel"></div>
+
+  <!-- 右：画布 + 输出 -->
+  <div>
+    <div class="canvas-wrap">
+      <div class="canvas-top">
+        <span class="t">🎨 工作流画布</span>
+        <div class="palette" id="palette"></div>
+      </div>
+      <div class="canvas" id="canvas">
+        <svg class="edges" id="edges"></svg>
+      </div>
+      <div class="canvas-foot">
+        <button class="btn btn-run" id="runBtn">▶ 运行工作流</button>
+        <button class="btn btn-ghost" id="resetBtn">重置这一关</button>
+        <span class="foot-msg" id="footMsg">提示：点节点右侧的橙点拖到下一个节点 = 连线</span>
+      </div>
+    </div>
+
+    <div class="out">
+      <div class="out-h">运行输出（这就是数据真正流出来的样子）</div>
+      <pre class="json" id="output">// 点「运行工作流」看这里冒出数据 …</pre>
+      <div class="verdict" id="verdict"></div>
+      <div class="next-row"><button class="btn btn-next" id="nextBtn">下一关 →</button></div>
+    </div>
+  </div>
+
+</div></div>
+
+<!-- 字段配置弹层 -->
+<div class="cfg" id="cfg"><div class="cfg-box">
+  <h4 id="cfgTitle">配置节点</h4>
+  <p id="cfgDesc">给这个节点设一个字段：左边是字段名，右边是值。</p>
+  <div id="cfgRows"></div>
+  <div class="cfg-acts">
+    <button class="btn btn-ghost" id="cfgCancel">取消</button>
+    <button class="btn btn-run" id="cfgSave">保存</button>
+  </div>
+</div></div>
+
+<footer><div class="wrap">
+  <div style="margin-bottom:10px;color:var(--ink2)">原型 v0.1 · 体现的核心设计（来自调研报告 13 条清单）：</div>
+  <span class="badge-design">① 10 分钟首胜</span>
+  <span class="badge-design">② 三段式撤支架</span>
+  <span class="badge-design">④ 验收结果不验收搭法</span>
+  <span class="badge-design">⑥ 错误给解释性反馈</span>
+  <span class="badge-design">⑩ 信息型反馈非 XP 徽章</span>
+  <div style="margin-top:14px;font-size:11px">这是给天欣看方向的可点原型，不是成品；真 n8n 判题引擎、内容全集、账号系统都还没接。</div>
+</div></footer>
+
+<script>
+// ══════════════════════════ 关卡数据 ══════════════════════════
+const NODE_TYPES = {
+  manualTrigger:{label:'手动触发',ic:'⚡',sub:'点一下就开跑',trigger:true},
+  set:{label:'Set 数据',ic:'📝',sub:'造一条数据',configurable:true},
+  edit:{label:'加字段',ic:'➕',sub:'在上游基础上加',configurable:true},
+};
+
+const LEVELS = [
+  {
+    seg:1, segName:'前段 · 全引导',
+    title:'第一次让它跑起来',
+    goal:'放一个「Set 数据」节点，连到触发器后面，点运行——你会看到第一条数据冒出来。这就是"做出来了"的感觉。',
+    guide:[
+      '画布上已经有一个 ⚡手动触发 节点（工作流的起点）',
+      '点右上角「📝 Set 数据」把它加到画布',
+      '从 ⚡触发器右侧的橙点，拖一条线到 📝Set 节点左侧',
+      '点 📝Set 节点，给它设一个字段（比如 message = 你好）',
+      '点「▶ 运行工作流」，看下面冒出 JSON',
+    ],
+    palette:['set'],
+    preset:{nodes:[{type:'manualTrigger',x:30,y:130}],edges:[]},
+    // 验收：只要触发器 → set 连通，且 set 有任意字段，输出非空
+    check(out,g){
+      if(!g.hasEdge) return {pass:false,msg:'节点还没连起来——数据流不过去。从触发器右侧橙点拖一条线到 Set 节点。'};
+      if(Object.keys(out).length===0) return {pass:false,msg:'Set 节点还没设字段，所以没数据。点一下 Set 节点配置它。'};
+      return {pass:true,info:'你刚做的事，就是 n8n 的最小闭环：触发 → 造数据 → 输出。后面所有复杂工作流，本质都是这条线的加长版。'};
+    }
+  },
+  {
+    seg:1, segName:'前段 · 全引导',
+    title:'让数据"流"过去',
+    goal:'数据在 n8n 里像水一样从一个节点流到下一个。这关：在 Set 后面再接一个「加字段」节点，让数据带着两个字段流出来。',
+    guide:[
+      '画布给了你 ⚡触发器 + 📝Set（已设好 name 字段）',
+      '加一个「➕ 加字段」节点，接在 Set 后面',
+      '配置它：再加一个字段，比如 city = 成都',
+      '运行——注意输出里 name 和 city 两个字段都在',
+      '体会：第二个节点拿到了第一个节点的数据，又往上加了东西',
+    ],
+    palette:['edit'],
+    preset:{nodes:[
+      {type:'manualTrigger',x:20,y:130},
+      {type:'set',x:185,y:130,config:{name:'天欣'}},
+    ],edges:[[0,1]]},
+    check(out,g){
+      if(Object.keys(out).length<2) return {pass:false,msg:'输出里字段不够。要让数据流出 ≥2 个字段：上游 Set 的 name + 你新加的字段。检查「加字段」节点连上了没、配了没。'};
+      return {pass:true,info:'看到没——数据是"累积"往下流的。这就是为什么 n8n 能搭很长的链：每个节点都在前一个的基础上加工。'};
+    }
+  },
+  {
+    seg:2, segName:'中段 · 半引导（开始撤支架）',
+    title:'这次，你自己搭',
+    goal:'不给你分步截图了。目标：搭一条工作流，输出里要有 name（你的名字）和 task（你最想让电脑替你自动化的一件事）两个字段。怎么连、用几个节点，你定。',
+    guide:[
+      '只给目标，不给连法——这是"撤支架"，逼你真会',
+      '可用节点：📝Set、➕加字段（自己选几个、怎么连）',
+      '验收只看一件事：运行输出里有没有 name 和 task',
+      '卡住了？回头看前两关你是怎么连的',
+    ],
+    palette:['set','edit'],
+    preset:{nodes:[{type:'manualTrigger',x:30,y:130}],edges:[]},
+    check(out,g){
+      const has = k => Object.keys(out).some(x=>x.toLowerCase()===k);
+      if(!has('name')||!has('task'))
+        return {pass:false,msg:'输出里要同时有 name 和 task 两个字段（字段名就用 name / task）。你现在的输出：{'+Object.keys(out).join(', ')+'}。差哪个补哪个。'};
+      return {pass:true,info:'注意：你的搭法可能和别人完全不同，但只要输出对了就算过——这就是 n8n 的真相：同一个结果有无数种正确搭法。判题判的是"跑出对的结果"，不是"和标准答案一模一样"。'};
+    }
+  },
+];
+
+// 后续关卡（锁定，仅展示三段式全貌）
+const LOCKED = [
+  {seg:1},{seg:2},{seg:2},{seg:3},{seg:3},{seg:3}
+];
+
+// ══════════════════════════ 状态 ══════════════════════════
+let cur = 0;
+let nodes = [];   // {id,type,x,y,config}
+let edges = [];   // [fromId,toId]
+let nid = 0;
+let selNode = null;
+let cfgTarget = null;
+
+const $ = s => document.querySelector(s);
+const canvas = $('#canvas'), edgesSvg = $('#edges');
+
+// ── 渲染章节地图 ──
+function renderMap(){
+  const all = [...LEVELS, ...LOCKED];
+  const map = $('#map');
+  map.innerHTML = '';
+  let seg = 0;
+  all.forEach((lv,i)=>{
+    if(lv.seg!==seg){
+      if(seg!==0){const d=document.createElement('span');d.className='seg-divider';map.appendChild(d);}
+      seg=lv.seg;
+    }
+    const el = document.createElement('div');
+    const locked = i>=LEVELS.length;
+    el.className = `lvl s${lv.seg} ${i<cur?'done':''} ${i===cur?'cur':''} ${locked?'locked':''}`;
+    el.textContent = locked? '🔒' : (i<cur?'✓':(i+1));
+    el.title = locked?'后续关卡（原型未展开）':`关卡 ${i+1}`;
+    map.appendChild(el);
+  });
+}
+
+// ── 加载一关 ──
+function loadLevel(i){
+  cur = i;
+  const lv = LEVELS[i];
+  nodes = []; edges = []; nid = 0; selNode = null;
+  // 预置节点
+  lv.preset.nodes.forEach(n=>{
+    nodes.push({id:nid++, type:n.type, x:n.x, y:n.y, config:n.config?{...n.config}:{}});
+  });
+  lv.preset.edges.forEach(([a,b])=> edges.push([a,b]));
+
+  // 左面板
+  const segColors={1:'var(--seg1)',2:'var(--seg2)',3:'var(--seg3)'};
+  const segBg={1:'var(--green-bg)',2:'#2a2414',3:'#2a1815'};
+  $('#lvlPanel').innerHTML = `
+    <span class="lvl-seg" style="background:${segBg[lv.seg]};color:${segColors[lv.seg]}">${lv.segName}</span>
+    <div class="lvl-title">关卡 ${i+1} · ${lv.title}</div>
+    <div class="lvl-goal">🎯 ${lv.goal}</div>
+    <div class="guide-h">${lv.seg===2?'只给目标（支架撤了）':'跟着做'}</div>
+    ${lv.guide.map((g,gi)=>`<div class="step ${lv.seg===2?'fade':''}"><span class="n">${lv.seg===2?'·':gi+1}</span><span>${g}</span></div>`).join('')}
+    ${lv.seg===2?'<div class="hint-note">前两关手把手，这关故意松手——"难一点"才记得住（学习科学叫 desirable difficulties）。</div>':''}
+  `;
+
+  // 调色板
+  $('#palette').innerHTML = lv.palette.map(t=>{
+    const nt=NODE_TYPES[t];
+    return `<button class="pal-btn" data-type="${t}"><span class="ic">${nt.ic}</span>${nt.label}</button>`;
+  }).join('');
+  $('#palette').querySelectorAll('.pal-btn').forEach(b=>{
+    b.onclick=()=>addNode(b.dataset.type);
+  });
+
+  // 重置输出
+  $('#output').textContent = '// 点「运行工作流」看这里冒出数据 …';
+  $('#verdict').className='verdict';
+  $('#nextBtn').className='btn btn-next';
+  $('#footMsg').textContent='提示：点节点右侧的橙点拖到下一个节点 = 连线';
+
+  renderMap();
+  render();
+  updateStepsLeft();
+}
+
+function updateStepsLeft(){
+  // 5 阶段路线，前段三关都在"阶段0"内
+  $('#stepsLeft').textContent = 5;
+}
+
+// ── 增删节点 ──
+function addNode(type){
+  const x = 185 + (nodes.filter(n=>!NODE_TYPES[n.type].trigger).length)*30;
+  const y = 130 + (nodes.length%2)*70;
+  nodes.push({id:nid++, type, x:Math.min(x,480), y, config:{}});
+  render();
+}
+
+// ── 渲染画布 ──
+function render(){
+  // 清掉旧节点
+  canvas.querySelectorAll('.node').forEach(n=>n.remove());
+  nodes.forEach(n=>{
+    const nt = NODE_TYPES[n.type];
+    const el = document.createElement('div');
+    el.className = `node ${nt.trigger?'trigger':''} ${selNode===n.id?'sel':''}`;
+    el.style.left = n.x+'px'; el.style.top = n.y+'px';
+    el.dataset.id = n.id;
+    const cfgText = Object.keys(n.config).length? Object.entries(n.config).map(([k,v])=>`${k}=${v}`).join(', ') : (nt.configurable?'未配置（点我设字段）':nt.sub);
+    el.innerHTML = `
+      <div class="nh"><span class="ic">${nt.ic}</span>${nt.label}</div>
+      <div class="nsub">${cfgText}</div>
+      ${nt.trigger?'':'<div class="port in"></div>'}
+      <div class="port out"></div>`;
+    canvas.appendChild(el);
+    enableDrag(el,n);
+    enableConnect(el,n);
+    if(nt.configurable){
+      el.querySelector('.nsub').onclick=(e)=>{e.stopPropagation();openCfg(n);};
+    }
+  });
+  drawEdges();
+}
+
+// ── 连线绘制 ──
+function drawEdges(){
+  edgesSvg.innerHTML='';
+  edges.forEach(([a,b])=>{
+    const na=nodes.find(n=>n.id===a), nb=nodes.find(n=>n.id===b);
+    if(!na||!nb) return;
+    const x1=na.x+148, y1=na.y+26;
+    const x2=nb.x, y2=nb.y+26;
+    const mx=(x1+x2)/2;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    path.setAttribute('stroke','#e8893a');path.setAttribute('stroke-width','2.5');
+    path.setAttribute('fill','none');path.setAttribute('opacity','.8');
+    edgesSvg.appendChild(path);
+  });
+}
+
+// ── 拖动节点 ──
+function enableDrag(el,n){
+  let sx,sy,ox,oy,moved;
+  el.addEventListener('mousedown',e=>{
+    if(e.target.classList.contains('port')) return;
+    moved=false; sx=e.clientX; sy=e.clientY; ox=n.x; oy=n.y;
+    const mv=ev=>{
+      moved=true;
+      n.x=Math.max(0,ox+ev.clientX-sx);
+      n.y=Math.max(0,oy+ev.clientY-sy);
+      el.style.left=n.x+'px'; el.style.top=n.y+'px';
+      drawEdges();
+    };
+    const up=()=>{document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+    document.addEventListener('mousemove',mv);document.addEventListener('mouseup',up);
+  });
+}
+
+// ── 连线交互 ──
+let connecting=null;
+function enableConnect(el,n){
+  const outPort=el.querySelector('.port.out');
+  outPort.addEventListener('mousedown',e=>{
+    e.stopPropagation();
+    connecting={from:n.id};
+    const mv=ev=>{};
+    const up=ev=>{
+      const tgt=ev.target.closest('.node');
+      if(tgt && +tgt.dataset.id!==n.id){
+        const toId=+tgt.dataset.id;
+        const toType=nodes.find(x=>x.id===toId).type;
+        if(NODE_TYPES[toType].trigger){
+          flash('触发器是起点，线不能连到它身上。连到普通节点的左侧。');
+        }else if(!edges.some(([a,b])=>a===n.id&&b===toId)){
+          edges.push([n.id,toId]);
+          render();
+        }
+      }
+      connecting=null;
+      document.removeEventListener('mouseup',up);
+    };
+    document.addEventListener('mouseup',up);
+  });
+}
+
+function flash(msg){
+  $('#footMsg').textContent='⚠ '+msg;
+  $('#footMsg').style.color='var(--red)';
+  setTimeout(()=>{$('#footMsg').style.color='';$('#footMsg').textContent='提示：点节点右侧的橙点拖到下一个节点 = 连线';},3500);
+}
+
+// ── 字段配置弹层 ──
+function openCfg(n){
+  cfgTarget=n;
+  const rows=$('#cfgRows'); rows.innerHTML='';
+  const entries=Object.entries(n.config);
+  if(entries.length===0) entries.push(['','']);
+  entries.forEach(([k,v])=>addCfgRow(k,v));
+  // 总留一个空行可加
+  addCfgRow('','');
+  $('#cfg').className='cfg show';
+}
+function addCfgRow(k,v){
+  const row=document.createElement('div');
+  row.className='cfg-row';
+  row.innerHTML=`<input placeholder="字段名 如 name" value="${k}"><input placeholder="值 如 天欣" value="${v}">`;
+  $('#cfgRows').appendChild(row);
+}
+$('#cfgCancel').onclick=()=>$('#cfg').className='cfg';
+$('#cfgSave').onclick=()=>{
+  const cfg={};
+  $('#cfgRows').querySelectorAll('.cfg-row').forEach(r=>{
+    const [ki,vi]=r.querySelectorAll('input');
+    if(ki.value.trim()) cfg[ki.value.trim()]=vi.value.trim()||'(空)';
+  });
+  cfgTarget.config=cfg;
+  $('#cfg').className='cfg';
+  render();
+};
+
+// ══════════════════════════ 运行引擎 ══════════════════════════
+function runFlow(){
+  const lv=LEVELS[cur];
+  // 从触发器出发，沿边累积 config
+  const trigger=nodes.find(n=>NODE_TYPES[n.type].trigger);
+  let hasEdge=edges.length>0;
+  let data={};
+  const visited=new Set();
+  let queue=trigger?[trigger.id]:[];
+  // 简单 BFS 沿出边走，累积所有可达节点的 config
+  while(queue.length){
+    const id=queue.shift();
+    if(visited.has(id))continue;
+    visited.add(id);
+    const node=nodes.find(n=>n.id===id);
+    if(node) Object.assign(data,node.config);
+    edges.filter(([a,b])=>a===id).forEach(([a,b])=>queue.push(b));
+  }
+  // 若触发器没连任何东西
+  const triggerConnected = trigger && edges.some(([a,b])=>a===trigger.id);
+  const g={hasEdge:triggerConnected};
+
+  // 输出
+  const outObj = data;
+  $('#output').textContent = JSON.stringify([{json:outObj}], null, 2);
+
+  // 判题
+  const res=lv.check(outObj,g);
+  const v=$('#verdict');
+  if(res.pass){
+    v.className='verdict show pass';
+    v.innerHTML=`<div class="vt">✅ 通过！这一关你真做出来了</div>
+      <div class="info">💡 ${res.info||''}</div>`;
+    $('#nextBtn').className = cur<LEVELS.length-1 ? 'btn btn-next show' : 'btn btn-next';
+    if(cur>=LEVELS.length-1){
+      v.innerHTML+=`<div class="info" style="color:var(--orange)">🎉 前段三关通关！原型到此为止——真正的网站这里会进入"中段撤支架 + 后段空白画布真项目"，最后让你独立搭出第一个能上线的数字员工。</div>`;
+    }
+  }else{
+    v.className='verdict show fail';
+    v.innerHTML=`<div class="vt">🔧 还差一点，再调调</div><div>${res.msg}</div>
+      <div class="info">这就是"解释性反馈"——不只说错，还告诉你为啥错、检查哪。</div>`;
+    $('#nextBtn').className='btn btn-next';
+  }
+}
+
+$('#runBtn').onclick=runFlow;
+$('#resetBtn').onclick=()=>loadLevel(cur);
+$('#nextBtn').onclick=()=>{ if(cur<LEVELS.length-1) loadLevel(cur+1); };
+
+// 点空白取消选中
+canvas.addEventListener('click',e=>{ if(e.target===canvas||e.target===edgesSvg){selNode=null;render();} });
+
+// 启动
+loadLevel(0);
+</script>
+</body>
+</html>

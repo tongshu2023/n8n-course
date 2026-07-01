@@ -1,0 +1,62 @@
+{
+  "name": "01 给自己发一封消息 · 人生第一个自动化工作流",
+  "nodes": [
+    {
+      "id": "note-01",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [60, 40],
+      "parameters": {
+        "content": "## 给自己发一封消息（成品①）\n\n**它做什么**：点一下「执行」，立刻给自己的邮箱发一封消息。\n\n**上手三步**：\n1. 开启你邮箱的 SMTP，拿到「授权码」\n2. 在「发到我的邮箱」节点里，填收件人=你的邮箱、新建 SMTP 凭证（邮箱+授权码）\n3. 点 Execute —— 邮箱立刻收到！\n\n**进阶**：把「手动触发」换成「定时触发」，就能每天自动发。",
+        "height": 320,
+        "width": 380
+      }
+    },
+    {
+      "id": "trigger-01",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [480, 200],
+      "parameters": {}
+    },
+    {
+      "id": "set-01",
+      "name": "组装消息内容",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 200],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "msg-text",
+              "name": "content",
+              "type": "string",
+              "value": "新的一天，加油 💪"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "email-01",
+      "name": "发到我的邮箱",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [920, 200],
+      "parameters": {
+        "toEmail": "YOUR_EMAIL_HERE",
+        "subject": "我的第一个数字员工",
+        "text": "={{ $json.content }}"
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": { "main": [[{ "node": "组装消息内容", "type": "main", "index": 0 }]] },
+    "组装消息内容": { "main": [[{ "node": "发到我的邮箱", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

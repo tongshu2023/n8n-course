@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数字员工养成计划 · 零基础 AI 自动化闯关</title>
+<style>
+  :root{
+    --bg:#faf9f6; --bg2:#f2efe9; --bg3:#e9e5dc; --card:#ffffff; --line:#e8e3d9;
+    --txt:#1c1a16; --txt2:#7c746a; --brand:#e2590a; --brand2:#c24a00;
+    --ok:#1d8a4e; --lock:#aba79e; --gold:#9a6700; --blue:#2a6df4; --purple:#7c4dd6;
+    --shadow:0 1px 3px rgba(60,50,30,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--txt);line-height:1.6;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+  button{font-family:inherit;cursor:pointer;border:none;outline:none}
+  .hidden{display:none !important}
+  .wrap{max-width:740px;margin:0 auto;padding:34px 22px 110px}
+  code{background:var(--bg2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#bf4d00;font-family:"SF Mono",ui-monospace,Consolas,monospace}
+  b,strong{color:#1d1d1f;font-weight:600}
+
+  /* ===== 登录 ===== */
+  #view-login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg2);padding:20px}
+  .login-card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);
+    border-radius:22px;padding:52px 40px;box-shadow:0 4px 24px rgba(0,0,0,.05);text-align:center}
+  .logo{display:inline-block;margin-bottom:6px}
+  .login-card h1{font-size:30px;margin:18px 0 8px;font-weight:700;letter-spacing:-.025em}
+  .login-card .sub{color:var(--txt2);font-size:15px;margin-bottom:34px;line-height:1.5}
+  .field{display:flex;flex-direction:column;gap:8px;text-align:left}
+  .field label{font-size:13px;color:var(--txt2)}
+  .field input{background:var(--bg);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;color:var(--txt);font-size:16px;transition:.15s}
+  .field input:focus{border-color:var(--txt)}
+  .btn-primary{margin-top:22px;width:100%;background:var(--brand);color:#fff;font-size:16px;
+    font-weight:500;padding:14px;border-radius:12px;transition:.2s}
+  .btn-primary:hover{opacity:.86}
+  .login-err{color:#d70015;font-size:13px;margin-top:12px;min-height:18px}
+  .login-hint{margin-top:26px;font-size:12px;color:var(--lock)}
+
+  /* ===== 顶栏 ===== */
+  .topbar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.72);
+    backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:740px;margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:16px}
+  .topbar .brand{font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;letter-spacing:-.01em}
+  .topbar .brand span{color:var(--brand)}
+  .progress-mini{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
+  .bar{flex:1;height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;min-width:40px}
+  .bar>i{display:block;height:100%;background:var(--brand);width:0;transition:width .5s}
+  .progress-mini small{color:var(--txt2);font-size:12px;white-space:nowrap}
+  .topbar .brand:hover{opacity:.7}
+  .btn-ghost{background:transparent;color:var(--txt2);font-size:13px;padding:6px 12px;border-radius:9px;transition:.12s}
+  .btn-ghost:hover{color:var(--txt);background:var(--bg2)}
+  /* ---- 步进式讲解:一次只露一块,治"全铺上去" ---- */
+  .stepped{display:none !important}
+  .step-btn{text-align:center;margin:10px 0 6px}
+  .btn-step{background:var(--bg2);border:1px solid var(--line);color:var(--txt);font-size:14px;
+    padding:10px 28px;border-radius:14px;font-weight:500;transition:.15s;cursor:pointer}
+  .btn-step:hover{background:var(--bg3);border-color:var(--txt2)}
+  /* ---- 连击爽感 + 通关键脉冲 ---- */
+  .combo-float{position:fixed;pointer-events:none;z-index:201;font-weight:800;font-size:14px;color:#fff;
+    background:#e8590c;padding:3px 11px;border-radius:99px;white-space:nowrap;transform:translateX(-50%);
+    box-shadow:0 4px 14px rgba(232,89,12,.35);animation:comboUp 1.3s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes comboUp{0%{opacity:0;transform:translate(-50%,4px) scale(.6)}20%{opacity:1;transform:translate(-50%,-8px) scale(1.12)}100%{opacity:0;transform:translate(-50%,-56px) scale(1)}}
+  .btn-complete.pulse{animation:btnPulse 1s ease 2}
+  @keyframes btnPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(226,89,10,.45)}50%{transform:scale(1.035);box-shadow:0 0 0 9px rgba(226,89,10,0)}}
+  .kbd-hint{text-align:center;font-size:12px;color:var(--lock);margin-top:8px}
+  .kbd-hint kbd{background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:inherit;font-size:11px;margin:0 1px}
+
+  /* ===== 首页 / hero + 章节列表 ===== */
+  .hero{padding:28px 4px 18px;display:flex;gap:32px;align-items:center;flex-wrap:wrap}
+  .hero-main{flex:1;min-width:260px}
+  .hero-main h2{font-size:42px;line-height:1.06;font-weight:700;letter-spacing:-.03em}
+  .hero-main p{color:var(--txt2);margin-top:12px;font-size:16px;line-height:1.5;max-width:46ch}
+  .hero-visual{flex-shrink:0;width:280px;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 4px 20px rgba(60,50,30,.08),0 1px 3px rgba(60,50,30,.04)}
+  .hero-visual img{display:block;width:100%;height:auto}
+  @media (max-width:640px){.hero-visual{width:100%}}
+  .hero-stats{display:flex;gap:18px;align-items:center;flex-shrink:0}
+  .btn-continue{margin-top:24px;background:var(--brand);color:#fff;font-weight:500;font-size:15px;padding:13px 28px;border-radius:980px;transition:.2s}
+  .btn-continue:hover{opacity:.86}
+  .all-done{margin-top:24px;font-size:15px;font-weight:500;color:var(--brand)}
+  .stat-ring{position:relative;width:60px;height:60px}
+  .stat-ring svg{transform:rotate(-90deg)}
+  .stat-ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px}
+  .stat-card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:11px 18px;text-align:center;min-width:68px}
+  .stat-card .num{font-size:23px;font-weight:600;color:var(--txt)}
+  .stat-card .lbl{font-size:11px;color:var(--txt2);margin-top:2px}
+  .oc-banner{margin-top:20px;text-align:center}
+  .oc-banner a{display:inline-block;padding:13px 28px;background:var(--bg2);border:1px solid var(--line);border-radius:980px;
+    font-size:14px;color:var(--txt);text-decoration:none;font-weight:500;transition:.15s}
+  .oc-banner a:hover{background:var(--bg3);border-color:var(--brand)}
+  .chapter{margin-top:42px}
+  .ch-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;padding:0 4px}
+  .ch-head .ic{display:none}
+  .ch-head h3{font-size:13px;font-weight:600;letter-spacing:.03em;color:var(--txt2)}
+  .ch-head .ch-prog{margin-left:auto;font-size:12px;color:var(--lock)}
+  .levels{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(60,50,30,.03),0 10px 30px rgba(60,50,30,.05)}
+  .level{display:flex;align-items:center;gap:15px;background:var(--card);padding:16px 18px;transition:.12s;border-top:1px solid var(--line)}
+  .level:first-child{border-top:none}
+  .level.unlocked{cursor:pointer}
+  .level.unlocked:hover{background:var(--bg2)}
+  .level.locked{cursor:default}
+  .level.locked .lv-body h4{color:var(--lock)}
+  .lv-badge{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:12px;flex-shrink:0;background:var(--card);color:var(--lock);border:1.5px solid var(--line);transition:.12s}
+  .level.done .lv-badge{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .level.current .lv-badge{background:var(--card);color:var(--brand);border-color:var(--brand)}
+  .lv-body{flex:1;min-width:0}
+  .lv-body h4{font-size:15px;font-weight:450;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .lv-tag{font-size:12px;padding:0;font-weight:500}
+  .tag-done{color:var(--ok)}
+  .tag-current{color:var(--brand)}
+  .tag-milestone{color:var(--gold)}
+  .lv-body p{color:var(--txt2);font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lv-arrow{color:var(--lock);font-size:17px;flex-shrink:0}
+
+  /* ===== 关卡详情 ===== */
+  .lesson-head{margin:0 0 30px;padding:0}
+  .lesson-head .crumb{font-size:13px;color:var(--brand);font-weight:500;display:flex;align-items:center;gap:8px}
+  .lesson-head h2{font-size:34px;margin-top:8px;font-weight:700;letter-spacing:-.028em;line-height:1.12}
+  .lesson-head .goal{margin-top:16px;font-size:15px;color:var(--txt2);background:var(--bg2);
+    border-radius:12px;padding:15px 17px;line-height:1.5}
+  .lesson-head .goal b{color:var(--txt)}
+
+  .block{margin-bottom:16px}
+  .block:last-child{margin-bottom:0}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 1px 2px rgba(60,50,30,.025),0 6px 18px rgba(60,50,30,.035)}
+  .sec h4{font-size:12.5px;color:var(--txt2);margin-bottom:14px;display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:.02em}
+  .sec h4::before{content:"";width:16px;height:2px;background:var(--brand);border-radius:2px;flex-shrink:0}
+  .sec p{margin-bottom:11px;font-size:15px;line-height:1.62}.sec p:last-child{margin-bottom:0}
+  .sec ul,.sec ol{margin:8px 0 11px 22px}.sec li{margin-bottom:7px;font-size:15px;line-height:1.55}
+
+  /* 类比/金句/提示卡 */
+  .callout{border-radius:14px;padding:17px 19px;display:flex;gap:13px;align-items:flex-start;background:var(--bg2)}
+  .callout .ci{font-size:19px;flex-shrink:0;line-height:1.45}
+  .callout .ctxt{font-size:15px;line-height:1.56}
+  .callout.analogy{background:#eef5ff}
+  .callout.analogy .ctxt b{color:var(--blue)}
+  .callout.quote{background:#f8f2ff;font-style:italic}
+  .callout.quote .ctxt b{color:var(--purple)}
+  .callout.warn{background:#fff4ec}
+  .callout.warn .ctxt b{color:var(--brand)}
+  .callout.tip{background:#eefaf2}
+  .callout.tip .ctxt b{color:var(--ok)}
+
+  /* 嗨点①·冲击卡——大号数字对比(如"手动3hrs→自动1min") */
+  .impact{padding:28px 32px;text-align:center;border-radius:16px;
+    background:linear-gradient(165deg,var(--bg2),var(--card));border:1px solid var(--line)}
+  .impact .big{font-size:48px;font-weight:800;letter-spacing:-.04em;color:var(--brand)}
+  .impact .big .arrow{color:var(--ok);font-size:36px;margin:0 14px;display:inline-block;transform:translateY(-4px)}
+  .impact .big .after{color:var(--ok)}
+  .impact .sub{font-size:15px;color:var(--txt2);margin-top:8px}
+  @media(max-width:640px){.impact .big{font-size:34px}.impact .big .arrow{font-size:26px;margin:0 8px}}
+
+  /* 嗨点②·钩子——章首甩震撼数据或挑衅问题,勾住学员 */
+  .hook{background:var(--txt);color:#fff;border-radius:16px;padding:26px 30px;margin-bottom:22px}
+  .hook .hq{font-size:22px;font-weight:700;line-height:1.28;letter-spacing:-.025em}
+  .hook .hs{font-size:14px;color:rgba(255,255,255,.62);margin-top:10px;line-height:1.55}
+  @media(max-width:640px){.hook .hq{font-size:18px}}
+
+  /* 嗨点③·金句——关键洞察,大字独行,一眼记住 */
+  .golden{padding:20px 28px;border-left:4px solid var(--brand);background:var(--bg2);border-radius:0 12px 12px 0;margin:4px 0}
+  .golden .gq{font-size:20px;font-weight:650;line-height:1.35;letter-spacing:-.018em;color:var(--txt)}
+  .golden .ga{font-size:13px;color:var(--txt2);margin-top:7px}
+
+  /* 嗨点④·对比卡——Before vs After 左右对照 */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.compare{grid-template-columns:1fr}}
+  .compare .cb{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .compare .cb .cl{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .compare .before .cl{color:#d70015}
+  .compare .after  .cl{color:var(--ok)}
+  .compare .cb .cd{font-size:14.5px;line-height:1.55;color:var(--txt)}
+
+  /* 概念翻卡 */
+  .flips{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:11px}
+  .flip{height:120px;perspective:900px;cursor:pointer}
+  .flip-in{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+  .flip.on .flip-in{transform:rotateY(180deg)}
+  .flip-f,.flip-b{position:absolute;inset:0;backface-visibility:hidden;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--line)}
+  .flip-f{background:var(--bg2);font-weight:500;font-size:15px;flex-direction:column;gap:6px}
+  .flip-f .fe{font-size:23px}
+  .flip-b{background:var(--txt);color:#fff;transform:rotateY(180deg);font-size:12.5px;line-height:1.5}
+
+  /* 实操 */
+  .lab{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg2)}
+  .lab .lab-goal{font-size:15px;margin-bottom:6px;line-height:1.55}
+  .lab-steps{counter-reset:step;margin:16px 0 4px}
+  .lab-steps li{list-style:none;position:relative;padding:9px 0 9px 40px;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.55}
+  .lab-steps li:last-child{border-bottom:none}
+  .lab-steps li img.step-shot{display:block;max-width:100%;width:520px;margin:10px 0 2px;border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+  .lab-steps li .step-shot-cap{font-size:12.5px;color:var(--muted);margin:4px 0 0}
+  .lab-steps li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:9px;
+    width:24px;height:24px;background:var(--txt);color:#fff;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+  .lab-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .btn-open,.btn-dl{display:inline-flex;align-items:center;gap:6px;font-weight:500;padding:10px 18px;
+    border-radius:980px;text-decoration:none;font-size:13.5px}
+  .btn-open{background:var(--brand);color:#fff}.btn-open:hover{opacity:.86}
+  .btn-dl{background:var(--card);color:var(--txt);border:1px solid var(--line)}.btn-dl:hover{background:var(--bg3)}
+  .embed-note{font-size:12px;color:var(--lock);margin-top:12px;line-height:1.5}
+  .ver-note{font-size:12.5px;color:var(--gold);background:var(--bg2);border-radius:10px;padding:9px 13px;margin:12px 0 0;line-height:1.55}
+  .ver-note a{color:var(--brand);font-weight:600}
+  .wf-preview{margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(60,50,30,.04)}
+  .wf-preview img{display:block;width:100%;height:auto}
+
+  /* 选择题 */
+  .quiz .qq{font-weight:500;margin-bottom:13px;font-size:15px;line-height:1.5}
+  .opt{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+    color:var(--txt);padding:13px 16px;border-radius:11px;margin-bottom:8px;font-size:14.5px;transition:.12s}
+  .opt:hover{background:var(--bg2);border-color:var(--lock)}
+  .opt.correct{border-color:var(--ok);background:#eefaf2}
+  .opt.wrong{border-color:#d70015;background:#fff0f0}
+  .opt:disabled{cursor:default}
+  .quiz-fb{font-size:13.5px;margin-top:8px;min-height:18px;line-height:1.5}
+
+  /* 节点排序 */
+  .order-pool,.order-slots{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+  .order-slots{min-height:48px;padding:11px;border:1px dashed var(--line);border-radius:12px;background:var(--bg2)}
+  .node-chip{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 15px;
+    font-size:13.5px;cursor:pointer;transition:.12s;display:inline-flex;align-items:center;gap:7px;user-select:none}
+  .node-chip:hover{border-color:var(--lock)}
+  .node-chip .ni{font-size:15px}
+  .order-slots .node-chip{background:#fff4ec;border-color:var(--brand)}
+  .order-arrow{color:var(--lock);align-self:center;font-size:14px}
+  .order-fb{font-size:13.5px;margin-top:8px;min-height:18px;line-height:1.5}
+
+  /* 填空 */
+  .fill .fq{margin-bottom:12px;font-size:15px;line-height:1.5}
+  .fill-row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+  .fill input{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+    color:#bf4d00;font-family:"SF Mono",ui-monospace,Consolas,monospace;font-size:14px;flex:1;min-width:160px}
+  .fill input:focus{border-color:var(--txt)}
+  .fill input.ok{border-color:var(--ok)}
+  .fill-fb{font-size:13.5px;margin-top:8px;min-height:18px}
+
+  /* 思考题 */
+  .think .tq{font-weight:500;margin-bottom:7px;font-size:15px;line-height:1.5}
+  .think .thint{font-size:13px;color:var(--txt2);margin-bottom:11px;line-height:1.5}
+  .think textarea{width:100%;min-height:90px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:12px;padding:13px;color:var(--txt);font-size:14.5px;resize:vertical;line-height:1.6}
+  .think textarea:focus{border-color:var(--txt)}
+  .think-fb{font-size:13.5px;margin-top:8px;min-height:18px;color:var(--ok)}
+
+  .done-mark{font-size:12px;color:var(--ok);font-weight:600;float:right}
+
+  /* 底部操作 */
+  .lesson-actions{display:flex;gap:12px;margin-top:30px}
+  .lesson-actions button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:500;transition:.2s}
+  .btn-back{background:var(--bg2);color:var(--txt)}.btn-back:hover{background:var(--bg3)}
+  .btn-complete{background:var(--brand);color:#fff}.btn-complete:hover{opacity:.86}
+  .btn-complete:disabled{background:var(--bg3);color:var(--lock);cursor:not-allowed}
+
+  /* 通关弹层 */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px 32px;text-align:center;max-width:340px;animation:fade-up .3s ease;box-shadow:0 16px 50px rgba(0,0,0,.16)}
+  @keyframes fade-up{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
+  .modal-card .big{font-size:50px}
+  #confetti{display:none}
+  .confetti-piece{display:none}
+  .modal-card h3{margin:14px 0 6px;font-size:21px;font-weight:600;letter-spacing:-.01em}
+  .modal-card p{color:var(--txt2);font-size:14.5px;margin-bottom:24px;line-height:1.5}
+
+  /* ===== 结课证书 ===== */
+  .cert{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:70;padding:20px}
+  .cert-card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:44px 38px 36px;text-align:center;max-width:420px;width:100%;box-shadow:0 16px 50px rgba(0,0,0,.14);animation:fade-up .35s ease;position:relative}
+  .cert-card .cert-em{font-size:52px;display:block}
+  .cert-card h2{font-size:25px;margin:16px 0 6px;font-weight:600;letter-spacing:-.02em}
+  .cert-card h3{font-size:16px;color:var(--brand);margin-bottom:10px;font-weight:500}
+  .cert-card .cert-body{color:var(--txt2);font-size:14.5px;line-height:1.75;margin:18px 0 24px}
+  .cert-card .cert-body b{color:var(--txt)}
+  .cert-stats{display:flex;gap:14px;justify-content:center;margin:20px 0 24px}
+  .cert-stat{text-align:center;min-width:72px}
+  .cert-stat .n{font-size:28px;font-weight:600;color:var(--txt)}
+  .cert-stat .l{font-size:11px;color:var(--txt2);margin-top:3px}
+  .btn-cert-close{margin-top:6px;background:var(--brand);color:#fff;font-size:15px;font-weight:500;padding:13px 34px;border-radius:980px}
+  .cert-identity{font-size:18px;color:var(--txt2);margin:2px 0 16px;line-height:1.5}
+  .cert-identity b{font-size:25px;color:var(--brand);font-weight:800;letter-spacing:-.01em}
+  .cert-acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  .btn-cert-share{background:var(--brand);color:#fff;border:none;border-radius:980px;padding:13px 26px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+  .btn-cert-share:hover{opacity:.88}
+  .cert-acts .btn-cert-close{margin-top:0;background:var(--bg2);color:var(--txt)}
+  .btn-cert-close:hover{opacity:.86}
+  .cert-ribbon{display:none}
+
+  @media(max-width:600px){
+    .hero h2{font-size:23px}
+    .lesson-actions{flex-direction:column}
+    .flips{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  }
+  /* ---- 课后作业板块 ---- */
+  .hw-wrap{margin:52px 0 8px}
+  .hw-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
+  .hw-head h3{font-size:25px;font-weight:700;letter-spacing:-.02em;color:var(--txt);margin-top:7px}
+  .hw-head p{color:var(--txt2);margin-top:8px;font-size:15px;line-height:1.65;max-width:660px}
+  .hw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
+  .hw-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;
+    box-shadow:0 1px 2px rgba(60,50,30,.04),0 12px 30px rgba(60,50,30,.06)}
+  .hw-top{display:flex;align-items:center;gap:13px;margin-bottom:15px}
+  .hw-n{width:40px;height:40px;border-radius:11px;background:var(--brand);color:#fff;
+    font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .hw-course{font-size:14px;font-weight:700;color:var(--txt)}
+  .hw-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .hw-n{display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;
+    background:var(--brand);color:#fff;font-weight:700;font-size:17px;flex-shrink:0}
+  .hw-course{font-size:13px;color:var(--txt2);font-weight:500}
+  .hw-title{font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--txt);margin-bottom:15px;line-height:1.35}
+  .hw-tasks{display:flex;flex-direction:column;gap:11px}
+  .hw-task{padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:10px}
+  .hw-t-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .hw-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+  .badge-must{background:var(--brand);color:#fff}
+  .badge-bug{background:#fef0f4;color:#d70015}
+  .badge-design{background:#f0f4ff;color:var(--blue)}
+  .badge-opt{background:var(--bg3);color:var(--txt2)}
+  .hw-t-title{font-size:14px;font-weight:600;color:var(--txt)}
+  .hw-t-desc{font-size:13px;color:var(--txt2);line-height:1.5;margin-top:4px}
+  .hw-t-check{font-size:12px;color:var(--ok);margin-top:6px;line-height:1.45}
+  @media(max-width:720px){ .hw-grid{grid-template-columns:1fr} .hw-card{padding:18px} .hw-title{font-size:16px} .hw-n{width:28px;height:28px;font-size:15px} }
+  /* ---- 课后作业(嵌在成品关末尾) ---- */
+  .hw-block{background:linear-gradient(180deg,#fff,var(--bg2));border:1.5px solid var(--brand);border-radius:18px;padding:24px;margin-top:6px;box-shadow:0 10px 30px rgba(226,89,10,.07)}
+  .hw-block-tag{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--brand);padding:3px 12px;border-radius:99px;margin-bottom:13px}
+  .hw-block h4{font-size:19px;font-weight:700;color:var(--txt);margin-bottom:14px;letter-spacing:-.01em}
+  .hw-block .hw-row{display:flex;gap:10px;margin-top:9px}
+  .hw-block .hw-label{flex-shrink:0;font-size:12px;font-weight:700;color:var(--brand);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 9px;height:fit-content;margin-top:2px}
+  .hw-block .hw-row p{font-size:14.5px;color:var(--txt2);line-height:1.62}
+  .hw-block .hw-why{margin-top:15px;padding-top:13px;border-top:1px dashed var(--line);font-size:13px;color:var(--gold);line-height:1.55}
+  /* ---- 掌握度 + 复习 ---- */
+  .review-banner{margin:24px 0 8px;background:linear-gradient(180deg,#fffdf7,var(--bg2));border:1.5px solid var(--gold);border-radius:18px;padding:20px 22px;box-shadow:0 8px 24px rgba(154,103,0,.08)}
+  .rv-head{font-size:17px;font-weight:700;color:var(--gold)}
+  .rv-sub{font-size:13.5px;color:var(--txt2);margin:6px 0 14px;line-height:1.5}
+  .rv-list{display:flex;flex-wrap:wrap;gap:10px}
+  .rv-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 16px;font-size:14px;font-weight:500;color:var(--txt);cursor:pointer;transition:.15s}
+  .rv-card:hover{border-color:var(--gold);background:var(--bg2)}
+  /* ---- 即时积分反馈 ---- */
+  .xp-counter{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:800;color:var(--gold);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .xp-counter .xp-ic{font-size:14px}
+  .xp-float{position:fixed;pointer-events:none;z-index:200;font-weight:800;font-size:19px;color:var(--brand);text-shadow:0 1px 6px rgba(255,255,255,.85);transform:translateX(-50%);animation:xpUp 1s cubic-bezier(.2,.7,.3,1) forwards}
+  @keyframes xpUp{0%{opacity:0;transform:translate(-50%,2px) scale(.7)}18%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-48px) scale(1)}}
+  .xp-bump{display:inline-block;animation:xpBump .42s ease}
+  @keyframes xpBump{0%,100%{transform:scale(1)}40%{transform:scale(1.3)}}
+  /* ---- 每关末:你现在能做什么 ---- */
+  .can-do{margin:22px 0 4px;background:linear-gradient(180deg,#fff,var(--bg2));border:1px solid var(--line);
+    border-radius:16px;padding:20px 22px;box-shadow:0 1px 2px rgba(60,50,30,.03),0 8px 22px rgba(60,50,30,.05)}
+  .can-do .cd-eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand)}
+  .can-do .cd-text{font-size:17px;font-weight:600;color:var(--txt);margin-top:8px;line-height:1.5;letter-spacing:-.01em}
+  .quiz-fb,.fill-fb{line-height:1.55}
+  /* ---- 免费试听 ---- */
+  .btn-trial{margin-top:14px;width:100%;background:var(--bg);border:1px solid var(--brand);color:var(--brand);
+    font-size:14px;font-weight:600;padding:13px;border-radius:12px;transition:.2s;line-height:1.3}
+  .btn-trial:hover{background:var(--bg2)}
+  .trial-sep{margin-top:24px;font-size:12px;color:var(--lock)}
+  .trial-badge{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--brand);
+    padding:3px 12px;border-radius:99px;margin-bottom:13px;letter-spacing:.03em}
+  .trial-cta{margin:36px 0 20px;background:linear-gradient(180deg,#fff,var(--bg2));border:1px solid var(--brand);
+    border-radius:20px;padding:32px 28px;text-align:center;box-shadow:0 12px 34px rgba(226,89,10,.09)}
+  .trial-cta .tc-h{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--txt)}
+  .trial-cta .tc-p{font-size:15px;color:var(--txt2);margin:12px auto 22px;max-width:480px;line-height:1.62}
+  .trial-cta .btn-continue{margin-top:0}
+</style>
+</head>
+<body>
+
+<!-- ============ 登录 ============ -->
+<section id="view-login">
+  <div class="login-card">
+    <div class="logo"><svg width="58" height="58" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg0" x1="0" y1="0" x2="56" y2="56"><stop offset="0%" stop-color="#ff5d3b"/><stop offset="100%" stop-color="#ffd24a"/></linearGradient></defs><path d="M14 41 Q28 41 28 28 Q28 15 42 15" stroke="url(#lg0)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".5"/><circle cx="14" cy="41" r="5" fill="url(#lg0)"/><circle cx="42" cy="15" r="5" fill="url(#lg0)"/><circle cx="28" cy="28" r="8" fill="url(#lg0)"/><circle cx="28" cy="28" r="3" fill="#fff" opacity=".92"/></svg></div>
+    <h1 id="loginTitle">数字员工养成计划</h1>
+    <div class="sub" id="loginSub">零基础 · 用 AI 工作流重构你的任务</div>
+    <div class="field">
+      <label for="code">班级口令</label>
+      <input id="code" type="text" placeholder="输入老师发给你的口令" autocomplete="off" onkeydown="if(event.key==='Enter')tryLogin()">
+    </div>
+    <button class="btn-primary" onclick="tryLogin()">进入学习</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="trial-sep">还没报名?</div>
+    <button class="btn-trial" onclick="enterTrial()">🎫 免费试听一节 · 看第一个数字员工怎么搭</button>
+    <div class="login-hint">学习进度保存在本浏览器,换设备需重新开始</div>
+  </div>
+</section>
+
+<!-- ============ 主应用 ============ -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand" onclick="renderHome()"><svg width="20" height="20" viewBox="0 0 56 56" fill="none" style="vertical-align:-4px;margin-right:7px"><defs><linearGradient id="lg1" x1="0" y1="0" x2="56" y2="56"><stop offset="0%" stop-color="#ff5d3b"/><stop offset="100%" stop-color="#ffd24a"/></linearGradient></defs><path d="M14 41 Q28 41 28 28 Q28 15 42 15" stroke="url(#lg1)" stroke-width="4.5" stroke-linecap="round" fill="none" opacity=".5"/><circle cx="14" cy="41" r="6" fill="url(#lg1)"/><circle cx="42" cy="15" r="6" fill="url(#lg1)"/><circle cx="28" cy="28" r="9" fill="url(#lg1)"/></svg>数字员工<span>养成计划</span></div>
+      <div class="progress-mini">
+        <div class="bar"><i id="barFill"></i></div>
+        <small id="barText">0 / 0</small>
+      </div>
+      <div class="xp-counter" title="学习积分:答对练习、闯过关都会涨"><span class="xp-ic">⚡</span><span id="xpNum">0</span></div>
+      <button class="btn-ghost" onclick="showHomework()" title="课后作业">📓 作业</button>
+      <button class="btn-ghost" onclick="alert(exportAnswers())" title="导出所有答案">📤 导出</button>
+      <button class="btn-ghost" onclick="logout()">退出</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <section id="view-home"></section>
+    <section id="view-lesson" class="hidden"></section>
+    <section id="view-homework" class="hidden"></section>
+  </div>
+</div>
+
+<!-- 通关撒花 -->
+<div id="confetti"></div>
+
+<!-- 结课证书 -->
+<div id="cert" class="cert hidden"></div>
+
+<!-- 通关弹层 -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="big" id="modalEmoji">🎉</div>
+    <h3 id="modalTitle">通关!</h3>
+    <p id="modalDesc"></p>
+    <button class="btn-primary" id="modalBtn" onclick="closeModal()">继续</button>
+  </div>
+</div>
+
+<script src="course-data.js"></script>
+<script src="homeworks.js"></script>
+<script>
+/* =========================================================
+   引擎 —— 课程数据来自 course-data.js 的 COURSE / CONFIG
+   ========================================================= */
+const LS_AUTH = "dew_auth";
+const LS_PROG = "dew_progress_v1";
+
+const LS_ANSWERS = "dew_answers_v1";
+function getAnswers(){ try{ return JSON.parse(localStorage.getItem(LS_ANSWERS)||"{}"); }catch(e){ return {}; } }
+function saveAnswer(lid, bi, type, val, correct){
+  var a = getAnswers();
+  if (!a[lid]) a[lid] = {};
+  a[lid][bi] = {t: type, v: val, c: !!correct, ts: Date.now()};
+  try { localStorage.setItem(LS_ANSWERS, JSON.stringify(a)); } catch(e) { console.warn("answer storage full"); }
+}
+function exportAnswers(){
+  var a = getAnswers(), out = [];
+  for (var lid in a) {
+    for (var bi in a[lid]) {
+      var r = a[lid][bi];
+      var ls = FLAT.find(function(l){ return l.id === lid; });
+      out.push({
+        lesson: lid,
+        title: ls ? ls.title : "",
+        block: parseInt(bi),
+        type: r.t,
+        value: r.v,
+        correct: r.c,
+        ts: new Date(r.ts).toISOString()
+      });
+    }
+  }
+  out.sort(function(x, y){ return y.ts.localeCompare(x.ts); });
+  var json = JSON.stringify(out, null, 2);
+  var blob = new Blob([json], {type: "application/json"});
+  var aEl = document.createElement("a");
+  aEl.href = URL.createObjectURL(blob);
+  aEl.download = "n8n-answers-" + new Date().toISOString().slice(0, 10) + ".json";
+  aEl.click();
+  URL.revokeObjectURL(aEl.href);
+  return out.length + " answers exported as JSON";
+}
+function markReviewSolved(){
+  // 回看已通关的关:把所有练习显示成"已解答正确"的样子,避免点不动/卡死(回看bug修复)
+  if(!CUR || !CUR.blocks) return;
+  CUR.blocks.forEach(function(b,i){
+    if(!ANSWERABLE.has(b.type)) return;
+    answered[i] = true;
+    var dm = document.getElementById("dm-"+i);
+    if(dm) dm.classList.remove("hidden");
+    if(b.type==="quiz"){
+      (b.opts||[]).forEach(function(_,k){
+        var displayIdx = quizOrder[i] ? quizOrder[i].indexOf(k) : k;
+        var o=document.getElementById("opt-"+i+"-"+(displayIdx>=0?displayIdx:k));
+        if(o){ o.disabled=true; if(k===b.answer) o.classList.add("correct"); }
+      });
+      var qfb=document.getElementById("fb-"+i);
+      if(qfb){ qfb.style.color="var(--ok)"; qfb.textContent="✓ "+(b.fb||"答对了!"); }
+    } else if(b.type==="order"){
+      orderState[i] = (b.nodes||[]).map(function(n,k){ return k; });
+      renderOrder(i,b);
+      document.querySelectorAll("#slots-"+i+" .node-chip").forEach(function(c){ c.style.cursor="default"; });
+      var ofb=document.getElementById("fb-"+i);
+      if(ofb){ ofb.style.color="var(--ok)"; ofb.textContent="✓ "+(b.fb||"顺序正确!"); }
+    } else if(b.type==="fill"){
+      var fi=document.getElementById("fill-"+i);
+      if(fi){ if(!fi.value && b.answers && b.answers[0]) fi.value=b.answers[0]; fi.disabled=true; fi.classList.add("ok"); }
+      var ffb=document.getElementById("fb-"+i);
+      if(ffb){ ffb.style.color="var(--ok)"; ffb.textContent="✓ "+(b.fb||"正确!"); }
+    }
+  });
+}
+function restoreAnswers(lid){
+  var a = getAnswers();
+  if (!a[lid]) return;
+  var saved = a[lid];
+  for (var bi in saved) {
+    var r = saved[bi];
+    var i = parseInt(bi);
+    if (r.t === "think") {
+      var ta = document.getElementById("think-" + i);
+      if (ta) ta.value = r.v;
+    } else if (r.t === "fill") {
+      var fi = document.getElementById("fill-" + i);
+      if (fi) fi.value = r.v;
+    }
+    if (r.c && ANSWERABLE.has(CUR.blocks[i] ? CUR.blocks[i].type : "")) {
+      answered[i] = true;
+      var dm = document.getElementById("dm-" + i);
+      if (dm) dm.classList.remove("hidden");
+    }
+  }
+}
+   // 存已通关 lesson id 的数组
+
+// 扁平化所有关卡(按章节顺序),用于线性解锁
+const WF_IMG = {"01_定时消息推送.json":"assets/wf01.png","02_AI智能写作助手.json":"assets/wf02.png","03_文档内容自动生产线.json":"assets/wf03.png","04_信息监控每日简报.json":"assets/wf04.png","05_发票表单信息提取.json":"assets/wf05.png"};
+const FLAT = [];
+COURSE.chapters.forEach((ch, ci) => ch.lessons.forEach((ls, li) => {
+  FLAT.push({...ls, _ch: ch, _ci: ci, _li: li});
+}));
+const FLAT_IDS = FLAT.map(l => l.id);
+
+function getDone(){ try{ return new Set(JSON.parse(localStorage.getItem(LS_PROG)||"[]")); }catch(e){ return new Set(); } }
+function saveDone(set){ localStorage.setItem(LS_PROG, JSON.stringify([...set])); }
+function isDone(id){ return getDone().has(id); }
+function isUnlocked(id){
+  const i = FLAT_IDS.indexOf(id);
+  if(CONFIG.unlockMode === "manual"){     // 老师手动控制:开放到第 openUpTo 关
+    return i < (CONFIG.openUpTo || 1);
+  }
+  if(i <= 0) return true;                 // 自动模式:第一关恒解锁
+  return getDone().has(FLAT_IDS[i-1]);    // 自动模式:前一关通关即解锁
+}
+function markDone(id){ const s = getDone(); s.add(id); saveDone(s); }
+
+/* ---------- 掌握度 + 间隔重复复习(借鉴 Khan 掌握度 + FSRS 思路) ---------- */
+const LS_MAST = "dew_mastery_v1";   // {关id:{m:掌握度0-3, due:下次复习ms, iv:间隔档}}
+const REVIEW_DAYS = [1,3,7,15];      // 复习间隔:首次1天,答对逐档延长
+function getMast(){ try{ return JSON.parse(localStorage.getItem(LS_MAST)||"{}"); }catch(e){ return {}; } }
+function saveMast(m){ localStorage.setItem(LS_MAST, JSON.stringify(m)); }
+function masteryOf(id){ const r=getMast()[id]; return r?r.m:0; }   // 0尝试 1熟悉 2熟练 3掌握
+function bumpMastery(id, correct){
+  const all=getMast(), cur=all[id]||{m:0,iv:0,due:0};
+  if(correct){ cur.m=Math.min(3,cur.m+1); cur.iv=Math.min(REVIEW_DAYS.length-1,cur.iv+1); }
+  else { cur.iv=0; }   // 答错:间隔重置(更早再复习),掌握度不降(温和)
+  cur.due = Date.now() + REVIEW_DAYS[cur.iv]*86400000;
+  all[id]=cur; saveMast(all);
+}
+function dueReviews(){
+  const all=getMast(), now=Date.now();
+  return FLAT.filter(l=>l.milestone && isDone(l.id) && all[l.id] && all[l.id].m<3 && all[l.id].due<=now);
+}
+
+/* ---------- 学习积分(即时反馈,来自顶级课的"把反馈延迟压到接近0") ---------- */
+const LS_XP = "dew_xp_v1";
+function getXP(){ return parseInt(localStorage.getItem(LS_XP)||"0",10)||0; }
+function renderXP(){ const el=document.getElementById("xpNum"); if(el) el.textContent=getXP(); }
+var _combo = 0;
+function resetCombo(){ _combo = 0; }
+function awardXP(amount, anchor, isCorrect){
+  let combo = 0, bonus = 0;
+  if(isCorrect){ _combo++; combo = _combo; bonus = combo>=2 ? (combo-1)*5 : 0; }  // 连对越多,额外加分越多
+  const gain = amount + bonus;
+  const cur=getXP(), next=cur+gain;
+  localStorage.setItem(LS_XP, next);
+  if(anchor){
+    try{ const r=anchor.getBoundingClientRect();
+      const f=document.createElement("div"); f.className="xp-float"; f.textContent="+"+gain;
+      f.style.left=(r.left + r.width/2)+"px"; f.style.top=(r.top - 4)+"px";
+      document.body.appendChild(f); setTimeout(()=>f.remove(),1000);
+      if(combo>=2){   // 连对≥2 额外飘一个"🔥连对×N",制造"别断了"的冲动
+        const cf=document.createElement("div"); cf.className="combo-float"; cf.textContent="🔥 连对 ×"+combo;
+        cf.style.left=(r.left + r.width/2)+"px"; cf.style.top=(r.top - 32)+"px";
+        document.body.appendChild(cf); setTimeout(()=>cf.remove(),1300);
+      }
+    }catch(e){}
+  }
+  const el=document.getElementById("xpNum");
+  if(el){ el.classList.remove("xp-bump"); void el.offsetWidth; el.classList.add("xp-bump");
+    const t0=performance.now(), dur=480;
+    (function step(t){ const p=Math.min(1,(t-t0)/dur); el.textContent=Math.round(cur+(next-cur)*p); if(p<1)requestAnimationFrame(step); })(performance.now());
+  }
+}
+
+/* ---------- 登录 ---------- */
+function tryLogin(){
+  const code = document.getElementById("code").value.trim();
+  const err = document.getElementById("loginErr");
+  if(!code){ err.textContent = "请输入班级口令"; return; }
+  if(CONFIG.classCodes.includes(code)){
+    localStorage.setItem(LS_AUTH, "1"); err.textContent = ""; enterApp();
+  } else { err.textContent = "口令不对,问问老师?"; }
+}
+function logout(){ localStorage.removeItem(LS_AUTH); location.reload(); }
+function enterApp(){
+  document.getElementById("view-login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  renderHome();
+}
+
+/* ---------- 免费试听(公开课用,无需口令) ---------- */
+function enterTrial(){
+  window.scrollTo(0,0);
+  if(typeof TRIAL === "undefined") return;
+  document.getElementById("view-login").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("view-lesson").classList.add("hidden");
+  const home = document.getElementById("view-home");
+  home.classList.remove("hidden");
+  let html = `<div class="hero"><div class="hero-main"><div class="trial-badge">免费试听</div><h2>${TRIAL.title}</h2><p>${TRIAL.intro}</p></div></div>`;
+  TRIAL.blocks.forEach((b,i)=>{ html += `<div class="block">${renderBlock(b, i)}</div>`; });
+  html += `<div class="trial-cta">
+    <div class="tc-h">想亲手搭出全部 6 个数字员工?</div>
+    <div class="tc-p">正式课 6 次课,带你从零搭出自动写作、自动简报、信息提取、还有会思考的 AI 助理。学完,你就有了"把任何重复活交给 AI"的底层能力。</div>
+    <button class="btn-continue" onclick="alert('报名正式课:联系老师(微信 / 二维码,由老师填)🎓')">🎓 报名正式课 →</button>
+    <div style="margin-top:14px"><button class="btn-ghost" onclick="logout()">← 返回登录</button></div>
+  </div>`;
+  home.innerHTML = html;
+  document.getElementById("barText").textContent = "试听中";
+}
+
+/* ---------- 首页:章节 + 关卡 ---------- */
+function renderHome(){
+  window.scrollTo(0,0);
+  document.getElementById("view-lesson").classList.add("hidden");
+  const home = document.getElementById("view-home");
+  home.classList.remove("hidden");
+  const totalDone = getDone().size;
+  const milestones = COURSE.chapters.reduce((a,c)=>a+c.lessons.filter(l=>l.milestone).length,0);
+  const milestonesDone = [...FLAT].filter(l=>l.milestone && isDone(l.id)).length;
+  const pct = FLAT.length ? Math.round(totalDone/FLAT.length*100) : 0;
+  const ringR = 30, ringC = 2*Math.PI*ringR, ringOff = ringC * (1-pct/100);
+  const nextLesson = FLAT.find(l => isUnlocked(l.id) && !isDone(l.id));
+  let html = `<div class="hero">
+    <div class="hero-main"><h2>${COURSE.title}</h2><p>${COURSE.intro}</p>${nextLesson ? `<button class="btn-continue" onclick="openLesson('${nextLesson.id}')">▸ ${totalDone>0?'继续学习':'开始第一关'}</button>` : '<div class="all-done">🎓 全部学完,你出师了!</div>'}</div>
+    <div class="hero-visual"><img src="assets/wf02.png" alt="AI 写作工作流示意"></div>
+    <div class="hero-visual"><img src="assets/n8n-hero.png" alt="n8n工作流仪表盘——你的数字工厂" /></div>
+  </div>
+  <div class="oc-banner"><a href="open-class.html" target="_blank">🎓 还犹豫要不要上车？先来听 <b>1 小时免费公开课</b>——零代码搭出第一个数字员工 →</a></div>`;
+  const _due = dueReviews();
+  if(_due.length){
+    html += `<div class="review-banner"><div class="rv-head">📅 该复习了 · ${_due.length} 关</div>
+      <div class="rv-sub">隔几天回头练一遍,才能真记住(不是学完就忘)。挑一个重做:</div>
+      <div class="rv-list">${_due.map(l=>`<button class="rv-card" onclick="openLesson('${l.id}')">🔁 ${l.title}</button>`).join("")}</div></div>`;
+  }
+  COURSE.chapters.forEach(ch => {
+    const total = ch.lessons.length;
+    const done = ch.lessons.filter(l => isDone(l.id)).length;
+    html += `<div class="chapter"><div class="ch-head"><div class="ic">${ch.icon}</div>
+      <h3>${ch.title}</h3><div class="ch-prog">${done}/${total}</div></div><div class="levels">`;
+    ch.lessons.forEach(ls => {
+      const un = isUnlocked(ls.id), dn = isDone(ls.id), cur = un && !dn;
+      const mst = masteryOf(ls.id);
+      const badge = dn ? (ls.milestone ? (mst>=3?"●":mst>=2?"◐":"○") : "✓") : "";
+      let tag = '<span class="lv-tag" style="color:var(--lock)">未解锁</span>';
+      if(dn) tag = '<span class="lv-tag tag-done">已通关</span>';
+      else if(cur) tag = '<span class="lv-tag tag-current">进行中</span>';
+      let mtag = ls.milestone ? '<span class="lv-tag tag-milestone">里程碑</span>' : '';
+      html += `<div class="level ${un?'unlocked':'locked'} ${dn?'done':''} ${cur?'current':''}" ${un?`onclick="openLesson('${ls.id}')"`:''}>
+        <div class="lv-badge">${badge}</div>
+        <div class="lv-body"><h4>${ls.title} ${tag} ${mtag}</h4><p>${ls.subtitle||''}</p></div>
+        <div class="lv-arrow">${un?'›':''}</div></div>`;
+    });
+    // 每章末尾加作业入口
+    html += `<div style="text-align:center;padding:6px 0 18px"><a href="javascript:void(0)" onclick="showHomework()" style="font-size:13px;color:var(--brand,#e2590a);text-decoration:none;font-weight:500">📓 查看本章课后作业 →</a></div>`;
+    html += `</div></div>`;
+  });
+  home.innerHTML = html;
+  updateBar();
+}
+function showHomework(){
+  var vh = document.getElementById("view-home");
+  var vl = document.getElementById("view-lesson");
+  var vw = document.getElementById("view-homework");
+  if (vh) vh.classList.add("hidden");
+  if (vl) vl.classList.add("hidden");
+  vw.classList.remove("hidden");
+  vw.innerHTML = '<div style="max-width:880px;margin:0 auto;padding:8px 16px 60px"><button class="btn-back" onclick="backHome()" style="margin-bottom:18px">← 返回课程</button>' + renderHomework() + '</div>';
+  window.scrollTo(0, 0);
+}
+function backHome(){
+  var vw = document.getElementById("view-homework");
+  if (vw) { vw.classList.add("hidden"); vw.innerHTML = ""; }
+  renderHome();
+}
+function renderHomework(){
+  if(typeof HOMEWORKS === "undefined" || !HOMEWORKS.length) return "";
+  const typeLabels = {must:"必做", findBug:"找茬", optional:"选做", design:"设计"};
+  function taskHtml(t){
+    const badge = typeLabels[t.type]||t.type;
+    const cls = t.type==='must'?'badge-must':t.type==='findBug'?'badge-bug':t.type==='design'?'badge-design':'badge-opt';
+    return `<div class="hw-task">
+      <div class="hw-t-head"><span class="hw-badge ${cls}">${badge}</span><span class="hw-t-title">${t.title}</span></div>
+      <p class="hw-t-desc">${t.desc}</p>
+      ${t.check?`<div class="hw-t-check">✅ 过关标准: ${t.check}</div>`:''}
+    </div>`;
+  }
+  return `<div class="hw-wrap">
+    <div class="hw-head"><div class="hw-eyebrow">课后作业</div><h3>6 次课 · 每周二/三上完课,回来交作业</h3>
+      <p>每次课后照着搭一遍,但要<b>迁移到你自己的真实场景</b>——把别人的例子换成你自己的活,才算真学会。</p></div>
+    <div class="hw-grid">${HOMEWORKS.map(h=>`
+      <div class="hw-card">
+        <div class="hw-top"><span class="hw-n">${h.week}</span><span class="hw-course">${h.date}</span></div>
+        <h4 class="hw-title">${h.title}</h4>
+        <div class="hw-tasks">${h.tasks.map(taskHtml).join("")}</div>
+      </div>`).join("")}</div>
+  </div>`;
+}
+function updateBar(){
+  const total = FLAT.length, done = getDone().size;
+  document.getElementById("barFill").style.width = (total?done/total*100:0) + "%";
+  document.getElementById("barText").textContent = `${done} / ${total}`;
+  renderXP();
+}
+
+/* ---------- 关卡详情 ---------- */
+let CUR = null;          // 当前关 flat 对象
+let answered = {};       // {blockIdx:true} 作答型 block 是否完成
+
+const ANSWERABLE = new Set(["quiz","order","fill","think"]);
+var _msCount = 0;
+
+function openLesson(id){
+  window.scrollTo(0,0);
+  CUR = FLAT.find(l => l.id === id);
+  answered = {};
+  // 已完成关卡回看时全部展开,避免卡在第一步
+  _visUpTo = isDone(id) ? (CUR.blocks ? CUR.blocks.length : 99) : 1;
+  document.getElementById("view-home").classList.add("hidden");
+  const v = document.getElementById("view-lesson");
+  v.classList.remove("hidden");
+  const chTitle = CUR._ch.title;
+  _msCount = 0;
+  let html = `<div class="lesson-head">
+    <div class="crumb">${chTitle}</div>
+    <h2>${CUR.title}</h2>
+    ${CUR.goal?`<div class="goal">🎯 <b>这一关你会</b>：${CUR.goal}</div>`:''}</div>`;
+  CUR.blocks.forEach((b, i) => {
+    const hidden = i >= _visUpTo ? ' stepped' : '';
+    html += `<div class="block${hidden}" id="blk-${i}">${renderBlock(b, i)}${i < CUR.blocks.length-1 ? `<div class="step-btn"><button class="btn-step" id="step-${i}" onclick="stepNext(${i+1})">继续 ▸</button></div>` : ''}</div>`;
+  });
+  if(CUR.canDo) html += `<div class="can-do stepped" id="blk-cando"><div class="cd-eyebrow">✦ 学完这一关,你现在能</div><div class="cd-text">${CUR.canDo}</div></div>`;
+  html += `<div class="lesson-actions stepped" id="blk-actions">
+    <button class="btn-back" onclick="renderHome()">← 返回</button>
+    <button class="btn-complete" id="completeBtn" disabled onclick="completeLesson()">全部完成,点此通关</button>
+  </div>`;
+  v.innerHTML = html;
+  // 渲染后初始化交互
+  CUR.blocks.forEach((b,i)=>{ if(b.type==='order') initOrder(i, b); });
+  restoreAnswers(CUR.id);
+  if(isDone(id)) markReviewSolved();
+  updateStepState();
+}
+
+/* ---------- 步进式讲解(治"全铺上去"——一次只露一块) ---------- */
+var _visUpTo = 1;
+var quizOrder = {};   // quiz选项洗牌映射,防答案全在B
+function stepNext(n){
+  _visUpTo = Math.max(_visUpTo, n + 1);
+  // 露出下一块
+  for(let i = n; i < Math.min(_visUpTo, CUR.blocks.length); i++){
+    const el = document.getElementById(`blk-${i}`); if(el) el.classList.remove("stepped");
+  }
+  // 当前块的"继续"按钮隐藏
+  const prevBtn = document.getElementById(`step-${n-1}`); if(prevBtn) prevBtn.style.display = "none";
+  document.getElementById(`blk-${n}`)?.scrollIntoView({behavior:"smooth",block:"center"});
+  updateStepState();
+  // 如果新露出的块是练习类,预初始化
+  const b = CUR.blocks[n]; if(b && b.type==='order'){ initOrder(n, b); }
+}
+function updateStepState(){
+  const total = CUR.blocks.length;
+  const allShown = _visUpTo >= total;
+  // 更新步进按钮状态
+  CUR.blocks.forEach((b,i)=>{
+    const vis = i < _visUpTo;
+    if(!vis) return;
+    const btn = document.getElementById(`step-${i}`);
+    if(btn){
+      // 隐藏"继续"按钮:①全露完了 ②当前块本身就是练习(靠答对自动推,不可点跳过)
+      if(allShown) btn.style.display = "none";
+      else if(ANSWERABLE.has(b.type)) btn.style.display = "none";
+    }
+  });
+  // 全部露出→显示能力卡+通关按钮
+  if(allShown){
+    const cd = document.getElementById("blk-cando"); if(cd) cd.classList.remove("stepped");
+    const act = document.getElementById("blk-actions"); if(act) act.classList.remove("stepped");
+    const btn = document.getElementById("completeBtn");
+    if(btn){
+      const need = CUR.blocks.filter(b => ANSWERABLE.has(b.type)).length;
+      const allDone = need === 0 || need === [...Array(CUR.blocks.length).keys()].filter(i=>answered[i]).length;
+      const wasDisabled = btn.disabled;
+      btn.disabled = !allDone;
+      btn.textContent = allDone ? "🎉 全部完成,点此通关" : `完成全部 ${need} 个练习即可通关`;
+      if(allDone && wasDisabled){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 答完最后一题:自动滚到通关键+脉冲,治"没注意到能通关了"
+    }
+  }
+}
+
+function renderBlock(b, i){
+  switch(b.type){
+    case "text": return `<div class="sec">${b.h?`<h4>${b.h}</h4>`:''}${b.html}</div>`;
+    case "callout": {
+      const m = {analogy:["🧠","analogy"],quote:["💬","quote"],warn:["⚠️","warn"],tip:["💡","tip"]}[b.variant||"tip"];
+      return `<div class="callout ${m[1]}"><div class="ci">${m[0]}</div><div class="ctxt">${b.html}</div></div>`;
+    }
+    case "flip": {
+      let cards = b.cards.map(c=>`<div class="flip" onclick="this.classList.toggle('on')">
+        <div class="flip-in"><div class="flip-f"><div class="fe">${c.emoji||'🔖'}</div>${c.front}</div>
+        <div class="flip-b">${c.back}</div></div></div>`).join("");
+      return `<div class="sec"><h4>${b.h||'点开卡片记概念'}</h4><div class="flips">${cards}</div></div>`;
+    }
+    case "lab": {
+      const steps = b.steps.map(s=>`<li>${s}</li>`).join("");
+      const wfImg = b.workflow && WF_IMG[b.workflow];
+      const shot = wfImg ? `<div class="wf-preview"><img src="${wfImg}" alt="工作流画布预览" loading="lazy" /></div>` : '';
+      return `<div class="sec"><h4>动手实操${b.milestone?'（里程碑成品）':''}</h4>
+        <div class="lab"><div class="lab-goal">${b.desc}</div>
+        ${shot}
+        <ol class="lab-steps">${steps}</ol>
+        <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
+    }
+    case "quiz": {
+      var order = b.opts.map(function(_,k){ return k; });
+      for(var kk=order.length-1;kk>0;kk--){ var jj=(kk*7+3)%(kk+1); var tt=order[kk]; order[kk]=order[jj]; order[jj]=tt; }
+      quizOrder[i] = order;
+      var opts = order.map(function(origIdx,displayIdx){
+        var o=b.opts[origIdx];
+        return '<button class="opt" id="opt-'+i+'-'+displayIdx+'" onclick="answerQuiz('+i+','+displayIdx+')" data-opt="'+origIdx+'">'+o+'</button>';
+      }).join("");
+      return `<div class="sec quiz"><h4>${b.tag||'小测'} <span class="done-mark hidden" id="dm-${i}">✓ 已答对</span></h4>
+        <div class="qq">${b.q}</div>${opts}<div class="quiz-fb" id="fb-${i}"></div></div>`;
+    }
+    case "fill": {
+      return `<div class="sec fill"><h4>填空练习 <span class="done-mark hidden" id="dm-${i}">✓ 已完成</span></h4>
+        <div class="fq">${b.q}</div>
+        <div class="fill-row"><input id="fill-${i}" placeholder="${b.placeholder||'在这里输入'}" onkeydown="if(event.key==='Enter')checkFill(${i})">
+        <button class="btn-dl" onclick="checkFill(${i})">检查</button></div>
+        <div class="fill-fb" id="fb-${i}"></div></div>`;
+    }
+    case "order": {
+      const answerNodes = b.nodes.map((n,k)=>`<span class="ni">${n.emoji||'🔹'}</span>${n.name}`).join(' → ');
+      return `<div class="sec"><h4>把工作流的节点排成正确顺序 <span class="done-mark hidden" id="dm-${i}">✓ 已答对</span></h4>
+        <p style="font-size:13.5px;color:var(--txt2)">${b.q||'点击下方节点,按数据流动的先后顺序依次放入。点错了再点一下取出。'}</p>
+        <div class="order-slots" id="slots-${i}"></div>
+        <div class="order-pool" id="pool-${i}"></div>
+        <div class="order-fb" id="fb-${i}"></div>
+        <button class="btn-hint" id="hint-${i}" onclick="showOrderHint(${i})" style="margin-top:8px;font-size:12px;background:none;border:1px dashed var(--line,#ccc);color:var(--txt2,#888);cursor:pointer;padding:4px 12px;border-radius:6px;font-family:inherit">💡 实在排不出?点我看答案</button>
+        <div class="order-hint hidden" id="hintbox-${i}" style="margin-top:6px;font-size:13px;color:var(--ok,#1d8a4e);background:var(--bg2,#f5f5f0);padding:8px 12px;border-radius:6px">✅ 正确顺序：${answerNodes}</div></div>`;
+    }
+    case "think": {
+      return `<div class="sec think"><h4>${b.tag||'思考题'} <span class="done-mark hidden" id="dm-${i}">✓ 已记录</span></h4>
+        <div class="tq">${b.q}</div>${b.hint?`<div class="thint">${b.hint}</div>`:''}
+        <textarea id="think-${i}" placeholder="写下你的想法（至少 ${b.min||10} 字）…" oninput="checkThink(${i})"></textarea>
+        <div class="think-fb" id="fb-${i}"></div></div>`;
+    }
+    case "impact": return `<div class="impact"><div class="big">${b.before} <span class="arrow">→</span> <span class="after">${b.after}</span></div><div class="sub">${b.text}</div></div>`;
+    case "hook": return `<div class="hook"><div class="hq">${b.q}</div>${b.sub?`<div class="hs">${b.sub}</div>`:''}</div>`;
+    case "golden": return `<div class="golden"><div class="gq">${b.q}</div>${b.author?`<div class="ga">—— ${b.author}</div>`:''}</div>`;
+    case "compare": {
+      const bf=b.before.map(x=>`<li>${x}</li>`).join("");
+      const af=b.after.map(x=>`<li>${x}</li>`).join("");
+      return `<div class="sec"><h4>${b.h||'从前 vs 现在'}</h4><div class="compare">
+        <div class="cb before"><div class="cl">❌ ${b.beforeLabel||'从前'}</div><div class="cd"><ul>${bf}</ul></div></div>
+        <div class="cb after"><div class="cl">✅ ${b.afterLabel||'现在'}</div><div class="cd"><ul>${af}</ul></div></div>
+      </div></div>`;
+    }
+    case "homework": return `<div class="hw-block">
+      <div class="hw-block-tag">📝 课后作业${b.from?` · ${b.from}`:''}</div>
+      <h4>${b.title}</h4>
+      <div class="hw-row"><span class="hw-label">要做</span><p>${b.task}</p></div>
+      <div class="hw-row"><span class="hw-label">算完成</span><p>${b.accept}</p></div>
+      <div class="hw-row"><span class="hw-label">交什么</span><p>${b.submit}</p></div>
+      ${b.why?`<div class="hw-why">💡 为什么做这个：${b.why}</div>`:''}</div>`;
+    default: return '';
+  }
+}
+
+/* ---- 选择题 ---- */
+function answerQuiz(i, oi){
+  if(answered[i]) return;
+  const b = CUR.blocks[i];
+  const btn = document.getElementById(`opt-${i}-${oi}`);
+  const fb = document.getElementById(`fb-${i}`);
+  if((quizOrder[i]?quizOrder[i][oi]:oi) === b.answer){
+    btn.classList.add("correct"); fb.style.color="var(--ok)"; fb.textContent = "✓ " + (b.fb||"答对了!");
+    answered[i] = true;
+    saveAnswer(CUR.id, i, "quiz", b.opts[oi], true);
+    b.opts.forEach((_,k)=>document.getElementById(`opt-${i}-${k}`).disabled=true);
+    document.getElementById(`dm-${i}`).classList.remove("hidden");
+    awardXP(b.xp||10, btn, true);
+    autoStepNext(i);
+    checkComplete();
+  } else {
+    btn.classList.add("wrong"); fb.style.color="var(--brand)"; resetCombo();
+    // 答错给"为什么错"诊断(顶级课核心):优先用该选项专属解释,没有则回退通用提示
+    fb.textContent = (b.whys && b.whys[oi]) || b.wrongFb || "再想想,换一个试试";
+    btn.disabled = true;
+    setTimeout(()=>btn.classList.remove("wrong"), 700);
+  }
+}
+
+/* ---- 填空 ---- */
+function checkFill(i){
+  if(answered[i]) return;
+  const b = CUR.blocks[i];
+  const val = (document.getElementById(`fill-${i}`).value||"").trim();
+  const fb = document.getElementById(`fb-${i}`);
+  const norm = s => s.replace(/\s+/g,'').toLowerCase();
+  const ok = b.answers.some(a => norm(a) === norm(val));
+  if(ok){
+    saveAnswer(CUR.id, i, "fill", val, true);
+    document.getElementById(`fill-${i}`).classList.add("ok");
+    document.getElementById(`fill-${i}`).disabled = true;
+    fb.style.color="var(--ok)"; fb.textContent = "✓ " + (b.fb||"正确!");
+    answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
+    awardXP(b.xp||10, document.getElementById(`fill-${i}`), true);
+    autoStepNext(i);
+    checkComplete();
+  } else {
+    resetCombo();
+    fb.style.color="var(--brand)"; fb.textContent = b.hintFb||"还不对,提示:" + (b.hint||"注意格式");
+  }
+}
+
+/* ---- 节点排序 ---- */
+function initOrder(i, b){
+  const pool = document.getElementById(`pool-${i}`);
+  // 打乱顺序展示
+  const order = b.nodes.map((n,idx)=>idx);
+  for(let k=order.length-1;k>0;k--){ const j=(k*7+3)%(k+1); [order[k],order[j]]=[order[j],order[k]]; }
+  orderShuffle[i] = order;   // 记住打乱顺序,重绘待选区时保持,否则会泄露正确答案
+  pool.innerHTML = order.map(idx=>`<div class="node-chip" data-idx="${idx}" onclick="pickNode(${i},${idx})">
+    <span class="ni">${b.nodes[idx].emoji||'🔹'}</span>${b.nodes[idx].name}</div>`).join("");
+  orderState[i] = [];
+}
+function showOrderHint(i){
+  document.getElementById(`hint-${i}`).classList.add("hidden");
+  document.getElementById(`hintbox-${i}`).classList.remove("hidden");
+}
+let orderState = {}, orderShuffle = {};
+function pickNode(i, idx){
+  if(answered[i]) return;
+  const b = CUR.blocks[i];
+  const pool = document.getElementById(`pool-${i}`);
+  const slots = document.getElementById(`slots-${i}`);
+  const inSlot = orderState[i].includes(idx);
+  if(inSlot){
+    orderState[i] = orderState[i].filter(x=>x!==idx);
+  } else {
+    orderState[i].push(idx);
+  }
+  // 重绘
+  renderOrder(i, b);
+  // 检查
+  if(orderState[i].length === b.nodes.length){
+    const fb = document.getElementById(`fb-${i}`);
+    const correct = orderState[i].every((v,k)=>v===k);
+    if(correct){
+      fb.style.color="var(--ok)"; fb.textContent="✓ "+(b.fb||"顺序正确!数据就是这样一棒接一棒往下传的。");
+      answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
+      saveAnswer(CUR.id, i, "order", b.nodes.map(n=>n.name).join(" → "), true);
+      document.querySelectorAll(`#slots-${i} .node-chip`).forEach(c=>c.style.cursor="default");
+      awardXP(b.xp||15, slots, true);
+      autoStepNext(i);
+      checkComplete();
+    } else {
+      resetCombo();
+      fb.style.color="var(--brand)"; fb.textContent="顺序不对,想想数据从哪开始、到哪结束。再点一下取出调整。";
+    }
+  } else {
+    document.getElementById(`fb-${i}`).textContent="";
+  }
+}
+function renderOrder(i, b){
+  const pool = document.getElementById(`pool-${i}`);
+  const slots = document.getElementById(`slots-${i}`);
+  slots.innerHTML = orderState[i].map((idx,k)=>`${k>0?'<span class="order-arrow">→</span>':''}<div class="node-chip" data-idx="${idx}" onclick="pickNode(${i},${idx})"><span class="ni">${b.nodes[idx].emoji||'🔹'}</span>${b.nodes[idx].name}</div>`).join("");
+  const used = new Set(orderState[i]);
+  const seq = orderShuffle[i] || b.nodes.map((n,idx)=>idx);   // 保持初始打乱顺序,不按正确答案顺序重排
+  pool.innerHTML = seq.filter(idx=>!used.has(idx))
+    .map(idx=>`<div class="node-chip" data-idx="${idx}" onclick="pickNode(${i},${idx})"><span class="ni">${b.nodes[idx].emoji||'🔹'}</span>${b.nodes[idx].name}</div>`).join("");
+}
+
+/* ---- 思考题 ---- */
+function checkThink(i){
+  const b = CUR.blocks[i];
+  const val = (document.getElementById(`think-${i}`).value||"").trim();
+  if (val) saveAnswer(CUR.id, i, "think", val, val.length >= (b.min || 10));
+  const fb = document.getElementById(`fb-${i}`);
+  if(val.length >= (b.min||10)){
+    if(!answered[i]){ answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
+      fb.textContent = b.fb||"✓ 想法已记录,带着它去学下面的内容。";
+      awardXP(b.xp||10, document.getElementById(`think-${i}`), true);
+      autoStepNext(i);
+      checkComplete(); }
+  } else {
+    if(answered[i]){ answered[i]=false; document.getElementById(`dm-${i}`).classList.add("hidden"); checkComplete(); }
+    fb.textContent="";
+  }
+}
+
+/* ---- 通关判定 ---- */
+function autoStepNext(i){
+  // 答对自动露出下一块(让练习→概念平滑过渡,不用手动点"继续")
+  const next = i + 1;
+  if(next < CUR.blocks.length && next >= _visUpTo){
+    stepNext(next);
+  }
+  updateStepState();
+}
+function checkComplete(){
+  const need = CUR.blocks.map((b,i)=>ANSWERABLE.has(b.type)?i:-1).filter(i=>i>=0);
+  const allDone = need.every(i=>answered[i]);
+  const allShown = _visUpTo >= CUR.blocks.length;
+  // 步进模式下,全露出 + 全做完才亮通关按钮
+  if(allShown){
+    const cd = document.getElementById("blk-cando"); if(cd) cd.classList.remove("stepped");
+    const act = document.getElementById("blk-actions"); if(act) act.classList.remove("stepped");
+  }
+  const btn = document.getElementById("completeBtn");
+  if(!btn) return;
+  if(allDone && allShown){
+    const wasDisabled = btn.disabled;
+    btn.disabled=false; btn.textContent = "🎉 全部完成,点此通关";
+    if(wasDisabled){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 修"点不开":答完最后一题,自动滚到通关键并脉冲提醒
+  }
+  else { btn.disabled=true; btn.classList.remove("pulse"); const left = need.filter(i=>!answered[i]).length; btn.textContent = `还差 ${left} 个练习`; }
+}
+
+function celebrate(){
+  const c = document.getElementById("confetti");
+  c.innerHTML = "";
+  const colors = ["#ff5d3b","#ffd24a","#34d399","#5b9dff","#b07bff","#ff8a6b"];
+  for(let i=0;i<90;i++){
+    const p = document.createElement("div");
+    p.className = "confetti-piece";
+    p.style.left = (Math.random()*100) + "%";
+    p.style.background = colors[i % colors.length];
+    const w = 6 + Math.random()*8;
+    p.style.width = w + "px";
+    p.style.height = (w*1.4) + "px";
+    p.style.animationDuration = (2 + Math.random()*2.2) + "s";
+    p.style.animationDelay = (Math.random()*0.35) + "s";
+    c.appendChild(p);
+  }
+  setTimeout(()=>{ c.innerHTML = ""; }, 4800);
+}
+function completeLesson(){
+  markDone(CUR.id);
+  if(CUR.milestone) bumpMastery(CUR.id, true);   // 成品关:首次通关=熟悉,以后每复习对一次升一级,并排下次复习
+  awardXP(CUR.milestone ? 50 : 25, document.getElementById("completeBtn"));
+  celebrate();
+  const allDone = getDone().size >= FLAT.length;
+  if(allDone){
+    // 全课完成 → 结课证书
+    const totalMilestone = COURSE.chapters.reduce((a,c)=>a+c.lessons.filter(l=>l.milestone).length,0);
+    const cert = document.getElementById("cert");
+    cert.innerHTML = `<div class="cert-card">
+      <span class="cert-ribbon">出师认证</span>
+      <span class="cert-em">🎖️</span>
+      <h2>出师了!</h2>
+      <div class="cert-identity">兹授予你「<b>数字员工训练师</b>」的身份</div>
+      <div class="cert-body">你已亲手搭出 <b>${totalMilestone} 个数字员工</b>、闯过 <b>${FLAT.length} 关</b>。从今天起,你不再是"不懂技术"的人——<b>你是能指挥 AI 替你干活、把重复烂活自动化掉的人。</b></div>
+      <div class="cert-stats">
+        <div class="cert-stat"><div class="n">${FLAT.length}</div><div class="l">闯关完成</div></div>
+        <div class="cert-stat"><div class="n">${totalMilestone}</div><div class="l">数字员工</div></div>
+        <div class="cert-stat"><div class="n">∞</div><div class="l">能自动化的活</div></div>
+      </div>
+      <div class="cert-body" style="font-size:12px;margin:0;opacity:.65">《${COURSE.title}》 · 出师于 ${new Date().toLocaleDateString('zh-CN')}</div>
+      <div class="cert-acts">
+        <button class="btn-cert-share" onclick="alert('截张图,把「数字员工训练师」这个新身份晒出去 🎖️')">📸 晒出我的身份</button>
+        <button class="btn-cert-close" onclick="document.getElementById('cert').classList.add('hidden'); renderHome()">回到首页</button>
+      </div>
+    </div>`;
+    cert.classList.remove("hidden");
+    return;
+  }
+  const idx = FLAT_IDS.indexOf(CUR.id);
+  const next = idx < FLAT_IDS.length-1 ? FLAT[idx+1] : null;
+  const modal = document.getElementById("modal");
+  document.getElementById("modalEmoji").textContent = CUR.milestone ? "🏆" : "🎉";
+  document.getElementById("modalTitle").textContent = CUR.milestone?"拿下一个成品!":"通关!";
+  document.getElementById("modalDesc").textContent = next ? `已解锁下一关：${next.title}` : "已解锁下一关";
+  document.getElementById("modalBtn").textContent = "去下一关";
+  modal._next = next ? next.id : null;
+  modal.classList.remove("hidden");
+}
+function closeModal(){
+  const modal = document.getElementById("modal");
+  modal.classList.add("hidden");
+  if(modal._next) openLesson(modal._next); else renderHome();
+}
+
+/* ---- 启动 ---- */
+/* 键盘翻页(像 PPT):右/下/空格=推进下一块,左/上=回看。降低"点继续"的鼠标摩擦 */
+document.addEventListener('keydown', (e)=>{
+  const modal = document.getElementById('modal');
+  if(modal && !modal.classList.contains('hidden')){   // 通关弹窗:Enter / 右键 / 空格 = 进下一关
+    if(e.key==='Enter' || e.key==='ArrowRight' || e.key===' '){ e.preventDefault(); closeModal(); }
+    return;
+  }
+  const lesson = document.getElementById('view-lesson');
+  if(!lesson || lesson.classList.contains('hidden')) return;   // 只在关卡页生效
+  if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;   // 思考题/填空输入时不拦
+  if(e.key==='ArrowRight' || e.key==='ArrowDown' || e.key===' '){
+    e.preventDefault();
+    const btns = [...document.querySelectorAll('.btn-step')].filter(b=>b.offsetParent!==null);  // 当前可见的"继续"
+    if(btns.length){ btns[btns.length-1].click(); }
+    else { const cb=document.getElementById('completeBtn'); if(cb && !cb.disabled) cb.click(); }
+  } else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){
+    e.preventDefault();
+    window.scrollBy({top: -window.innerHeight*0.6, behavior:'smooth'});
+  }
+});
+document.getElementById("loginTitle").textContent = COURSE.title;
+document.getElementById("loginSub").textContent = COURSE.loginSub || "零基础 · 用 AI 工作流重构你的任务";
+if(localStorage.getItem(LS_AUTH) === "1") enterApp();
+</script>
+</body>
+</html>
