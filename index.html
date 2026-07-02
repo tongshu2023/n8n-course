@@ -201,9 +201,7 @@
   .btn-open{background:var(--brand);color:#fff}.btn-open:hover{opacity:.86}
   .btn-dl{background:var(--card);color:var(--txt);border:1px solid var(--line)}.btn-dl:hover{background:var(--bg3)}
   .embed-note{font-size:12px;color:var(--lock);margin-top:12px;line-height:1.5}
-  .ver-note{font-size:12.5px;color:var(--gold);background:var(--bg2);border-radius:10px;padding:9px 13px;margin:12px 0 0;line-height:1.55}
-  .ver-note a{color:var(--brand);font-weight:600}
-  .wf-preview{margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(60,50,30,.04)}
+    .wf-preview{margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(60,50,30,.04)}
   .wf-preview img{display:block;width:100%;height:auto}
 
   /* 选择题 */
@@ -214,6 +212,12 @@
   .opt.correct{border-color:var(--ok);background:#eefaf2}
   .opt.wrong{border-color:#d70015;background:#fff0f0}
   .opt:disabled{cursor:default}
+  .lab-challenge{font-size:14px;line-height:1.65;background:var(--bg2);border-radius:10px;padding:11px 14px;margin:10px 0}
+  .lab-chips{font-size:13.5px;margin:10px 0;line-height:2}
+  .lab-chip{display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:2px 10px;margin:0 6px 4px 0;font-size:12.5px}
+  .lab-rescue{margin:10px 0}
+  .lab-rescue summary{cursor:pointer;font-size:13.5px;color:var(--txt2);padding:8px 12px;background:var(--bg2);border-radius:10px;user-select:none}
+  .lab-rescue[open] summary{margin-bottom:8px}
   .quiz-fb{font-size:13.5px;margin-top:8px;min-height:18px;line-height:1.5}
 
   /* 节点排序 */
@@ -258,9 +262,7 @@
   .modal-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:36px 32px;text-align:center;max-width:340px;animation:fade-up .3s ease;box-shadow:0 16px 50px rgba(0,0,0,.16)}
   @keyframes fade-up{0%{transform:translateY(12px);opacity:0}100%{transform:translateY(0);opacity:1}}
   .modal-card .big{font-size:50px}
-  #confetti{display:none}
-  .confetti-piece{display:none}
-  .modal-card h3{margin:14px 0 6px;font-size:21px;font-weight:600;letter-spacing:-.01em}
+    .modal-card h3{margin:14px 0 6px;font-size:21px;font-weight:600;letter-spacing:-.01em}
   .modal-card p{color:var(--txt2);font-size:14.5px;margin-bottom:24px;line-height:1.5}
 
   /* ===== 结课证书 ===== */
@@ -298,10 +300,6 @@
   .hw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
   .hw-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;
     box-shadow:0 1px 2px rgba(60,50,30,.04),0 12px 30px rgba(60,50,30,.06)}
-  .hw-top{display:flex;align-items:center;gap:13px;margin-bottom:15px}
-  .hw-n{width:40px;height:40px;border-radius:11px;background:var(--brand);color:#fff;
-    font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .hw-course{font-size:14px;font-weight:700;color:var(--txt)}
   .hw-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .hw-n{display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;
     background:var(--brand);color:#fff;font-weight:700;font-size:17px;flex-shrink:0}
@@ -404,7 +402,6 @@
 </div>
 
 <!-- 通关撒花 -->
-<div id="confetti"></div>
 
 <!-- 结课证书 -->
 <div id="cert" class="cert hidden"></div>
@@ -466,7 +463,9 @@ function exportAnswers(){
 function markReviewSolved(){
   // 回看已通关的关:把所有练习显示成"已解答正确"的样子,避免点不动/卡死(回看bug修复)
   if(!CUR || !CUR.blocks) return;
-  CUR.blocks.forEach(function(b,i){
+  CUR.blocks.forEach(function(b,i){ solveBlockUI(i, b); });
+}
+function solveBlockUI(i, b){
     if(!ANSWERABLE.has(b.type)) return;
     answered[i] = true;
     var dm = document.getElementById("dm-"+i);
@@ -491,7 +490,6 @@ function markReviewSolved(){
       var ffb=document.getElementById("fb-"+i);
       if(ffb){ ffb.style.color="var(--ok)"; ffb.textContent="✓ "+(b.fb||"正确!"); }
     }
-  });
 }
 function restoreAnswers(lid){
   var a = getAnswers();
@@ -507,10 +505,8 @@ function restoreAnswers(lid){
       var fi = document.getElementById("fill-" + i);
       if (fi) fi.value = r.v;
     }
-    if (r.c && ANSWERABLE.has(CUR.blocks[i] ? CUR.blocks[i].type : "")) {
-      answered[i] = true;
-      var dm = document.getElementById("dm-" + i);
-      if (dm) dm.classList.remove("hidden");
+    if (r.c && CUR.blocks[i] && ANSWERABLE.has(CUR.blocks[i].type)) {
+      solveBlockUI(i, CUR.blocks[i]);   // 渲染成已解态,不然按钮看着能点实际点不动
     }
   }
 }
@@ -525,7 +521,7 @@ COURSE.chapters.forEach((ch, ci) => ch.lessons.forEach((ls, li) => {
 const FLAT_IDS = FLAT.map(l => l.id);
 
 function getDone(){ try{ return new Set(JSON.parse(localStorage.getItem(LS_PROG)||"[]")); }catch(e){ return new Set(); } }
-function saveDone(set){ localStorage.setItem(LS_PROG, JSON.stringify([...set])); }
+function saveDone(set){ try{ localStorage.setItem(LS_PROG, JSON.stringify([...set])); }catch(e){ console.warn("progress storage failed"); } }
 function isDone(id){ return getDone().has(id); }
 function isUnlocked(id){
   const i = FLAT_IDS.indexOf(id);
@@ -541,13 +537,17 @@ function markDone(id){ const s = getDone(); s.add(id); saveDone(s); }
 const LS_MAST = "dew_mastery_v1";   // {关id:{m:掌握度0-3, due:下次复习ms, iv:间隔档}}
 const REVIEW_DAYS = [1,3,7,15];      // 复习间隔:首次1天,答对逐档延长
 function getMast(){ try{ return JSON.parse(localStorage.getItem(LS_MAST)||"{}"); }catch(e){ return {}; } }
-function saveMast(m){ localStorage.setItem(LS_MAST, JSON.stringify(m)); }
+function saveMast(m){ try{ localStorage.setItem(LS_MAST, JSON.stringify(m)); }catch(e){ console.warn("mastery storage failed"); } }
 function masteryOf(id){ const r=getMast()[id]; return r?r.m:0; }   // 0尝试 1熟悉 2熟练 3掌握
 function bumpMastery(id, correct){
   const all=getMast(), cur=all[id]||{m:0,iv:0,due:0};
-  if(correct){ cur.m=Math.min(3,cur.m+1); cur.iv=Math.min(REVIEW_DAYS.length-1,cur.iv+1); }
-  else { cur.iv=0; }   // 答错:间隔重置(更早再复习),掌握度不降(温和)
-  cur.due = Date.now() + REVIEW_DAYS[cur.iv]*86400000;
+  if(correct){
+    cur.m=Math.min(3,cur.m+1);
+    // 用"当前档"算下次复习日,再升档——首次通关=1天后复习,复习答对后 3天→7天 逐档拉长
+    cur.due = Date.now() + REVIEW_DAYS[Math.min(cur.iv, REVIEW_DAYS.length-1)]*86400000;
+    cur.iv=Math.min(REVIEW_DAYS.length-1,cur.iv+1);
+  }
+  else { cur.iv=0; cur.due = Date.now() + REVIEW_DAYS[0]*86400000; }   // 答错:间隔重置(明天再来),掌握度不降(温和)
   all[id]=cur; saveMast(all);
 }
 function dueReviews(){
@@ -566,7 +566,7 @@ function awardXP(amount, anchor, isCorrect){
   if(isCorrect){ _combo++; combo = _combo; bonus = combo>=2 ? (combo-1)*5 : 0; }  // 连对越多,额外加分越多
   const gain = amount + bonus;
   const cur=getXP(), next=cur+gain;
-  localStorage.setItem(LS_XP, next);
+  try{ localStorage.setItem(LS_XP, next); }catch(e){ console.warn("xp storage failed"); }
   if(anchor){
     try{ const r=anchor.getBoundingClientRect();
       const f=document.createElement("div"); f.className="xp-float"; f.textContent="+"+gain;
@@ -638,14 +638,13 @@ function renderHome(){
   let html = `<div class="hero">
     <div class="hero-main"><h2>${COURSE.title}</h2><p>${COURSE.intro}</p>${nextLesson ? `<button class="btn-continue" onclick="openLesson('${nextLesson.id}')">▸ ${totalDone>0?'继续学习':'开始第一关'}</button>` : '<div class="all-done">🎓 全部学完,你出师了!</div>'}</div>
     <div class="hero-visual"><img src="assets/wf02.png" alt="AI 写作工作流示意"></div>
-    <div class="hero-visual"><img src="assets/n8n-hero.png" alt="n8n工作流仪表盘——你的数字工厂" /></div>
   </div>
   <div class="oc-banner"><a href="open-class.html" target="_blank">🎓 还犹豫要不要上车？先来听 <b>1 小时免费公开课</b>——零代码搭出第一个数字员工 →</a></div>`;
   const _due = dueReviews();
   if(_due.length){
     html += `<div class="review-banner"><div class="rv-head">📅 该复习了 · ${_due.length} 关</div>
       <div class="rv-sub">隔几天回头练一遍,才能真记住(不是学完就忘)。挑一个重做:</div>
-      <div class="rv-list">${_due.map(l=>`<button class="rv-card" onclick="openLesson('${l.id}')">🔁 ${l.title}</button>`).join("")}</div></div>`;
+      <div class="rv-list">${_due.map(l=>`<button class="rv-card" onclick="openLesson('${l.id}', true)">🔁 ${l.title}</button>`).join("")}</div></div>`;
   }
   COURSE.chapters.forEach(ch => {
     const total = ch.lessons.length;
@@ -689,10 +688,11 @@ function backHome(){
 }
 function renderHomework(){
   if(typeof HOMEWORKS === "undefined" || !HOMEWORKS.length) return "";
-  const typeLabels = {must:"必做", findBug:"找茬", optional:"选做", design:"设计"};
   function taskHtml(t){
-    const badge = typeLabels[t.type]||t.type;
-    const cls = t.type==='must'?'badge-must':t.type==='findBug'?'badge-bug':t.type==='design'?'badge-design':'badge-opt';
+    // homeworks.js 里 type 是中文("必做·实操"/"找茬·排错"/"设计"…),按包含关系映射颜色
+    const badge = t.type;
+    const tp = String(t.type||"");
+    const cls = tp.indexOf('必做')>=0?'badge-must':tp.indexOf('找茬')>=0?'badge-bug':tp.indexOf('设计')>=0?'badge-design':'badge-opt';
     return `<div class="hw-task">
       <div class="hw-t-head"><span class="hw-badge ${cls}">${badge}</span><span class="hw-t-title">${t.title}</span></div>
       <p class="hw-t-desc">${t.desc}</p>
@@ -720,14 +720,17 @@ function updateBar(){
 /* ---------- 关卡详情 ---------- */
 let CUR = null;          // 当前关 flat 对象
 let answered = {};       // {blockIdx:true} 作答型 block 是否完成
+let _reviewMode = false; // true=从复习入口进来,练习清空重做
 
 const ANSWERABLE = new Set(["quiz","order","fill","think"]);
 var _msCount = 0;
 
-function openLesson(id){
+function openLesson(id, review){
   window.scrollTo(0,0);
   CUR = FLAT.find(l => l.id === id);
   answered = {};
+  // 复习模式(从"该复习了"进来):内容全展开,但练习清空重做——复习=重新提取记忆,不是重读答案
+  _reviewMode = !!review && isDone(id);
   // 已完成关卡回看时全部展开,避免卡在第一步
   _visUpTo = isDone(id) ? (CUR.blocks ? CUR.blocks.length : 99) : 1;
   document.getElementById("view-home").classList.add("hidden");
@@ -751,8 +754,10 @@ function openLesson(id){
   v.innerHTML = html;
   // 渲染后初始化交互
   CUR.blocks.forEach((b,i)=>{ if(b.type==='order') initOrder(i, b); });
-  restoreAnswers(CUR.id);
-  if(isDone(id)) markReviewSolved();
+  if(!_reviewMode){
+    restoreAnswers(CUR.id);
+    if(isDone(id)) markReviewSolved();
+  }
   updateStepState();
 }
 
@@ -796,8 +801,9 @@ function updateStepState(){
       const allDone = need === 0 || need === [...Array(CUR.blocks.length).keys()].filter(i=>answered[i]).length;
       const wasDisabled = btn.disabled;
       btn.disabled = !allDone;
-      btn.textContent = allDone ? "🎉 全部完成,点此通关" : `完成全部 ${need} 个练习即可通关`;
-      if(allDone && wasDisabled){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 答完最后一题:自动滚到通关键+脉冲,治"没注意到能通关了"
+      const doneView = isDone(CUR.id) && !_reviewMode;   // 回看已通关的关:按钮只是"返回",不再发分
+      btn.textContent = allDone ? (doneView ? "✓ 已通关 · 返回目录" : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关") : `完成全部 ${need} 个练习即可通关`;
+      if(allDone && wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 答完最后一题:自动滚到通关键+脉冲,治"没注意到能通关了"
     }
   }
 }
@@ -816,13 +822,20 @@ function renderBlock(b, i){
       return `<div class="sec"><h4>${b.h||'点开卡片记概念'}</h4><div class="flips">${cards}</div></div>`;
     }
     case "lab": {
-      const steps = b.steps.map(s=>`<li>${s}</li>`).join("");
+      const steps = (b.steps||[]).map(s=>`<li>${s}</li>`).join("");
       const wfImg = b.workflow && WF_IMG[b.workflow];
       const shot = wfImg ? `<div class="wf-preview"><img src="${wfImg}" alt="工作流画布预览" loading="lazy" /></div>` : '';
+      // 半引导模式(challenge):只亮出需求+节点清单,手把手步骤折叠成"救援"——撤支架,逼你先自己想连法
+      const chips = (b.nodeList||[]).map(n=>`<span class="lab-chip">${n}</span>`).join("");
+      const stepsHtml = b.challenge
+        ? `<div class="lab-challenge">💪 ${typeof b.challenge==='string'?b.challenge:'这是半引导关:只给需求和节点清单,连法自己想。先自己试 10 分钟,记得牢十倍。'}</div>
+           ${chips?`<div class="lab-chips"><b>会用到的节点:</b> ${chips}</div>`:''}
+           ${steps?`<details class="lab-rescue"><summary>🆘 卡住超过 10 分钟?点开救援步骤</summary><ol class="lab-steps">${steps}</ol></details>`:''}`
+        : `<ol class="lab-steps">${steps}</ol>`;
       return `<div class="sec"><h4>动手实操${b.milestone?'（里程碑成品）':''}</h4>
         <div class="lab"><div class="lab-goal">${b.desc}</div>
         ${shot}
-        <ol class="lab-steps">${steps}</ol>
+        ${stepsHtml}
         <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
     }
     case "quiz": {
@@ -883,14 +896,16 @@ function renderBlock(b, i){
 
 /* ---- 选择题 ---- */
 function answerQuiz(i, oi){
-  if(answered[i]) return;
+  if(!CUR || answered[i]) return;
   const b = CUR.blocks[i];
   const btn = document.getElementById(`opt-${i}-${oi}`);
   const fb = document.getElementById(`fb-${i}`);
-  if((quizOrder[i]?quizOrder[i][oi]:oi) === b.answer){
+  // oi 是洗牌后的显示位置;whys/opts/answer 都按原始顺序存,先换算回原始下标再用
+  const origIdx = quizOrder[i] ? quizOrder[i][oi] : oi;
+  if(origIdx === b.answer){
     btn.classList.add("correct"); fb.style.color="var(--ok)"; fb.textContent = "✓ " + (b.fb||"答对了!");
     answered[i] = true;
-    saveAnswer(CUR.id, i, "quiz", b.opts[oi], true);
+    saveAnswer(CUR.id, i, "quiz", b.opts[origIdx], true);
     b.opts.forEach((_,k)=>document.getElementById(`opt-${i}-${k}`).disabled=true);
     document.getElementById(`dm-${i}`).classList.remove("hidden");
     awardXP(b.xp||10, btn, true);
@@ -899,7 +914,7 @@ function answerQuiz(i, oi){
   } else {
     btn.classList.add("wrong"); fb.style.color="var(--brand)"; resetCombo();
     // 答错给"为什么错"诊断(顶级课核心):优先用该选项专属解释,没有则回退通用提示
-    fb.textContent = (b.whys && b.whys[oi]) || b.wrongFb || "再想想,换一个试试";
+    fb.textContent = (b.whys && b.whys[origIdx]) || b.wrongFb || "再想想,换一个试试";
     btn.disabled = true;
     setTimeout(()=>btn.classList.remove("wrong"), 700);
   }
@@ -907,7 +922,7 @@ function answerQuiz(i, oi){
 
 /* ---- 填空 ---- */
 function checkFill(i){
-  if(answered[i]) return;
+  if(!CUR || answered[i]) return;
   const b = CUR.blocks[i];
   const val = (document.getElementById(`fill-${i}`).value||"").trim();
   const fb = document.getElementById(`fb-${i}`);
@@ -945,7 +960,7 @@ function showOrderHint(i){
 }
 let orderState = {}, orderShuffle = {};
 function pickNode(i, idx){
-  if(answered[i]) return;
+  if(!CUR || answered[i]) return;
   const b = CUR.blocks[i];
   const pool = document.getElementById(`pool-${i}`);
   const slots = document.getElementById(`slots-${i}`);
@@ -989,6 +1004,7 @@ function renderOrder(i, b){
 
 /* ---- 思考题 ---- */
 function checkThink(i){
+  if(!CUR) return;
   const b = CUR.blocks[i];
   const val = (document.getElementById(`think-${i}`).value||"").trim();
   if (val) saveAnswer(CUR.id, i, "think", val, val.length >= (b.min || 10));
@@ -1027,35 +1043,34 @@ function checkComplete(){
   if(!btn) return;
   if(allDone && allShown){
     const wasDisabled = btn.disabled;
-    btn.disabled=false; btn.textContent = "🎉 全部完成,点此通关";
-    if(wasDisabled){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 修"点不开":答完最后一题,自动滚到通关键并脉冲提醒
+    const doneView = isDone(CUR.id) && !_reviewMode;
+    btn.disabled=false; btn.textContent = doneView ? "✓ 已通关 · 返回目录" : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关";
+    if(wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 修"点不开":答完最后一题,自动滚到通关键并脉冲提醒
   }
   else { btn.disabled=true; btn.classList.remove("pulse"); const left = need.filter(i=>!answered[i]).length; btn.textContent = `还差 ${left} 个练习`; }
 }
 
-function celebrate(){
-  const c = document.getElementById("confetti");
-  c.innerHTML = "";
-  const colors = ["#ff5d3b","#ffd24a","#34d399","#5b9dff","#b07bff","#ff8a6b"];
-  for(let i=0;i<90;i++){
-    const p = document.createElement("div");
-    p.className = "confetti-piece";
-    p.style.left = (Math.random()*100) + "%";
-    p.style.background = colors[i % colors.length];
-    const w = 6 + Math.random()*8;
-    p.style.width = w + "px";
-    p.style.height = (w*1.4) + "px";
-    p.style.animationDuration = (2 + Math.random()*2.2) + "s";
-    p.style.animationDelay = (Math.random()*0.35) + "s";
-    c.appendChild(p);
-  }
-  setTimeout(()=>{ c.innerHTML = ""; }, 4800);
-}
 function completeLesson(){
+  const wasDone = isDone(CUR.id);
+  // 回看已通关的关:按钮=返回目录,不重复发分/不重复升掌握度
+  if(wasDone && !_reviewMode){ renderHome(); return; }
+  // 复习模式:重新答对全部练习才走到这——升一档掌握度,排下次复习
+  if(_reviewMode){
+    _reviewMode = false;
+    bumpMastery(CUR.id, true);
+    const m = masteryOf(CUR.id);
+    const modal = document.getElementById("modal");
+    document.getElementById("modalEmoji").textContent = "🧠";
+    document.getElementById("modalTitle").textContent = "复习完成!";
+    document.getElementById("modalDesc").textContent = m>=3 ? "这一关已完全掌握,不再进复习队列。" : "记忆又牢了一档,过几天再来一次就真记住了。";
+    document.getElementById("modalBtn").textContent = "回目录";
+    modal._next = null;
+    modal.classList.remove("hidden");
+    return;
+  }
   markDone(CUR.id);
   if(CUR.milestone) bumpMastery(CUR.id, true);   // 成品关:首次通关=熟悉,以后每复习对一次升一级,并排下次复习
   awardXP(CUR.milestone ? 50 : 25, document.getElementById("completeBtn"));
-  celebrate();
   const allDone = getDone().size >= FLAT.length;
   if(allDone){
     // 全课完成 → 结课证书

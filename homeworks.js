@@ -10,7 +10,7 @@ const HOMEWORKS = [
   {
     week: 1,
     date: "第 1 次课（第 1 周）",
-    cover: "序章(0-1,0-2) + 第1章(1-1,1-local,1-2,1-3,1-err)",
+    cover: "课前准备(prep-1,prep-2) + 序章(0-1,0-2,0-3) + 第1章(1-1,1-2,1-3,1-4,1-err)",
     title: "第一份工：让你的数字员工准点报到",
     tasks: [
       {
@@ -72,7 +72,7 @@ const HOMEWORKS = [
   {
     week: 3,
     date: "第 3 次课（第 3 周）",
-    cover: "第3章(3-1,3-2,3-3)",
+    cover: "第3章(3-1,3-2,3-multi,3-3)",
     title: "开一条只属于你的内容流水线",
     tasks: [
       {
@@ -100,7 +100,7 @@ const HOMEWORKS = [
   {
     week: 4,
     date: "第 4 次课（第 4 周）",
-    cover: "第4章(4-1,4-2)",
+    cover: "第4章(4-1,4-clean,4-2)",
     title: "招一个私人情报官",
     tasks: [
       {
@@ -162,7 +162,7 @@ const HOMEWORKS = [
   {
     week: 6,
     date: "第 6 次课（第 6 周）· 结课",
-    cover: "第6章(6-1,6-2,6-3,6-4,6-5,6-6)",
+    cover: "第6章(6-1,6-2,6-3,6-4,6-5,6-test,6-6)",
     title: "总装：交付你的专属数字员工",
     tasks: [
       {
