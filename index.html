@@ -1136,6 +1136,12 @@ document.addEventListener('keydown', (e)=>{
 });
 document.getElementById("loginTitle").textContent = COURSE.title;
 document.getElementById("loginSub").textContent = COURSE.loginSub || "零基础 · 用 AI 工作流重构你的任务";
+// 访问 ?reset=1 一键清空学习进度(方便重新做题/测试),保留登录状态,不用重登
+if(new URLSearchParams(location.search).get('reset') === '1'){
+  [LS_PROG, LS_ANSWERS, LS_MAST].forEach(function(k){ localStorage.removeItem(k); });
+  history.replaceState(null, '', location.pathname);   // 抹掉地址栏的 ?reset=1,免得刷新又清一次
+  alert('✅ 已重置学习进度,现在可以从头重新做题了');
+}
 if(localStorage.getItem(LS_AUTH) === "1") enterApp();
 </script>
 </body>
