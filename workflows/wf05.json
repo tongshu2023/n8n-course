@@ -1,0 +1,156 @@
+{
+  "name": "05 发票/表单信息提取录入 · 成品③",
+  "nodes": [
+    {
+      "id": "note-05",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "content": "## 🧾 发票/表单信息提取录入（实战三·成品③）\n\n**它做什么**：把乱糟糟的报销消息/发票文本粘进来 → AI 自动提取「日期/事项/金额/类别」→ 生成可直接打开的 CSV 报销台账。手工录入 1 小时变 10 秒。\n\n**上手三步**：\n1. 配 DeepSeek 凭证（同模板 02）\n2. 把「粘贴原始文本」里的内容换成你的真实报销消息（多条直接堆一起）\n3. Execute Workflow → 最后一个节点下载 CSV，Excel/WPS 直接打开\n\n**举一反三**：提取字段改一改，就是合同关键信息台账、客户线索登记、简历筛选表——一切「非结构化文本 → 表格」的活。",
+        "height": 380,
+        "width": 420
+      }
+    },
+    {
+      "id": "trigger-05",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [480, 260],
+      "parameters": {}
+    },
+    {
+      "id": "set-05",
+      "name": "粘贴原始文本",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 260],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "raw-05",
+              "name": "原始文本",
+              "type": "string",
+              "value": "6月3号打车去客户那边谈合同花了45.5，滴滴发票\n周二请客户吃饭，老乡鸡，餐费 286 元有发票\n6月5日 买打印纸和墨盒 京东 199.9\n上周五住宿费汉庭酒店一晚 309 块，6月6号的"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "chain-05",
+      "name": "AI 提取结构化信息",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [920, 260],
+      "parameters": {
+        "promptType": "define",
+        "text": "=从下面的报销消息里提取每一笔费用，输出 json 数组，每笔一个对象，字段：日期(yyyy-MM-dd，年份按2026)、事项、金额(数字)、类别(交通/餐饮/办公/住宿/其他)。只输出 json 数组，不要其他内容。\n\n{{ $json.原始文本 }}"
+      }
+    },
+    {
+      "id": "model-05",
+      "name": "DeepSeek 大模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [920, 480],
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {}
+      },
+      "credentials": {
+        "deepSeekApi": {
+          "id": "deepseek-cred",
+          "name": "DeepSeek 账号"
+        }
+      }
+    },
+    {
+      "id": "code-05",
+      "name": "校验并展开成表格行",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 260],
+      "parameters": {
+        "jsCode": "// AI 输出的 JSON 字符串 → 校验 → 一笔一行\nconst raw = $input.first().json.text.replace(/```json|```/g, '').trim();\nlet rows;\ntry {\n  rows = JSON.parse(raw);\n} catch (e) {\n  throw new Error('AI 输出不是合法 JSON，请重跑一次：' + raw.slice(0, 100));\n}\nif (!Array.isArray(rows) || rows.length === 0) {\n  throw new Error('没有提取到任何费用条目');\n}\n\nreturn rows.map((r) => ({\n  json: {\n    日期: r.日期 || '',\n    事项: r.事项 || '',\n    金额: Number(r.金额) || 0,\n    类别: r.类别 || '其他',\n  },\n}));"
+      }
+    },
+    {
+      "id": "csv-05",
+      "name": "生成 CSV 报销台账",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [1360, 260],
+      "parameters": {
+        "operation": "csv",
+        "options": {
+          "fileName": "报销台账.csv"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "粘贴原始文本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "粘贴原始文本": {
+      "main": [
+        [
+          {
+            "node": "AI 提取结构化信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 提取结构化信息": {
+      "main": [
+        [
+          {
+            "node": "校验并展开成表格行",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验并展开成表格行": {
+      "main": [
+        [
+          {
+            "node": "生成 CSV 报销台账",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 大模型": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 提取结构化信息",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

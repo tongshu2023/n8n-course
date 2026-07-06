@@ -1,0 +1,214 @@
+﻿{
+  "name": "03 文档/内容自动生产线 · 成品①",
+  "nodes": [
+    {
+      "id": "note-03",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "content": "## 🏭 文档/内容自动生产线（实战一·成品①）\n\n**它做什么**：给一个选题 → AI 写正文 → AI 起标题和摘要 → 自动排版成 Markdown 文档 → 归档到本地文件夹。周报、通知、产品文案、公众号推文都是这条线。\n\n**上手三步**：\n1. 配好 DeepSeek 凭证（同模板 02）\n2. 改「填写选题」里的内容，「归档到本地」节点里把保存路径换成你自己的文件夹\n3. Execute Workflow → 去文件夹里收成稿\n\n**举一反三**：把「手动触发」换成 Schedule（定时）或表单触发，就是全自动内容工厂；把归档换成发邮件/推群，就是自动分发。",
+        "height": 380,
+        "width": 420
+      }
+    },
+    {
+      "id": "trigger-03",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [480, 260],
+      "parameters": {}
+    },
+    {
+      "id": "set-03",
+      "name": "填写选题",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 260],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "topic-03",
+              "name": "选题",
+              "type": "string",
+              "value": "给全体同事的通知：下周一起启用新的报销流程，发票拍照上传企微即可，不再需要纸质粘贴"
+            },
+            {
+              "id": "style-03",
+              "name": "文体",
+              "type": "string",
+              "value": "对内通知"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "chain-body-03",
+      "name": "AI 写正文",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [920, 260],
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是企业行政写作专家。请根据以下选题写一篇{{ $json.文体 }}的正文（不含标题）：\n\n{{ $json.选题 }}\n\n要求：信息完整、条理清晰、语气友好专业，300 字以内。直接输出正文。"
+      }
+    },
+    {
+      "id": "model-body-03",
+      "name": "DeepSeek 大模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [920, 480],
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {}
+      },
+      "credentials": {
+        "deepSeekApi": {
+          "id": "deepseek-cred",
+          "name": "DeepSeek 账号"
+        }
+      }
+    },
+    {
+      "id": "chain-title-03",
+      "name": "AI 起标题和摘要",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1160, 260],
+      "parameters": {
+        "promptType": "define",
+        "text": "=为下面这篇文档起一个标题和一句话摘要，用 json 格式输出，格式：{\"title\": \"标题\", \"summary\": \"一句话摘要\"}。只输出 json，不要其他内容。\n\n文档正文：\n{{ $json.text }}"
+      }
+    },
+    {
+      "id": "code-03",
+      "name": "组装 Markdown 成稿",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1400, 260],
+      "parameters": {
+        "jsCode": "// 上一步 AI 输出的是 JSON 字符串，正文在更早的节点里\nconst raw = $input.first().json.text.replace(/```json|```/g, '').trim();\nconst meta = JSON.parse(raw);\nconst body = $('AI 写正文').first().json.text;\nconst today = new Date().toLocaleDateString('zh-CN');\n\nconst doc = `# ${meta.title}\\n\\n> ${meta.summary}\\n> 生成日期：${today} · 由 n8n 自动生产线产出\\n\\n${body}\\n`;\n\n// 文件名里不能有特殊字符\nconst safeName = meta.title.replace(/[\\\\/:*?\"<>|\\s]/g, '_').slice(0, 30);\n\nreturn [{ json: { 文档: doc, 文件名: `${safeName}.md` } }];"
+      }
+    },
+    {
+      "id": "tofile-03",
+      "name": "转成文件",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [1620, 260],
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "文档",
+        "options": {
+          "fileName": "={{ $json.文件名 }}"
+        }
+      }
+    },
+    {
+      "id": "write-03",
+      "name": "归档到本地",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [1840, 260],
+      "parameters": {
+        "operation": "write",
+        "fileName": "=C:/n8n-output/{{ $('组装 Markdown 成稿').first().json.文件名 }}",
+        "dataPropertyName": "data",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "填写选题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "填写选题": {
+      "main": [
+        [
+          {
+            "node": "AI 写正文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 写正文": {
+      "main": [
+        [
+          {
+            "node": "AI 起标题和摘要",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 起标题和摘要": {
+      "main": [
+        [
+          {
+            "node": "组装 Markdown 成稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装 Markdown 成稿": {
+      "main": [
+        [
+          {
+            "node": "转成文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转成文件": {
+      "main": [
+        [
+          {
+            "node": "归档到本地",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 大模型": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 写正文",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI 起标题和摘要",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
