@@ -50,8 +50,15 @@
   .bar>i{display:block;height:100%;background:var(--brand);width:0;transition:width .5s}
   .progress-mini small{color:var(--txt2);font-size:12px;white-space:nowrap}
   .topbar .brand:hover{opacity:.7}
-  .btn-ghost{background:transparent;color:var(--txt2);font-size:13px;padding:6px 12px;border-radius:9px;transition:.12s}
+  .btn-ghost{background:transparent;color:var(--txt2);font-size:13px;padding:6px 12px;border-radius:9px;transition:.12s;white-space:nowrap}
   .btn-ghost:hover{color:var(--txt);background:var(--bg2)}
+  @media (max-width:540px){
+    .topbar-inner{gap:7px;padding:11px 10px}
+    .topbar .brand{font-size:0}
+    .topbar .brand svg{margin-right:0}
+    .btn-ghost{padding:5px 6px;font-size:12px}
+    .progress-mini{gap:6px}
+  }
   /* ---- 步进式讲解:一次只露一块,治"全铺上去" ---- */
   .stepped{display:none !important}
   .step-btn{text-align:center;margin:10px 0 6px}
@@ -557,7 +564,7 @@ function dueReviews(){
 
 /* ---------- 学习积分(即时反馈,来自顶级课的"把反馈延迟压到接近0") ---------- */
 const LS_XP = "dew_xp_v1";
-function getXP(){ return parseInt(localStorage.getItem(LS_XP)||"0",10)||0; }
+function getXP(){ try{ return parseInt(localStorage.getItem(LS_XP)||"0",10)||0; }catch(e){ return 0; } }
 function renderXP(){ const el=document.getElementById("xpNum"); if(el) el.textContent=getXP(); }
 var _combo = 0;
 function resetCombo(){ _combo = 0; }
@@ -592,10 +599,10 @@ function tryLogin(){
   const err = document.getElementById("loginErr");
   if(!code){ err.textContent = "请输入班级口令"; return; }
   if(CONFIG.classCodes.includes(code)){
-    localStorage.setItem(LS_AUTH, "1"); err.textContent = ""; enterApp();
+    try{ localStorage.setItem(LS_AUTH, "1"); }catch(e){ console.warn("auth storage blocked"); } err.textContent = ""; enterApp();
   } else { err.textContent = "口令不对,问问老师?"; }
 }
-function logout(){ localStorage.removeItem(LS_AUTH); location.reload(); }
+function logout(){ try{ localStorage.removeItem(LS_AUTH); }catch(e){} location.reload(); }
 function enterApp(){
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
@@ -1138,11 +1145,11 @@ document.getElementById("loginTitle").textContent = COURSE.title;
 document.getElementById("loginSub").textContent = COURSE.loginSub || "零基础 · 用 AI 工作流重构你的任务";
 // 访问 ?reset=1 一键清空学习进度(方便重新做题/测试),保留登录状态,不用重登
 if(new URLSearchParams(location.search).get('reset') === '1'){
-  [LS_PROG, LS_ANSWERS, LS_MAST].forEach(function(k){ localStorage.removeItem(k); });
+  [LS_PROG, LS_ANSWERS, LS_MAST].forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
   history.replaceState(null, '', location.pathname);   // 抹掉地址栏的 ?reset=1,免得刷新又清一次
   alert('✅ 已重置学习进度,现在可以从头重新做题了');
 }
-if(localStorage.getItem(LS_AUTH) === "1") enterApp();
+try{ if(localStorage.getItem(LS_AUTH) === "1") enterApp(); }catch(e){ console.warn("storage blocked, login required each visit"); }
 </script>
 </body>
 </html>
