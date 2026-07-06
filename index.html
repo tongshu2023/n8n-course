@@ -416,8 +416,8 @@
   </div>
 </div>
 
-<script src="course-data.js"></script>
-<script src="homeworks.js"></script>
+<script src="course-data.js?v=20260706b"></script>
+<script src="homeworks.js?v=20260706b"></script>
 <script>
 /* =========================================================
    引擎 —— 课程数据来自 course-data.js 的 COURSE / CONFIG
@@ -839,8 +839,9 @@ function renderBlock(b, i){
         <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
     }
     case "quiz": {
+      // 选项不再运行时打乱:所见即所得(显示顺序=数据顺序)。答案分布已在数据层打散,
+      // 从根上消除"显示与判定不一致"的历史bug。order 保持恒等,下游映射代码无需改动。
       var order = b.opts.map(function(_,k){ return k; });
-      for(var kk=order.length-1;kk>0;kk--){ var jj=(kk*7+3)%(kk+1); var tt=order[kk]; order[kk]=order[jj]; order[jj]=tt; }
       quizOrder[i] = order;
       var opts = order.map(function(origIdx,displayIdx){
         var o=b.opts[origIdx];
