@@ -58,7 +58,7 @@ const COURSE = {
             "<b>打开你的 n8n,点「Start from scratch」进入空白画布。</b>",
             "<b>点画布中间的「+」,搜 <code>Manual Trigger</code>,点它。</b>画布上出现第一个节点——这是「开关」,一会儿你按它,整条线就跑。",
             "<b>点这个节点右侧的小「+」,搜 <code>Edit Fields</code>,点第一个结果。</b>这是你的第一台「机器」。",
-            "<b>在打开的面板里点「Add Field」加一个字段:名字填 <code>给自己的话</code>,值随便写一句,比如「我真的把它跑起来了」。</b>右上角 ✕ 关掉面板。",
+            "<b>在打开的面板里点「Add Field」加一个字段。</b>会出现左右两个框——像一张便利贴:<b>左框(name)是标签</b>,写「这是什么」;<b>右框(value)是正文</b>,写具体内容。左框填 <code>给自己的话</code>,右框随便写一句,比如「我真的把它跑起来了」。右上角 ✕ 关掉面板。",
             "<b>点底部橙色大按钮「Execute workflow」。</b>",
             "<b>看:节点右上角出现绿色的勾 ✅。点开 Edit Fields 节点,右侧输出区里躺着你刚写的那句话</b>——这就是「数据流过流水线」的样子。"
           ]},
@@ -183,6 +183,8 @@ const COURSE = {
           { type:"text", h:"工作流就是一条流水线", html:`<p>别被术语吓到。一条 <b>工作流(Workflow)</b> 就是一条自动流水线:你把每个工位摆好、用传送带接起来,原料从一头进、成品从另一头出,中间不用人搬。</p>` },
           { type:"callout", variant:"analogy", html:`<b>节点之间传的是「快递包裹」。</b><br>每个 <b>节点(Node)</b> = 流水线上的一个工位,干一件小事。前一个节点干完会吐出一个「包裹」(数据),传给下一个节点。<br>这个包裹里装着一样样东西,每样都有名字(叫<b>字段名</b>)。下一站要用,就得准确地说「把包裹里那个叫 xxx 的东西拿出来」。<b>看懂数据怎么流,你就懂了 n8n 的一半。</b>` },
           { type:"quiz", tag:"随手一测", q:"按「快递包裹」的比喻,n8n 里一个「节点」相当于什么?", opts:["快递包裹本身","流水线上的一个工位,干一件小事再把包裹传给下一站","整条流水线","收件人的地址"], answer:1, fb:"对!节点=流水线上的一个工位,干完一件小事,把数据「包裹」传给下一个节点。", wrongFb:"节点是「工位」,包裹是它传出去的数据。", whys:["包裹是节点吐出来的数据,不是节点本身","","整条流水线是「工作流」,节点只是其中一个工位","地址不是节点;节点是干活的工位"] },
+          { type:"text", h:"包裹里面长什么样?——认识 JSON(数据世界的快递单)", html:`<p>包裹里的东西是怎么写下来的?计算机世界有一种通用的「快递单写法」,叫 <b>JSON</b>(读「杰森」)。别被英文吓到,它就是一张「<b>名字:内容</b>」的清单:</p><p><code>{ "标题": "今天的新闻", "链接": "https://xxx", "日期": "2026-07-06" }</code></p><p>冒号<b>左边是字段名</b>(这样东西叫什么),<b>右边是值</b>(它具体是什么)——跟快递单上「收件人:张三」「电话:138xxxx」一模一样。</p><p><b>为什么现在就要认识它?</b>因为 n8n 里每个节点吐出的包裹,拆开都长这样。你在点火测试里填过的 name/value 两个框,就是在亲手写一行这样的快递单;等下要学的取数据写法 <code>$json</code>,字面意思就是「上一步的 JSON 包裹」。现在花 1 分钟认识它,后面整门课处处眼熟。</p>` },
+          { type:"quiz", tag:"随手一测", q:"JSON 里的一行 <code>\"金额\": \"1280\"</code>,冒号左右分别是什么?", opts:["左边是值,右边是字段名","左边是字段名(这样东西叫什么),右边是值(它具体是什么)","两边都是字段名","随便写,没有规则"], answer:1, fb:"对!字段名:值,像快递单的「收件人:张三」。后面你取数据、填字段,全靠认准这对搭档。", wrongFb:"想想快递单:「收件人:张三」——哪边是标签,哪边是内容?", whys:["方向反了,左边是名字、右边是内容","","右边是具体内容,不是名字","有规则:左名右值,乱写机器就看不懂了"] },
           { type:"flip", h:"四个核心词,点开记住", cards:[
             { emoji:"🔧", front:"工作流", back:"一整条自动化流水线,由若干节点连起来组成。" },
             { emoji:"🔹", front:"节点", back:"流水线上的一个工位,干一件具体的小事(取数据/处理/发送)。" },
@@ -206,6 +208,7 @@ const COURSE = {
         blocks: [
           { type:"callout", variant:"tip", html:`<b>管理提示 · 给新员工的第一个任务,要"小而明确"。</b>你不会让刚入职的人第一天就扛大项目——先派一件简单、能当天验收的小事。这一关搭的第一个工作流(点一下发条消息)就是这个理:任务越清晰,你的 AI 员工越不容易出错。先把"小事"交顺手,再谈复杂的。`},
           { type:"text", h:"我们要做什么", html:`<p>跟着老师,亲手搭一个工作流:<b>点一下,立刻给自己的邮箱发一封消息。</b>搭完点一下、邮箱「叮」一声收到的那一刻,你就破除了「我搭不出来」的心魔——剩下的都是照葫芦画瓢。</p>` },
+          { type:"callout", variant:"tip", html:`<b>🧱 动手前 30 秒,先认识这关的三个新面孔</b>(等下步骤里全会遇到,先混个脸熟,撞见不慌):<br>① <b>字段的 name/value 两个框</b>:就是上一关认识的 JSON 快递单——name 写「这样东西叫什么」,value 写「内容是什么」。等下我们给要发的话起名叫 <code>content</code>。<b>为什么用英文起名?</b>好习惯:后面引用它时不用切输入法、不容易打错。<br>② <b>凭证(Credential)</b>:让 n8n 替你开邮箱的「钥匙」。注意——钥匙<b>不是你的邮箱登录密码</b>,是邮箱专门发给机器用的「授权码」(第一步就带你去领)。<br>③ <b>双花括号 <code>{{ $json.content }}</code></b>:把上一步包裹里的东西「填进来」的写法,意思是「把上一步那个叫 content 的内容拿来放这」。这关先照着用一次,第 2 章会把它彻底讲透——先体验,再原理。` },
           { type:"lab", milestone:true, workflow:"01_定时消息推送.json", desc:"目标:跟着老师亲手搭出「手动触发 → 组装内容 → 发到邮箱」。搭完点一下,邮箱立刻收到——这是你第一个亲手做出来、能跑的数字员工。", steps:[
             "<b>第一步:开通 QQ 邮箱的发信权限,拿到「授权码」。</b>这串授权码的作用,是让 n8n 拿到「替你控制邮箱发信」的权限。操作:① 登录 QQ 邮箱网页版(mail.qq.com)→ ② 点右上角「<b>账号与安全</b>」→ ③ 进「<b>安全设置</b>」→ ④ 找到「POP3/IMAP/SMTP/Exchange/CardDAV 服务」→ ⑤ 点「<b>生成授权码</b>」→ ⑥ 按提示发一条<b>短信验证</b> → ⑦ <b>复制</b>那串授权码,存到记事本(等下填进 n8n)。",
             "<b>第二步:新建一条空白工作流。</b>进 n8n 后,点<b>右上角橙色的「Create workflow」</b>(创建工作流)按钮,进入一块空白画布。画布正中间会显示一个虚线方框,下面写着「<b>Add first step…</b>」(添加第一步),点它。",
@@ -231,11 +234,14 @@ const COURSE = {
           blocks:[
             { type:"hook", q:"你搭出了发邮件的数字员工。那——你想让它发微信、发钉钉、还是发飞书?", sub:"核心骨架没变,只是把最后的 Send Email 换成另一个输出节点。这就是 n8n 最值钱的能力:搭一次骨架,换块积木就换一种能力。" },
             { type:"text", h:"骨架不变,换出口就换能力", html:`<p>成品1你搭了一条流水线:<b>手动触发 &rarr; 组装消息 &rarr; 发邮件</b>。前两步(触发+组装)是<b>骨架</b>,最后一步(发邮件)只是<b>出口</b>。把出口换成微信/飞书/钉钉,同样的流水线就有了新能力——不用重头搭。</p>` },
+            { type:"text", h:"🧱 动手前 3 分钟,认识新积木:HTTP Request(万能发送器)", html:`<p>发微信/飞书/钉钉,n8n 里没有现成的「Send WeChat」节点,我们用一块万能积木——<b>HTTP Request(网络请求)</b>。它干的事说白了就是:<b>替你往一个网址递一张条子</b>。只要填对三样,它就能把消息送到任何地方:</p><ul><li><b>URL(送到哪)</b>:收条子的网址。pushplus/飞书/钉钉的机器人都会发给你一串专属网址(就是常说的 webhook 地址)。</li><li><b>Method(怎么送)</b>:递条子的方式。<code>POST</code>=送东西过去(发消息用它);<code>GET</code>=去拿东西回来(以后抓数据用)。</li><li><b>Body(条子上写什么)</b>:要送的内容。对方通常要求写成上一章认识的 <b>JSON 快递单格式</b>——比如 pushplus 要求长这样:<code>{ "token": "你的token", "content": "要发的话" }</code>。什么格式哪里查?每家机器人的说明文档里都印着,照抄就行。</li></ul><p>一句话记住:<b>URL=送到哪,Method=怎么送,Body=送什么。</b>这块积木后面会反复出现(抓数据、推简报都是它),这关先用它发出第一条微信。</p>` },
+            { type:"quiz", tag:"随手一测", q:"用 HTTP Request 给 pushplus 发消息,「要发的内容按对方要求的格式写好」应该填在哪?", opts:["URL 里","Method 里","随便哪里都行","Body(请求体)里,通常写成 JSON 格式"], answer:3, fb:"对!URL 是地址、Method 是方式、Body 才是条子上写的话——三件套各管各的。", wrongFb:"回想那张条子:地址、送法、内容,分别填哪?", whys:["URL 只是收件地址,内容不写在地址上","Method 只是 POST/GET 这种「送法」,装不下内容","位置是有讲究的,填错对方收不到",""] },
             { type:"lab", desc:"目标:复制成品1,把最后的 Send Email 换成你常用的消息通道(微信/飞书/钉钉)。", steps:[
               "<b>第一步:复制成品1。</b>在 n8n 的 Workflows 列表里找到成品1那条流,点三个点 &rarr; Duplicate,起个新名字如「微信早安消息」。",
               "<b>第二步:删掉 Send Email 节点。</b>进复制出来的新流,选中 Send Email 节点,Delete 删掉。",
-              "<b>第三步:接新通道。</b>加 HTTP Request 节点,Method 选 POST,URL 填 pushplus/飞书/钉钉给你的 webhook 地址,Body 里塞 {{ $json.content }}。",
-              "<b>第四步:Execute 验收。</b>点执行,看你的微信/飞书能不能收到——收到=完成了第一次举一反三。"
+              "<b>第三步:拿到你的 webhook 地址。</b>以最简单的 pushplus(微信收消息)为例:微信搜「pushplus 推送加」公众号,登录官网拿到你的 <b>token</b>(一串字母数字);它的收信地址格式是 <code>http://www.pushplus.plus/send</code>。飞书/钉钉则是在群设置里加「自定义机器人」,直接复制它给的 webhook 网址。",
+              "<b>第四步:接上 HTTP Request 节点,照三件套填。</b>点 Edit Fields 右边「+」搜 <code>HTTP Request</code> 加进来:<b>Method</b> 选 <code>POST</code>;<b>URL</b> 填上一步拿到的地址;打开「<b>Send Body</b>」开关,Body Content Type 选 <code>JSON</code>,内容按对方要求写——pushplus 填:<code>{ \"token\": \"你的token\", \"content\": \"{{ $json.content }}\" }</code>(把消息装进 content,和成品① 邮件正文引用同一个字段)。",
+              "<b>第五步:Execute 验收。</b>点执行,看你的微信/飞书能不能收到——收到=完成了第一次举一反三。收不到?九成是 URL/token 少复制了一个字母,回第三步从源头重新完整复制。"
             ]},
             { type:"quiz", tag:"小测", q:"把成品1从发邮件改成发微信,核心思路是什么?", opts:["全部重搭","前两步(触发+组装)不变,只换最后一个输出节点","两个通道都留着","换掉触发器"], answer:1, fb:"对!骨架不变,只换出口——搭一次,复用 N 种通道。", wrongFb:"什么不变、什么换?", whys:["不用重搭","","都留着是同时发两个,不是替换","触发器是骨架,要换的是输出"] },
             { type:"quiz", tag:"小测", q:"接 webhook 时最容易犯的错是?", opts:["Method 选错了","n8n 版本太旧","URL 填错或 token 拼错","忘了存"], answer:2, fb:"对!webhook 地址少一个字母都收不到——从源头完整复制,原样粘贴。", wrongFb:"先查 URL 有没有完整复制。", whys:["Method 一般是 POST","版本跟这个没关系","","忘了存只是下次打不开"] },
@@ -275,6 +281,7 @@ const COURSE = {
         blocks: [
           { type:"text", h:"先记住这句话", html:`<p><b>90% 的 n8n 问题,都是因为不理解数据结构、或者引用错了字段。</b>把这一关学透,你就跨过了 n8n 最大的门槛。</p>` },
           { type:"callout", variant:"analogy", html:`还记得「快递包裹」吗?前一个节点吐出的包裹里,每样东西都有名字(字段名)。要在后面的节点里用上一步的数据,就得用一个固定写法去「点名」拿货。` },
+          { type:"callout", variant:"tip", html:`<b>其实你已经用过它了。</b>成品① 邮件正文里那句 <code>{{ $json.content }}</code>,你是照着抄的;这一关把它拆开讲透——为什么这么写、哪里容易翻车。顺手解开一个悬念:<b><code>$json</code> 的字面意思就是「上一步的 JSON 包裹」</b>(第 1 章认识的那种快递单),<code>.content</code> 是「从包裹里点名拿 content 这一样」。学完这关,你就从「照抄」升级成「会写」。` },
           { type:"text", h:"表达式的写法", html:`<p>在 n8n 里,引用上一步数据用这个格式:</p><p><code>{{ $json.字段名 }}</code></p><p>还记得成品① 里那个 <code>Set</code> 节点设的 <code>content</code> 字段吗?如果下一步想用它,就写 <code>{{ $json.content }}</code> —— 意思是「把上一步包裹里那个叫 content 的东西拿出来」。字段叫什么,你就把 content 换成什么。</p><p><b>再多举两个例子:</b>假设上一步抓回来一篇新闻,里面有 <code>title</code>(标题)、<code>url</code>(链接)、<code>date</code>(日期)——</p><ul><li>要取标题 → <code>{{ $json.title }}</code></li><li>要取链接 → <code>{{ $json.url }}</code></li><li>要拼成一句话「今天的新闻:xxx(点此查看)」→ 写成 <code>今天的新闻:{{ $json.title }}({{ $json.url }})</code>,n8n 会自动把花括号里的东西替换成实际值。</li></ul><p>想象你在填快递单:收件人是「{{ $json.收件人 }}」,地址是「{{ $json.地址 }}」,电话是「{{ $json.电话 }}」——不管每单具体是谁、地址在哪,你只写一次模板,n8n 帮你填每一单。</p>` },
           { type:"quiz", tag:"随手一测", q:"写法 {{ $json.content }} 里的 content,代表什么?", opts:["一个固定关键词,任何工作流都这么写","n8n 的功能按钮","上一步数据包裹里那个字段的名字","你要发的那条消息的标题"], answer:2, fb:"对!content 只是字段名,上一步那个字段叫啥,你就把它换成啥。", wrongFb:"content 是「字段名」,会随你上一步的数据变。", whys:["不是固定的,字段叫什么你就写什么,不一定是 content","它不是按钮,是写在表达式里点名取数据用的","","content 是字段名,正好这里存的是消息内容,但本质是字段名"] },
           { type:"fill", q:"上一步抓回的数据里有个字段叫 <code>title</code>(标题)。在下一个节点里引用它,应该怎么写?", placeholder:"{{ $json.??? }}", answers:["{{ $json.title }}","{{$json.title}}","{{ $json.title}}","{{$json.title }}"], hint:"格式是 {{ $json.字段名 }},把字段名换成 title", fb:"正确!{{ $json.title }} 就是引用上一步的 title 字段。" },
@@ -303,7 +310,7 @@ const COURSE = {
         canDo:"给工作流接上 DeepSeek 这个不卡网的大脑,密钥安全锁进凭证",
         goal: "让工作流会调用 AI,并学会安全管理密钥",
         blocks: [
-          { type:"text", h:"为什么用 DeepSeek", html:`<p>要让工作流「会思考」,就得接一个 AI 大模型。我们选 <b>DeepSeek</b>:国产、<b>不卡网络</b>、有免费额度(学习够用)、接入简单。这一步是很多新手容易卡住的地方——过了这关后面就顺了。</p>` },
+          { type:"text", h:"为什么用 DeepSeek", html:`<p>要让工作流「会思考」,就得接一个 AI 大模型。我们选 <b>DeepSeek</b>:国产、<b>不卡网络</b>、有免费额度(学习够用)、接入简单。这一步是很多新手容易卡住的地方——过了这关后面就顺了。</p><p>顺手翻译两个高频词,后面见到不慌:<b>API</b>(程序对程序的「服务窗口」——你的 n8n 不是打开 DeepSeek 网页去聊天,而是从后台窗口直接递单子、取结果);<b>API Key</b>(在这个窗口办事的「身份钥匙」,证明是你、也记你的账)。</p>` },
           { type:"lab", desc:"目标:申请一个 DeepSeek 的 API Key,理解它怎么安全锁进 n8n。配一次,后面所有要用 AI 的工作流都能复用。", steps:[
             "<b>去 DeepSeek 官网申请一个 API Key。</b>打开 <code>platform.deepseek.com</code> 注册,进 API Keys 页面,创建一个新的 Key,复制下来,先存记事本里。",
             "<b>这把钥匙怎么填进 n8n?</b>DeepSeek 在 n8n 里是 AI 节点的「大脑」,要在搭 AI 工作流时挂上去。<b>具体填法下一关(成品②)第五、六步会手把手带你做</b>:在 Basic LLM Chain 节点下方「Model」接口点「+」→ 在弹出的「Language Models」面板里选「<b>DeepSeek Chat Model</b>」→ 在它的「<b>Credential</b>」里点「<b>Set up credential</b>」,把这把 Key 粘进去保存。",
@@ -336,6 +343,7 @@ const COURSE = {
         goal: "搭出会调用 AI 的工作流:给主题,自动生成周报/文案",
         blocks: [
           { type:"text", h:"我们要做什么", html:`<p>搭一个工作流:<b>你给一个主题和要求,AI 自动帮你写好周报、通知或文案。</b>这是你的第一个「会思考」的数字员工。</p>` },
+          { type:"callout", variant:"tip", html:`<b>🧱 动手前 30 秒,这关的三个新面孔:</b><br>① <b>Basic LLM Chain(AI 撰写节点)</b>:一个「把提示词交给 AI、收回答案」的工位。它自己不会思考,得单独给它接个大脑(第五步做)。<br>② <b>提示词(Prompt)</b>:你给 AI 员工的「岗位说明书」——序章讲过的那个概念,这关你第一次亲手写一份。写进去的 <code>{{ $json.文体 }}</code> 这类双花括号,就是上一关刚讲透的表达式:把你填的字段动态装进说明书。<br>③ <b>⚠️ 预告一个必踩的坑</b>:打开 LLM Chain 后,<b>提示词框默认根本不出现</b>——要先把最上面的「Source for Prompt」改成「Define below」它才冒出来。第四步会带你做,现在先有个印象:看不到框≠坏了。` },
           { type:"lab", milestone:true, workflow:"02_AI智能写作助手.json", desc:"目标:跟着老师亲手搭出「手动触发 → 填主题要求 → AI 撰写 → 输出成稿」。你给个主题,AI 立刻写好——这是你第一个会思考的数字员工。", steps:[
             "<b>第一步:新建工作流,加第一个节点「手动触发」。</b>跟成品① 一模一样:点右上角橙色「<b>Create workflow</b>」→ 画布中间点「<b>Add first step…</b>」→ 右侧面板标题「<b>What triggers this workflow?</b>」里,<b>直接点列表第一项「Trigger manually」</b>。画布上出现的节点叫「<b>When clicking 'Execute workflow'</b>」(点一下「执行」才跑,方便边搭边看)。",
             "<b>第二步:接「Edit Fields(Set)」,填好要写什么。</b>鼠标移到手动触发节点上,点它右边冒出的「<b>+</b>」,面板标题变「<b>What happens next?</b>」,搜索框输 <code>Edit Fields</code>,点「<b>Edit Fields (Set)</b>」。在面板里找到「<b>Fields to Set</b>」,点橙色「<b>Add Field</b>」加三个字段(每加一个点一次):<code>文体</code>(如「工作周报」)、<code>主题</code>(你这周干了啥)、<code>要求</code>(分几段、多少字、什么语气)。填完按 <b>Esc</b> 回画布。",
@@ -391,9 +399,9 @@ const COURSE = {
           ]},
           { type:"lab", desc:"搭一个最小采集:定时抓一个 RSS 源的最新文章。", steps:[
             "<b>新建工作流,放第一个节点:Manual Trigger(手动触发)。</b>先用它调试,以后可换成定时触发。",
-            "<b>接上 RSS Read 节点,填上 RSS 地址。</b>面板搜 RSS 加进来,URL 填一个你关心的 RSS 地址(比如某新闻站的 /feed)。",
-            "<b>点 Execute(执行),看抓回了什么。</b>右侧输出里抓回了一串文章(标题、链接、摘要)。这就是你的「素材库」入口。",
-            "🚀 <b>没找到 RSS?改用 HTTP Request 节点。</b>URL 填目标网页,一样能把内容抓回来。"
+            "<b>接上 RSS Read 节点,填上 RSS 地址。</b>面板搜 RSS 加进来,URL 填一个你关心的 RSS 地址。<b>一时找不到?先用这个能直接跑通的练手:</b><code>https://sspai.com/feed</code>(少数派,科技生活类)。找你自己想盯的源:搜「网站名 + RSS」,常见地址以 <code>/feed</code> 或 <code>/rss</code> 结尾。",
+            "<b>点 Execute(执行),看抓回了什么。</b>右侧输出里抓回了一串文章。<b>顺便干一件重要的事:记下字段名</b>——RSS 抓回来的文章,标题一般叫 <code>title</code>、摘要叫 <code>contentSnippet</code>、链接叫 <code>link</code>。下一关引用素材,就靠你此刻看到的这些名字。",
+            "🚀 <b>没找到 RSS?改用 HTTP Request 节点。</b>Method 选 GET(去拿东西),URL 填目标网页。<b>先打个预防针:</b>抓普通网页回来的是一大坨网页源代码(HTML,夹着各种尖括号标签),看着很乱——<b>这是正常的,不是你搞错了</b>。第 4 章会专门教你把它清洗干净;所以能找到 RSS 就优先用 RSS,它抓回来的天生是干净的。"
           ]},
           { type:"quiz", tag:"小测", q:"一个网站没有 RSS,你想抓它的内容,用哪个节点?", opts:["RSS Read","Set","HTTP Request(万能取数器)","IF"], answer:2, fb:"对!没 RSS 就用 HTTP Request 直接去网址要数据。", wrongFb:"没 RSS 时,用那个「万能取数器」。", whys:["RSS Read 只能订有 RSS 的源,这网站没 RSS 用不了","Set 是整理字段的,不负责去网址抓数据","","IF 是岔路口做判断的,不抓数据"] },
           { type:"quiz", tag:"小测", q:"RSS 的本质是?", opts:["一种病毒","付费才有","一种图片格式","网站的更新订阅地址,更新了自动推给你"], answer:3, fb:"对!像订杂志,网站一更新你就自动收到。", wrongFb:"想想「订杂志」那个比喻。", whys:["RSS 是正经的订阅地址,不是病毒,放心用","RSS 多数免费,搜「网站名+RSS」就能找到","RSS 是订阅地址不是图片格式,跟图片无关",""] },
@@ -412,8 +420,8 @@ const COURSE = {
           { type:"lab", milestone:true, workflow:"03_文档内容自动生产线.json", desc:"目标:把「采集 → AI 写正文 → 归档」串成自动流水线。跟着老师一步步搭,亲手让素材自己变成一篇能用的稿子。", steps:[
             "<b>在上一关采集素材的基础上,接上 Basic LLM Chain(AI 撰写)节点。</b>鼠标移到采集节点上点右边「<b>+</b>」,在「What happens next?」搜索框输 <code>LLM Chain</code>,点「<b>Basic LLM Chain</b>」。这就是 AI 写正文的工位;提示词里引用上一步采集回来的素材。",
             "<b>给 AI 撰写节点接上大脑 DeepSeek。</b>和成品② 第五步一模一样:看 Basic LLM Chain 节点<b>正下方的「Model」接口,点接口下面的「+」</b>→ 右侧滑出「<b>Language Models</b>」面板 → 点「<b>DeepSeek Chat Model</b>」就自动接上(<b>不用拖线</b>)。钥匙在第 2-2/成品② 配过了,这里会自动复用。",
-            "<b>点开 AI 撰写节点,把提示词写细。</b><b>⚠️ 同成品② 第四步:先把最上面「Source for Prompt (User Message)」从默认的「Connected Chat Trigger Node」改成「Define below」,下面才会出现提示词框。</b>然后在框里告诉它文体、风格、字数,并用 <code>{{ $json.字段名 }}</code> 把上一步采集的素材引进来。<b>这是整条线最该花心思的地方。</b>",
-            "<b>末尾接上归档节点,把稿子存起来。</b>用 Edit Fields(Set) 整理好,再接 Google Sheets / 飞书多维表 / 本地文件,把写好的稿子存进去。",
+            "<b>点开 AI 撰写节点,把提示词写细。</b><b>⚠️ 同成品② 第四步:先把最上面「Source for Prompt (User Message)」从默认的「Connected Chat Trigger Node」改成「Define below」,下面才会出现提示词框。</b>然后在框里告诉它文体、风格、字数,并用 <code>{{ $json.字段名 }}</code> 把上一步采集的素材引进来。<b>字段名填什么?不是背出来的,是看出来的:</b>点开上一步采集节点,右侧输出面板里写着什么名字,你就引用什么(RSS 常见:标题 <code>{{ $json.title }}</code>、摘要 <code>{{ $json.contentSnippet }}</code>)。先看再引,永远不会错。<b>提示词是整条线最该花心思的地方。</b>",
+            "<b>末尾接上归档节点,把稿子存起来。</b>用 Edit Fields(Set) 整理好,再接一个出口把稿子存住。<b>国内学员推荐两条路:</b>① 飞书多维表(搜 Lark/飞书相关节点,配一次授权);② 最零门槛——接 <code>Convert to File</code> 导出 CSV 文件下载(第 5 章成品⑤会细讲,这里先会用)。Google Sheets 需要谷歌账号和稳定的国际网络,国内不推荐。",
             "<b>点画布底部居中橙色「Execute workflow」,看稿子自动流出来。</b>一篇稿子从素材到成稿自动跑完——<b>你的内容生产线跑通了。</b>"
           ]},
           { type:"order", q:"内容生产线的环节,按顺序排好。", nodes:[
@@ -493,8 +501,8 @@ const COURSE = {
           ]},
           { type:"lab", desc:"搭一个多源抓取 + 清洗的开头。", steps:[
             "<b>新建工作流,放第一个节点:Manual Trigger(手动触发)。</b>先用它调试。",
-            "<b>接上第一个 HTTP Request 节点,抓一个信息源。</b>抓一个你关心的源(新闻接口/RSS/网页)。",
-            "<b>再接上第二个 HTTP Request 节点,抓另一个源。</b>多接一个,体会「多源」是什么意思。",
+            "<b>接上第一个 HTTP Request 节点,抓一个信息源。</b>Method 选 GET(去拿东西)。抓一个你关心的源;没头绪就先用第 3 章跑通过的 RSS 地址(如 <code>https://sspai.com/feed</code>,用 RSS Read 节点也行)。",
+            "<b>再接上第二个 HTTP Request(或 RSS Read)节点,抓另一个源。</b>多接一个,体会「多源」是什么意思——两个采集节点都直接连在触发器后面,并排各抓各的。",
             "<b>后面接上 Set 节点,把脏数据捋干净。</b>只保留你要的字段(标题、链接、时间),其余丢掉。",
             "<b>点 Execute(执行)看输出。</b>从一堆原始数据,变成几列干净信息。这就是 AI 蒸馏前的「备料」。"
           ]},
@@ -518,7 +526,7 @@ const COURSE = {
             { type:"lab", desc:"目标:在成品4的「抓数据」和「AI摘要」之间,加 Edit Fields 做清洗——只保留 title/summary/date,把其他全过滤掉。", steps:[
               "<b>第一步:找到成品4的流。</b>打开你的「信息监控+每日简报」流。在抓数据和 AI 摘要之间,点连线上的 +,加 Edit Fields(Set)节点。",
               "<b>第二步:关掉 Include Other Input Fields。</b>点开 Edit Fields 配置,找到这个开关,<b>关掉(Off)</b>——只保留你手动指定的字段,其他全扔掉。这才是清洗。",
-              "<b>第三步:指定保留字段。</b>Fields to Set 里加三个:title(引 { $json.title })、summary(引 { $json.summary } 或 { $json.contentSnippet })、date(引 { $json.pubDate })。",
+              "<b>第三步:指定保留字段。</b>Fields to Set 里加三个:title(值填 <code>{{ $json.title }}</code>)、summary(值填 <code>{{ $json.summary }}</code>,RSS 源常叫 <code>{{ $json.contentSnippet }}</code>,以上一步输出面板里的名字为准)、date(值填 <code>{{ $json.pubDate }}</code>)。<b>记住是双花括号 {{ }}</b>——单花括号 n8n 不认。",
               "<b>第四步:对比效果。</b>先点「执行到此节点」看 Edit Fields 输出——是不是只剩三个字段了?再跑完整流程,对比清洗前后的 AI 摘要。"
             ]},
             { type:"quiz", tag:"小测", q:"Edit Fields 的「Include Other Input Fields」为什么要关掉?", opts:["关不关都一样","开着看起来高级","关掉跑得更快","关掉=只保留你指定的字段,其他全扔——这才是清洗;开着等于没洗"], answer:3, fb:"对!这个开关是灵魂:关掉=白名单模式(只留指定的),开着=追加模式(原来脏数据全保留)。", wrongFb:"这个开关是清洗的关键——开着=脏数据原封不动流过去。", whys:["区别大了","跟高级不高级没关系","跟速度无关",""] },
@@ -537,7 +545,7 @@ const COURSE = {
           { type:"lab", milestone:true, workflow:"04_信息监控每日简报.json", challenge:"你已经搭过三个成品了,这次撤掉扶手:下面只给需求和节点清单,先自己想连法、自己搭。想 10 分钟再看救援,记得牢十倍——课下真自己用的时候,身边可没有步骤。", nodeList:["Manual Trigger(先手动调试)","Basic LLM Chain + DeepSeek Chat Model(蒸馏)","HTTP Request(推到群机器人)","Schedule Trigger(进阶:换成定时)"], desc:"需求:在上一关采集清洗的基础上,接「AI 蒸馏成 3-5 条重点 → 推送到你的群」。验收:点执行,群里真收到一份简报。", steps:[
             "<b>在采集清洗的后半段,接上 Basic LLM Chain(AI 蒸馏)节点。</b>点上一节点右边「<b>+</b>」→ 搜 <code>LLM Chain</code> → 点「<b>Basic LLM Chain</b>」。这就是你的简报编辑;<b>再给它接大脑:点 LLM Chain 下方「Model」接口的「+」→ 在「Language Models」面板里点「DeepSeek Chat Model」</b>(和成品② 第五步一样,不用拖线)。",
             "<b>在蒸馏节点的提示词里,让 AI 把信息浓缩成重点。</b><b>⚠️ 同成品② 第四步:双击打开节点后,先把最上面「Source for Prompt (User Message)」改成「Define below」,下面才会出现提示词框。</b>然后告诉它:把抓回来的信息(用 <code>{{ $json.字段名 }}</code> 引进来)缩成 3-5 条重点。",
-            "<b>末尾接上推送节点,把简报发到群里。</b>点 LLM Chain 右边「<b>+</b>」→ 搜 <code>HTTP Request</code> → 点「<b>HTTP Request</b>」。配法:<b>Method</b> 选 <code>POST</code>,<b>URL</b> 填你的企微/飞书群机器人 Webhook 地址,打开 <b>Send Body</b> 把简报内容按机器人要求的格式塞进去。",
+            "<b>末尾接上推送节点,把简报发到群里。</b>点 LLM Chain 右边「<b>+</b>」→ 搜 <code>HTTP Request</code> → 点「<b>HTTP Request</b>」。配法就是 1-4 学过的三件套:<b>Method</b> 选 <code>POST</code>,<b>URL</b> 填你的企微/飞书群机器人 Webhook 地址,打开 <b>Send Body</b>、类型选 JSON。<b>两个关键点:</b>① AI 蒸馏的结果放在上一步输出的 <code>text</code> 字段里(不信点开 LLM Chain 的输出面板看,字段名就叫 text),所以引用写 <code>{{ $json.text }}</code>;② Body 格式各家机器人不一样,照抄:企微填 <code>{ \"msgtype\": \"text\", \"text\": { \"content\": \"{{ $json.text }}\" } }</code>,pushplus 填 <code>{ \"token\": \"你的token\", \"content\": \"{{ $json.text }}\" }</code>(格式出处:各家机器人的说明文档,不用背)。",
             "<b>开头先用 Manual Trigger(手动触发)调试,点底部橙色「Execute workflow」看效果。</b>群里立刻收到一份简报——<b>不用等明天,现在就看到效果。先把这个跑通。</b>",
             "🚀 <b>进阶(以后再玩):想每天自动送、不用你点?</b>把开头的手动触发换成 <code>Schedule Trigger</code>(定时),设每天早上 8 点,再把右上角切 <code>Active</code>——就从「立刻看」升级成「每天都送」。"
           ]},
@@ -577,7 +585,7 @@ const COURSE = {
             "<b>第一步:新建工作流,加第一个节点「手动触发」。</b>跟成品① 一样:点橙色「<b>Create workflow</b>」→ 点「<b>Add first step…</b>」→ 在「What triggers this workflow?」里点第一项「<b>Trigger manually</b>」。它点一下才跑,方便边搭边看。",
             "<b>第二步:接「Edit Fields(Set)」,粘一段模拟乱发票当原料。</b>点手动触发节点右边「<b>+</b>」→ 搜 <code>Edit Fields</code> → 点「<b>Edit Fields (Set)</b>」→ 点「<b>Add Field</b>」加一个字段:左框 name 填 <code>rawText</code>,右框 value 粘:「价税合计人民币壹仟贰佰捌拾元整¥1280.00 开票日期2026年06月03日 销售方成都云图科技有限公司」。",
             "<b>第三步:接「Basic LLM Chain」并接上大脑 DeepSeek。</b>点 Edit Fields 右边「<b>+</b>」→ 搜 <code>LLM Chain</code> → 点「<b>Basic LLM Chain</b>」;再<b>点它正下方「Model」接口的「+」→ 在「Language Models」面板里点「DeepSeek Chat Model」</b>(和成品② 第五步一样,不用拖线)。钥匙第 2 章配过会自动复用。",
-            "<b>第四步:在 Basic LLM Chain 的提示词里,把要提取的字段写死。</b>双击打开它。<b>⚠️ 同成品② 第四步:先把最上面「Source for Prompt (User Message)」从默认的「Connected Chat Trigger Node」改成「Define below」,下面才会冒出提示词框。</b>然后提示词填:「请从下面文字提取并以 JSON 返回:amount(金额,只要数字)、date(开票日期,YYYY-MM-DD)、partner(对方公司全称)。找不到填空。<b>直接返回纯 JSON,不要加 ```代码块,不要任何解释。</b>文字:{{ $json.rawText }}」。",
+            "<b>第四步:在 Basic LLM Chain 的提示词里,把要提取的字段写死。</b>双击打开它。<b>⚠️ 同成品② 第四步:先把最上面「Source for Prompt (User Message)」从默认的「Connected Chat Trigger Node」改成「Define below」,下面才会冒出提示词框。</b>然后提示词填:「请从下面文字提取并以 JSON 返回(就是第 1 章认识的「字段名:值」快递单格式——让 AI 按快递单交货,下一步才拆得开):amount(金额,只要数字)、date(开票日期,YYYY-MM-DD)、partner(对方公司全称)。找不到填空。<b>直接返回纯 JSON,不要加 ```代码块,不要任何解释。</b>文字:{{ $json.rawText }}」。",
             "<b>第五步:再接一个「Edit Fields(Set)」,把 AI 揪出来的三个值拆成三列。</b><b>⚠️ 关键真相(实测必踩的坑):</b>AI 的回答<b>整段塞在一个叫 <code>text</code> 的字段里、是一串 JSON 文字</b>(不是现成的三个字段),有时它还多包一层 <code>```json</code> 外壳——所以<b>不能直接写 <code>{{ $json.amount }}</code></b>(那样啥也取不到)。正确做法:点「Add Field」加三个字段 <code>amount</code>/<code>date</code>/<code>partner</code>,每个的<b>值框右上角切到「Expression」(表达式)模式</b>,分别粘下面这串(只改结尾的字段名):<br><code>{{ JSON.parse($json.text.replace(/```json|```/g,'').trim()).amount }}</code><br>另外两列把结尾 <code>.amount</code> 换成 <code>.date</code>、<code>.partner</code>。<b>这串看不懂没关系,照抄就行</b>,它干的活是:<b>先把 AI 回答外面那层代码块壳扒掉,再把里面的 JSON 拆开,取出对应那个值。</b>",
             "<b>第六步:接「Convert to File」节点,把输出格式选成 CSV,点底部橙色「Execute workflow」验证。</b>点上一节点「+」→ 搜 <code>Convert to File</code> → 点「<b>Convert to File</b>」→ 在它的配置里把输出格式选成 <b>CSV</b>。执行后看最后是不是出现了 amount=1280、date=2026-06-03、partner=成都云图科技 这样干净的三列 ✅"
           ]},
@@ -634,7 +642,7 @@ const COURSE = {
           { type:"lab", challenge:"这关的三块积木上面都讲过了,连法自己想:什么当开关?文字在哪准备?从哪发出去?哪一步决定「明早它真的自己跑」?", nodeList:["Schedule Trigger(定时)","Edit Fields / Set(准备文字)","发消息节点(企微 WeCom / 飞书 Lark)"], desc:"需求:做一个「每天早上 9 点自动发报销提醒」的流程。验收:手动执行一次群里能收到 + 工作流已切到 Active(激活),明早它会自己跑。", steps:[
             "<b>新建工作流,放第一个节点:Schedule Trigger(定时触发)。</b>设 Days(按天)+ 时间 09:00。",
             "<b>接上 Set 节点,准备好提醒文字。</b>内容填:「☀️ 早安!请记得提交本月报销,截止本周五。」",
-            "<b>接上发消息节点,第一次用先配凭证授权。</b>企微搜 WeCom、飞书搜 Lark,配 Credential 授权;消息内容填 <code>{{ $json.提醒文字 }}</code>。",
+            "<b>接上发消息节点。</b>两条路任选:① 最熟的路——用 1-4/成品④ 用过的 <code>HTTP Request</code> 发到 pushplus/群机器人(三件套照旧,内容引 <code>{{ $json.提醒文字 }}</code>);② 想用官方节点——企微搜 WeCom、飞书搜 Lark,第一次用先配 Credential 授权,消息内容同样填 <code>{{ $json.提醒文字 }}</code>。",
             "<b>把工作流右上角切到 Active(激活)。</b>这是关键一步——只有激活了,明早 9 点它才会真自动发。想立刻验证就手动 Execute 一次,看群里收到没。",
             "🚀 <b>进阶(以后再玩):只想每月 25 号发,别天天打扰?</b>在中间加一个 IF 节点:今天是 25 号才发,否则跳过。"
           ]},
@@ -693,9 +701,10 @@ const COURSE = {
           { type:"lab", desc:"目标:摸一次 AI Agent,把抽象概念变成你真搭过的东西(为最后的结课大成品打底)。", steps:[
             "<b>新建工作流,放第一个节点:Manual Trigger(手动触发)。</b>点一下才跑,方便调试。",
             "<b>接上一个 AI Agent 节点。</b>面板搜「AI Agent」加进来。",
-            "<b>给 Agent 挂大脑。</b>把你配好的 <code>DeepSeek Chat Model</code> 连到它下方的 <b>Chat Model</b> 接口。",
-            "<b>再给 Agent 挂个工具试试。</b>加一个 <code>Calculator</code>(计算器)节点到它的 <b>Tool</b> 接口上。",
-            "<b>点 Execute(执行),问它一句要算数的话。</b>比如「123 乘 456 等于几」,看它<b>自己决定去调用计算器工具</b>——这就是 Agent 在「思考 + 选工具」,和固定工作流的本质区别。"
+            "<b>给 Agent 挂大脑。</b>和成品② 第五步同一个动作:点 Agent 节点<b>下方「Chat Model」接口的「+」</b>,在弹出的面板里点 <code>DeepSeek Chat Model</code>——自动接上,钥匙复用第 2 章配的。",
+            "<b>再给 Agent 挂个工具试试。</b>点 Agent 下方的 <b>Tool</b> 接口「+」,在面板里选 <code>Calculator</code>(计算器)。",
+            "<b>把要问的话填进 Agent。</b><b>⚠️ 老朋友坑又来了(成品② 踩过):</b>双击 Agent 节点,最上面「Source for Prompt (User Message)」默认是「Connected Chat Trigger Node」——我们用的是手动触发,<b>必须改成「Define below」</b>,下面出现的 Prompt 框里填一句要算数的话,比如「123 乘 456 等于几?」。",
+            "<b>点 Execute(执行),看它干活。</b>点开 Agent 节点的执行日志,能看到它<b>自己决定去调用了计算器工具</b>再回答——这就是 Agent 在「思考 + 选工具」,和固定工作流的本质区别。"
           ]},
           { type:"quiz", tag:"小测", q:"AI Agent 比普通工作流,多了什么本事?", opts:["跑得更快","不要钱","会自己思考、自己选用哪个工具","界面更好看"], answer:2, fb:"对!会自己判断和选工具,这是 Agent 的灵魂。", wrongFb:"想想「打印路线图」和「会变通的实时导航」的区别。", whys:["Agent 反而更慢,它多了「思考」这步,快不是它的特点","Agent 调 AI 思考更费钱,不是「不要钱」","","界面不是区别,区别在它会自己判断、选工具"] },
           { type:"quiz", tag:"小测", q:"下面哪种活,更适合用 AI Agent(而不是普通工作流)?", opts:["每天早 9 点定时发一条固定消息","每周一固定生成一份格式一样的报表","把表格 A 的数据复制到表格 B","读一张乱糟糟的客服工单,判断该转给哪个部门"], answer:3, fb:"对!「需要临场判断」的活才上 Agent。其他三个流程固定,用普通工作流又快又稳。", wrongFb:"哪个事先没法写死规则、需要 AI 临场判断?", whys:["定时发固定消息步骤写死了,普通工作流又快又稳","固定格式报表规则明确,普通工作流更合适","复制数据是死规则,用 Agent 浪费钱还更慢",""] },
@@ -730,10 +739,10 @@ const COURSE = {
             { emoji:"🪟", front:"Window 窗口", back:"只记最近 N 轮对话。最简单常用的短期记忆方式,接上去就能让对话连贯。" }
           ]},
           { type:"lab", desc:"给上一关的 AI Agent 装上记忆,让它能接住多轮对话。", steps:[
-            "<b>打开你在 6-1 关搭的那个 AI Agent 工作流。</b>就是带 Chat Model 的那个。",
+            "<b>打开你在 6-1 关搭的那个 AI Agent 工作流,把起点换掉。</b><b>为什么要换?</b>测记忆得「连着聊两句」,手动触发一次只能跑一问,没法聊第二句。所以把开头的 Manual Trigger 删掉,换成 <code>Chat Trigger</code>(聊天触发器,面板搜 Chat)——它给你一个能连续发消息的聊天窗。这个节点是下下关(6-5)的主角,这里先借用,只管加上就行。顺手把 Agent 里的「Source for Prompt」改回默认的「Connected Chat Trigger Node」(现在真有聊天入口了,让它听聊天窗的)。",
             "<b>给 Agent 挂上记忆节点。</b>点 Agent 节点下方的 <b>Memory</b> 接口,加一个 <code>Window Buffer Memory</code>(窗口记忆)节点挂上去。",
             "<b>设它记住最近几轮对话。</b>比如设成记最近 5 轮。",
-            "<b>测试一下记忆有没有生效。</b>先问它「我叫小明」,再问「我叫什么?」——装了记忆它能答出「小明」,没装就会反问你。这一前一后的对比,你就摸到记忆的作用了 ✅"
+            "<b>测试一下记忆有没有生效。</b>点 Chat Trigger 的「Open Chat」打开聊天窗:先发「我叫小明」,再发「我叫什么?」——装了记忆它能答出「小明」;想看反差,把 Memory 节点断开再问一遍,它就反问你了。这一前一后的对比,你就摸到记忆的作用了 ✅"
           ]},
           { type:"quiz", tag:"小测", q:"你希望 AI 助理在「同一次对话里」能接住上下文(比如你说「再正式点」它知道改什么),该用?", opts:["不需要记忆","换个更贵的模型","只能长期记忆","短期记忆(如 Window 窗口记忆)"], answer:3, fb:"对!一次对话内接上下文,短期记忆就够了。", wrongFb:"一次对话内的连贯,用哪种记忆最划算?", whys:["不装记忆它就金鱼记忆,问完上句忘上句,接不住","换贵模型也没用,不装记忆它照样忘上一句","一次对话内用短期记忆就够,长期记忆是杀鸡用牛刀",""] },
           { type:"quiz", tag:"小测", q:"你想让助理「跨越好几天都记得你的偏好」,需要?", opts:["长期记忆(存进外部数据库)","短期记忆就行","不可能做到","每次重新告诉它"], answer:0, fb:"对!跨会话长期记住,得把记忆存到外部,像写进笔记本。", wrongFb:"跨天记住=便利贴不够,得用「笔记本」那种。", whys:["","短期记忆是便利贴,聊完就撕,跨不了天","能做到,把记忆存进外部数据库就行","每次重说太累,装上长期记忆它自己就记住了"] }
