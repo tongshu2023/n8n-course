@@ -97,6 +97,13 @@
   .oc-banner a{display:inline-block;padding:13px 28px;background:var(--bg2);border:1px solid var(--line);border-radius:980px;
     font-size:14px;color:var(--txt);text-decoration:none;font-weight:500;transition:.15s}
   .oc-banner a:hover{background:var(--bg3);border-color:var(--brand)}
+  .gate-banner{margin:8px 0 20px;background:#fff8f2;border:1px solid #f0c7aa;border-radius:16px;
+    padding:16px 18px;display:flex;align-items:center;gap:14px;justify-content:space-between;box-shadow:var(--shadow)}
+  .gate-copy{min-width:0}.gate-copy strong{display:block;font-size:14px}.gate-copy p{font-size:12px;color:var(--txt2);margin-top:3px}
+  .gate-refresh{flex-shrink:0;background:var(--card);border:1px solid var(--line);color:var(--brand);font-size:13px;
+    padding:8px 12px;border-radius:10px;font-weight:600}.gate-refresh:hover{background:var(--bg2)}
+  .gate-refresh:disabled{opacity:.55;cursor:wait}.gate-wait{margin-top:22px;font-size:15px;color:var(--brand);font-weight:600}
+  @media (max-width:540px){.gate-banner{align-items:flex-start;flex-direction:column}.gate-refresh{width:100%}}
   .chapter{margin-top:42px}
   .ch-head{display:flex;align-items:baseline;gap:10px;margin-bottom:14px;padding:0 4px}
   .ch-head .ic{display:none}
@@ -423,7 +430,8 @@
   </div>
 </div>
 
-<script src="course-data.js?v=20260706b"></script>
+<script src="gate-client.js?v=20260716a"></script>
+<script src="course-data.js?v=20260716a"></script>
 <script src="homeworks.js?v=20260706b"></script>
 <script>
 /* =========================================================
@@ -527,13 +535,49 @@ COURSE.chapters.forEach((ch, ci) => ch.lessons.forEach((ls, li) => {
 }));
 const FLAT_IDS = FLAT.map(l => l.id);
 
+let gateState = CourseGate.sanitizeState({
+  openUpTo: CONFIG.openUpTo || 1,
+  source: "fallback",
+  online: false
+}, FLAT.length, CONFIG.openUpTo || 1);
+const gateClient = new CourseGate.GateClient({
+  apiUrl: CONFIG.gateApiUrl || "",
+  total: FLAT.length,
+  fallbackOpenUpTo: CONFIG.openUpTo || 1,
+  refreshMs: CONFIG.gateRefreshMs || 30000,
+  onChange: function(state){
+    gateState = state;
+    const app = document.getElementById("app");
+    const home = document.getElementById("view-home");
+    if(app && !app.classList.contains("hidden") && home && !home.classList.contains("hidden")) renderHome();
+  }
+});
+
+function gateNoticeHtml(){
+  const opened = Math.min(FLAT.length, gateState.openUpTo || 1);
+  const allOpen = opened >= FLAT.length;
+  const status = gateState.online ? "已连接老师控制台" : (gateState.source === "cache" ? "暂时离线，沿用上次同步状态" : "暂时离线，仅开放第一关");
+  const main = allOpen ? `老师已开放全部 ${FLAT.length} 关` : `老师已开放到第 ${opened} 关`;
+  return `<div class="gate-banner"><div class="gate-copy"><strong>🔐 ${main}</strong><p>${status}。完成本关只记进度，下一关由老师放行。</p></div>
+    <button class="gate-refresh" id="gateRefreshBtn" onclick="refreshGatesNow()">检查老师是否放行</button></div>`;
+}
+
+function refreshGatesNow(){
+  const btn = document.getElementById("gateRefreshBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "检查中…"; }
+  gateClient.refresh().finally(function(){
+    const current = document.getElementById("gateRefreshBtn");
+    if(current){ current.disabled = false; current.textContent = "检查老师是否放行"; }
+  });
+}
+
 function getDone(){ try{ return new Set(JSON.parse(localStorage.getItem(LS_PROG)||"[]")); }catch(e){ return new Set(); } }
 function saveDone(set){ try{ localStorage.setItem(LS_PROG, JSON.stringify([...set])); }catch(e){ console.warn("progress storage failed"); } }
 function isDone(id){ return getDone().has(id); }
 function isUnlocked(id){
   const i = FLAT_IDS.indexOf(id);
   if(CONFIG.unlockMode === "manual"){     // 老师手动控制:开放到第 openUpTo 关
-    return i < (CONFIG.openUpTo || 1);
+    return CourseGate.isUnlocked(i, gateState);
   }
   if(i <= 0) return true;                 // 自动模式:第一关恒解锁
   return getDone().has(FLAT_IDS[i-1]);    // 自动模式:前一关通关即解锁
@@ -606,6 +650,7 @@ function logout(){ try{ localStorage.removeItem(LS_AUTH); }catch(e){} location.r
 function enterApp(){
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
+  gateClient.start();
   renderHome();
 }
 
@@ -642,10 +687,15 @@ function renderHome(){
   const pct = FLAT.length ? Math.round(totalDone/FLAT.length*100) : 0;
   const ringR = 30, ringC = 2*Math.PI*ringR, ringOff = ringC * (1-pct/100);
   const nextLesson = FLAT.find(l => isUnlocked(l.id) && !isDone(l.id));
+  const allCourseDone = totalDone >= FLAT.length;
+  const heroAction = nextLesson
+    ? `<button class="btn-continue" onclick="openLesson('${nextLesson.id}')">▸ ${totalDone>0?'继续学习':'开始第一关'}</button>`
+    : (allCourseDone ? '<div class="all-done">🎓 全部学完,你出师了!</div>' : '<div class="gate-wait">✓ 本轮已完成，等待老师开放下一关</div>');
   let html = `<div class="hero">
-    <div class="hero-main"><h2>${COURSE.title}</h2><p>${COURSE.intro}</p>${nextLesson ? `<button class="btn-continue" onclick="openLesson('${nextLesson.id}')">▸ ${totalDone>0?'继续学习':'开始第一关'}</button>` : '<div class="all-done">🎓 全部学完,你出师了!</div>'}</div>
+    <div class="hero-main"><h2>${COURSE.title}</h2><p>${COURSE.intro}</p>${heroAction}</div>
     <div class="hero-visual"><img src="assets/wf02.png" alt="AI 写作工作流示意"></div>
   </div>
+  ${gateNoticeHtml()}
   <div class="oc-banner"><a href="open-class.html" target="_blank">🎓 还犹豫要不要上车？先来听 <b>1 小时免费公开课</b>——零代码搭出第一个数字员工 →</a></div>`;
   const _due = dueReviews();
   if(_due.length){
@@ -662,7 +712,7 @@ function renderHome(){
       const un = isUnlocked(ls.id), dn = isDone(ls.id), cur = un && !dn;
       const mst = masteryOf(ls.id);
       const badge = dn ? (ls.milestone ? (mst>=3?"●":mst>=2?"◐":"○") : "✓") : "";
-      let tag = '<span class="lv-tag" style="color:var(--lock)">未解锁</span>';
+      let tag = '<span class="lv-tag" style="color:var(--lock)">等待老师开放</span>';
       if(dn) tag = '<span class="lv-tag tag-done">已通关</span>';
       else if(cur) tag = '<span class="lv-tag tag-current">进行中</span>';
       let mtag = ls.milestone ? '<span class="lv-tag tag-milestone">里程碑</span>' : '';
@@ -734,10 +784,18 @@ var _msCount = 0;
 
 function openLesson(id, review){
   window.scrollTo(0,0);
-  CUR = FLAT.find(l => l.id === id);
+  const target = FLAT.find(l => l.id === id);
+  if(!target){ renderHome(); return; }
+  const canReview = !!review && isDone(id);
+  if(!canReview && !isDone(id) && !isUnlocked(id)){
+    alert("这一关还没开放。完成当前关后，等待老师在控制台放行。");
+    renderHome();
+    return;
+  }
+  CUR = target;
   answered = {};
   // 复习模式(从"该复习了"进来):内容全展开,但练习清空重做——复习=重新提取记忆,不是重读答案
-  _reviewMode = !!review && isDone(id);
+  _reviewMode = canReview;
   // 已完成关卡回看时全部展开,避免卡在第一步
   _visUpTo = isDone(id) ? (CUR.blocks ? CUR.blocks.length : 99) : 1;
   document.getElementById("view-home").classList.add("hidden");
@@ -1109,9 +1167,11 @@ function completeLesson(){
   const modal = document.getElementById("modal");
   document.getElementById("modalEmoji").textContent = CUR.milestone ? "🏆" : "🎉";
   document.getElementById("modalTitle").textContent = CUR.milestone?"拿下一个成品!":"通关!";
-  document.getElementById("modalDesc").textContent = next ? `已解锁下一关：${next.title}` : "已解锁下一关";
-  document.getElementById("modalBtn").textContent = "去下一关";
-  modal._next = next ? next.id : null;
+  document.getElementById("modalDesc").textContent = next
+    ? (isUnlocked(next.id) ? "本关已完成。下一关已由老师开放，回到关卡地图后可进入。" : "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。")
+    : "最后一关已完成，全部课程通关。";
+  document.getElementById("modalBtn").textContent = "返回关卡地图";
+  modal._next = null;
   modal.classList.remove("hidden");
 }
 function closeModal(){
@@ -1124,7 +1184,7 @@ function closeModal(){
 /* 键盘翻页(像 PPT):右/下/空格=推进下一块,左/上=回看。降低"点继续"的鼠标摩擦 */
 document.addEventListener('keydown', (e)=>{
   const modal = document.getElementById('modal');
-  if(modal && !modal.classList.contains('hidden')){   // 通关弹窗:Enter / 右键 / 空格 = 进下一关
+  if(modal && !modal.classList.contains('hidden')){   // 通关弹窗:Enter / 右键 / 空格 = 返回关卡地图
     if(e.key==='Enter' || e.key==='ArrowRight' || e.key===' '){ e.preventDefault(); closeModal(); }
     return;
   }
