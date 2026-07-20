@@ -376,7 +376,7 @@
 <body>
 
 <!-- ============ 登录 ============ -->
-<section id="view-login">
+<section id="view-login" class="hidden">
   <div class="login-card">
     <div class="logo"><svg width="58" height="58" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="lg0" x1="0" y1="0" x2="56" y2="56"><stop offset="0%" stop-color="#ff5d3b"/><stop offset="100%" stop-color="#ffd24a"/></linearGradient></defs><path d="M14 41 Q28 41 28 28 Q28 15 42 15" stroke="url(#lg0)" stroke-width="3.5" stroke-linecap="round" fill="none" opacity=".5"/><circle cx="14" cy="41" r="5" fill="url(#lg0)"/><circle cx="42" cy="15" r="5" fill="url(#lg0)"/><circle cx="28" cy="28" r="8" fill="url(#lg0)"/><circle cx="28" cy="28" r="3" fill="#fff" opacity=".92"/></svg></div>
     <h1 id="loginTitle">数字员工养成计划</h1>
@@ -405,7 +405,7 @@
       <div class="xp-counter" title="学习积分:答对练习、闯过关都会涨"><span class="xp-ic">⚡</span><span id="xpNum">0</span></div>
       <button class="btn-ghost" onclick="showHomework()" title="课后作业">📓 作业</button>
       <button class="btn-ghost" onclick="alert(exportAnswers())" title="导出所有答案">📤 导出</button>
-      <button class="btn-ghost" onclick="logout()">退出</button>
+      <button class="btn-ghost" id="logoutBtn" onclick="logout()">退出</button>
     </div>
   </div>
   <div class="wrap">
@@ -653,6 +653,7 @@ function logout(){ try{ localStorage.removeItem(LS_AUTH); }catch(e){} location.r
 function enterApp(){
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
+  document.getElementById("logoutBtn").classList.toggle("hidden", CONFIG.unlockMode !== "manual");
   if(CONFIG.unlockMode === "manual") gateClient.start();
   renderHome();
 }
@@ -1216,7 +1217,12 @@ if(new URLSearchParams(location.search).get('reset') === '1'){
   history.replaceState(null, '', location.pathname);   // 抹掉地址栏的 ?reset=1,免得刷新又清一次
   alert('✅ 已重置学习进度,现在可以从头重新做题了');
 }
-try{ if(localStorage.getItem(LS_AUTH) === "1") enterApp(); }catch(e){ console.warn("storage blocked, login required each visit"); }
+if(CONFIG.unlockMode === "auto"){
+  enterApp();
+} else {
+  document.getElementById("view-login").classList.remove("hidden");
+  try{ if(localStorage.getItem(LS_AUTH) === "1") enterApp(); }catch(e){ console.warn("storage blocked, login required each visit"); }
+}
 </script>
 </body>
 </html>

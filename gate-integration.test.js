@@ -14,6 +14,12 @@ test("生产配置恢复自学自动解锁模式", () => {
   assert.match(html, /gate-client\.js/);
 });
 
+test("自学模式无需班级口令即可直接进入课程", () => {
+  assert.match(html, /<section id="view-login" class="hidden">/);
+  assert.match(html, /if\(CONFIG\.unlockMode === "auto"\)\{\s*enterApp\(\);/);
+  assert.match(html, /logoutBtn[\s\S]*?CONFIG\.unlockMode !== "manual"/);
+});
+
 test("关卡入口自身校验远端闸门", () => {
   const openLesson = html.match(/function openLesson\(id, review\)\{[\s\S]*?\n\}/);
   assert.ok(openLesson, "应存在 openLesson");
