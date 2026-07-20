@@ -431,7 +431,7 @@
 </div>
 
 <script src="gate-client.js?v=20260716a"></script>
-<script src="course-data.js?v=20260716a"></script>
+<script src="course-data.js?v=20260720a"></script>
 <script src="homeworks.js?v=20260706b"></script>
 <script>
 /* =========================================================
@@ -554,6 +554,9 @@ const gateClient = new CourseGate.GateClient({
 });
 
 function gateNoticeHtml(){
+  if(CONFIG.unlockMode !== "manual"){
+    return `<div class="gate-banner"><div class="gate-copy"><strong>🚀 自学模式已开启</strong><p>完成当前关后会自动解锁下一关，不用再等待老师放行。</p></div></div>`;
+  }
   const opened = Math.min(FLAT.length, gateState.openUpTo || 1);
   const allOpen = opened >= FLAT.length;
   const status = gateState.online ? "已连接老师控制台" : (gateState.source === "cache" ? "暂时离线，沿用上次同步状态" : "暂时离线，仅开放第一关");
@@ -650,7 +653,7 @@ function logout(){ try{ localStorage.removeItem(LS_AUTH); }catch(e){} location.r
 function enterApp(){
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
-  gateClient.start();
+  if(CONFIG.unlockMode === "manual") gateClient.start();
   renderHome();
 }
 
@@ -690,7 +693,7 @@ function renderHome(){
   const allCourseDone = totalDone >= FLAT.length;
   const heroAction = nextLesson
     ? `<button class="btn-continue" onclick="openLesson('${nextLesson.id}')">▸ ${totalDone>0?'继续学习':'开始第一关'}</button>`
-    : (allCourseDone ? '<div class="all-done">🎓 全部学完,你出师了!</div>' : '<div class="gate-wait">✓ 本轮已完成，等待老师开放下一关</div>');
+    : (allCourseDone ? '<div class="all-done">🎓 全部学完,你出师了!</div>' : `<div class="gate-wait">${CONFIG.unlockMode === "manual" ? '✓ 本轮已完成，等待老师开放下一关' : '✓ 完成上一关后即可继续'}</div>`);
   let html = `<div class="hero">
     <div class="hero-main"><h2>${COURSE.title}</h2><p>${COURSE.intro}</p>${heroAction}</div>
     <div class="hero-visual"><img src="assets/wf02.png" alt="AI 写作工作流示意"></div>
@@ -712,7 +715,7 @@ function renderHome(){
       const un = isUnlocked(ls.id), dn = isDone(ls.id), cur = un && !dn;
       const mst = masteryOf(ls.id);
       const badge = dn ? (ls.milestone ? (mst>=3?"●":mst>=2?"◐":"○") : "✓") : "";
-      let tag = '<span class="lv-tag" style="color:var(--lock)">等待老师开放</span>';
+      let tag = `<span class="lv-tag" style="color:var(--lock)">${CONFIG.unlockMode === "manual" ? '等待老师开放' : '先完成上一关'}</span>`;
       if(dn) tag = '<span class="lv-tag tag-done">已通关</span>';
       else if(cur) tag = '<span class="lv-tag tag-current">进行中</span>';
       let mtag = ls.milestone ? '<span class="lv-tag tag-milestone">里程碑</span>' : '';
@@ -788,7 +791,9 @@ function openLesson(id, review){
   if(!target){ renderHome(); return; }
   const canReview = !!review && isDone(id);
   if(!canReview && !isDone(id) && !isUnlocked(id)){
-    alert("这一关还没开放。完成当前关后，等待老师在控制台放行。");
+    alert(CONFIG.unlockMode === "manual"
+      ? "这一关还没开放。完成当前关后，等待老师在控制台放行。"
+      : "这一关还没解锁。先完成上一关，就能继续学习。");
     renderHome();
     return;
   }
@@ -1168,10 +1173,12 @@ function completeLesson(){
   document.getElementById("modalEmoji").textContent = CUR.milestone ? "🏆" : "🎉";
   document.getElementById("modalTitle").textContent = CUR.milestone?"拿下一个成品!":"通关!";
   document.getElementById("modalDesc").textContent = next
-    ? (isUnlocked(next.id) ? "本关已完成。下一关已由老师开放，回到关卡地图后可进入。" : "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。")
+    ? (CONFIG.unlockMode === "manual"
+      ? (isUnlocked(next.id) ? "本关已完成。下一关已由老师开放，回到关卡地图后可进入。" : "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。")
+      : "本关已完成，下一关已经自动解锁。")
     : "最后一关已完成，全部课程通关。";
-  document.getElementById("modalBtn").textContent = "返回关卡地图";
-  modal._next = null;
+  document.getElementById("modalBtn").textContent = CONFIG.unlockMode === "manual" ? "返回关卡地图" : "进入下一关";
+  modal._next = CONFIG.unlockMode === "manual" || !next ? null : next.id;
   modal.classList.remove("hidden");
 }
 function closeModal(){
