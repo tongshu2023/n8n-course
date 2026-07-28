@@ -18,6 +18,8 @@
   button{font-family:inherit;cursor:pointer;border:none;outline:none}
   .hidden{display:none !important}
   .wrap{max-width:740px;margin:0 auto;padding:34px 22px 110px}
+  #app.homework-mode .wrap{max-width:1240px;padding-left:32px;padding-right:32px}
+  #app.homework-mode .topbar-inner{max-width:1240px}
   code{background:var(--bg2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#bf4d00;font-family:"SF Mono",ui-monospace,Consolas,monospace}
   b,strong{color:#1d1d1f;font-weight:600}
 
@@ -307,30 +309,44 @@
     .flips{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   }
   /* ---- 课后作业板块 ---- */
+  .homework-shell{width:100%;padding:8px 0 60px}
   .hw-wrap{margin:52px 0 8px}
   .hw-eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--brand)}
   .hw-head h3{font-size:25px;font-weight:700;letter-spacing:-.02em;color:var(--txt);margin-top:7px}
   .hw-head p{color:var(--txt2);margin-top:8px;font-size:15px;line-height:1.65;max-width:660px}
-  .hw-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:24px}
-  .hw-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 24px;
+  .hw-grid{display:grid;grid-template-columns:1fr;gap:20px;margin-top:28px}
+  .hw-card{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px 30px;
     box-shadow:0 1px 2px rgba(60,50,30,.04),0 12px 30px rgba(60,50,30,.06)}
   .hw-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .hw-n{display:flex;align-items:center;justify-content:center;width:33px;height:33px;border-radius:50%;
     background:var(--brand);color:#fff;font-weight:700;font-size:17px;flex-shrink:0}
   .hw-course{font-size:13px;color:var(--txt2);font-weight:500}
   .hw-title{font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--txt);margin-bottom:15px;line-height:1.35}
-  .hw-tasks{display:flex;flex-direction:column;gap:11px}
-  .hw-task{padding:12px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:10px}
-  .hw-t-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .hw-tasks{display:flex;flex-direction:column;gap:12px}
+  .hw-task{min-width:0;display:grid;grid-template-columns:minmax(180px,.7fr) minmax(280px,1.25fr) minmax(300px,1.25fr);
+    align-items:start;gap:22px;padding:18px 20px;background:var(--bg2);border:1px solid var(--line);border-radius:12px}
+  .hw-t-head{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:0}
   .hw-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
   .badge-must{background:var(--brand);color:#fff}
   .badge-bug{background:#fef0f4;color:#d70015}
   .badge-design{background:#f0f4ff;color:var(--blue)}
   .badge-opt{background:var(--bg3);color:var(--txt2)}
-  .hw-t-title{font-size:14px;font-weight:600;color:var(--txt)}
-  .hw-t-desc{font-size:13px;color:var(--txt2);line-height:1.5;margin-top:4px}
-  .hw-t-check{font-size:12px;color:var(--ok);margin-top:6px;line-height:1.45}
-  @media(max-width:720px){ .hw-grid{grid-template-columns:1fr} .hw-card{padding:18px} .hw-title{font-size:16px} .hw-n{width:28px;height:28px;font-size:15px} }
+  .hw-t-title{font-size:14px;font-weight:600;color:var(--txt);line-height:1.5}
+  .hw-t-desc{min-width:0;font-size:14px;color:var(--txt2);line-height:1.62;margin:0}
+  .hw-t-check{min-width:0;font-size:13px;color:var(--ok);margin:0;padding-left:20px;border-left:1px solid rgba(29,138,78,.2);line-height:1.58}
+  .hw-col-label{display:block;margin-bottom:5px;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--lock)}
+  .hw-t-check .hw-col-label{color:var(--ok)}
+  @media(max-width:960px){
+    .hw-task{grid-template-columns:1fr;gap:10px}
+    .hw-t-head{flex-direction:row;align-items:center}
+    .hw-t-check{padding:10px 0 0;border-left:0;border-top:1px solid rgba(29,138,78,.2)}
+  }
+  @media(max-width:720px){
+    #app.homework-mode .wrap{padding-left:16px;padding-right:16px}
+    .hw-card{padding:20px}
+    .hw-title{font-size:16px}
+    .hw-n{width:28px;height:28px;font-size:15px}
+  }
   /* ---- 课后作业(嵌在成品关末尾) ---- */
   .hw-block{background:linear-gradient(180deg,#fff,var(--bg2));border:1.5px solid var(--brand);border-radius:18px;padding:24px;margin-top:6px;box-shadow:0 10px 30px rgba(226,89,10,.07)}
   .hw-block-tag{display:inline-block;font-size:12px;font-weight:700;color:#fff;background:var(--brand);padding:3px 12px;border-radius:99px;margin-bottom:13px}
@@ -682,6 +698,7 @@ function enterTrial(){
 /* ---------- 首页:章节 + 关卡 ---------- */
 function renderHome(){
   window.scrollTo(0,0);
+  document.getElementById("app").classList.remove("homework-mode");
   document.getElementById("view-lesson").classList.add("hidden");
   const home = document.getElementById("view-home");
   home.classList.remove("hidden");
@@ -733,13 +750,14 @@ function renderHome(){
   updateBar();
 }
 function showHomework(){
+  document.getElementById("app").classList.add("homework-mode");
   var vh = document.getElementById("view-home");
   var vl = document.getElementById("view-lesson");
   var vw = document.getElementById("view-homework");
   if (vh) vh.classList.add("hidden");
   if (vl) vl.classList.add("hidden");
   vw.classList.remove("hidden");
-  vw.innerHTML = '<div style="max-width:880px;margin:0 auto;padding:8px 16px 60px"><button class="btn-back" onclick="backHome()" style="margin-bottom:18px">← 返回课程</button>' + renderHomework() + '</div>';
+  vw.innerHTML = '<div class="homework-shell"><button class="btn-back" onclick="backHome()" style="margin-bottom:18px">← 返回课程</button>' + renderHomework() + '</div>';
   window.scrollTo(0, 0);
 }
 function backHome(){
@@ -756,8 +774,8 @@ function renderHomework(){
     const cls = tp.indexOf('必做')>=0?'badge-must':tp.indexOf('找茬')>=0?'badge-bug':tp.indexOf('设计')>=0?'badge-design':'badge-opt';
     return `<div class="hw-task">
       <div class="hw-t-head"><span class="hw-badge ${cls}">${badge}</span><span class="hw-t-title">${t.title}</span></div>
-      <p class="hw-t-desc">${t.desc}</p>
-      ${t.check?`<div class="hw-t-check">✅ 过关标准: ${t.check}</div>`:''}
+      <p class="hw-t-desc"><span class="hw-col-label">要做什么</span>${t.desc}</p>
+      ${t.check?`<div class="hw-t-check"><span class="hw-col-label">怎么算过关</span>${t.check}</div>`:''}
     </div>`;
   }
   return `<div class="hw-wrap">
@@ -788,6 +806,7 @@ var _msCount = 0;
 
 function openLesson(id, review){
   window.scrollTo(0,0);
+  document.getElementById("app").classList.remove("homework-mode");
   const target = FLAT.find(l => l.id === id);
   if(!target){ renderHome(); return; }
   const canReview = !!review && isDone(id);
