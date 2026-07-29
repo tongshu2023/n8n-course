@@ -389,7 +389,7 @@
   .trial-cta .btn-continue{margin-top:0}
 </style>
 </head>
-<body>
+<body data-annotation-deferred>
 
 <!-- ============ 登录 ============ -->
 <section id="view-login" class="hidden">
@@ -449,6 +449,7 @@
 <script src="gate-client.js?v=20260716a"></script>
 <script src="course-data.js?v=20260720a"></script>
 <script src="homeworks.js?v=20260706b"></script>
+<script src="annotation-layer.js?v=20260729a"></script>
 <script>
 /* =========================================================
    引擎 —— 课程数据来自 course-data.js 的 COURSE / CONFIG
@@ -670,6 +671,7 @@ function enterApp(){
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   document.getElementById("logoutBtn").classList.toggle("hidden", CONFIG.unlockMode !== "manual");
+  if(window.AnnotationLayer) window.AnnotationLayer.show();
   if(CONFIG.unlockMode === "manual") gateClient.start();
   renderHome();
 }
@@ -678,6 +680,7 @@ function enterApp(){
 function enterTrial(){
   window.scrollTo(0,0);
   if(typeof TRIAL === "undefined") return;
+  if(window.AnnotationLayer){ window.AnnotationLayer.show(); window.AnnotationLayer.setPage("course-trial"); }
   document.getElementById("view-login").classList.add("hidden");
   document.getElementById("app").classList.remove("hidden");
   document.getElementById("view-lesson").classList.add("hidden");
@@ -698,6 +701,7 @@ function enterTrial(){
 /* ---------- 首页:章节 + 关卡 ---------- */
 function renderHome(){
   window.scrollTo(0,0);
+  if(window.AnnotationLayer) window.AnnotationLayer.setPage("course-home");
   document.getElementById("app").classList.remove("homework-mode");
   document.getElementById("view-lesson").classList.add("hidden");
   const home = document.getElementById("view-home");
@@ -750,6 +754,7 @@ function renderHome(){
   updateBar();
 }
 function showHomework(){
+  if(window.AnnotationLayer) window.AnnotationLayer.setPage("course-homework");
   document.getElementById("app").classList.add("homework-mode");
   var vh = document.getElementById("view-home");
   var vl = document.getElementById("view-lesson");
@@ -806,6 +811,7 @@ var _msCount = 0;
 
 function openLesson(id, review){
   window.scrollTo(0,0);
+  if(window.AnnotationLayer) window.AnnotationLayer.setPage(`lesson:${id}`);
   document.getElementById("app").classList.remove("homework-mode");
   const target = FLAT.find(l => l.id === id);
   if(!target){ renderHome(); return; }
