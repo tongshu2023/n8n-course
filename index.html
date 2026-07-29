@@ -603,6 +603,10 @@ function isUnlocked(id){
   return getDone().has(FLAT_IDS[i-1]);    // 自动模式:前一关通关即解锁
 }
 function markDone(id){ const s = getDone(); s.add(id); saveDone(s); }
+function nextLessonAfter(id){
+  const i = FLAT_IDS.indexOf(id);
+  return i >= 0 && i < FLAT.length - 1 ? FLAT[i + 1] : null;
+}
 
 /* ---------- 掌握度 + 间隔重复复习(借鉴 Khan 掌握度 + FSRS 思路) ---------- */
 const LS_MAST = "dew_mastery_v1";   // {关id:{m:掌握度0-3, due:下次复习ms, iv:间隔档}}
@@ -897,8 +901,9 @@ function updateStepState(){
       const allDone = need === 0 || need === [...Array(CUR.blocks.length).keys()].filter(i=>answered[i]).length;
       const wasDisabled = btn.disabled;
       btn.disabled = !allDone;
-      const doneView = isDone(CUR.id) && !_reviewMode;   // 回看已通关的关:按钮只是"返回",不再发分
-      btn.textContent = allDone ? (doneView ? "✓ 已通关 · 返回目录" : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关") : `完成全部 ${need} 个练习即可通关`;
+      const doneView = isDone(CUR.id) && !_reviewMode;   // 回看已通关的关:直接去下一节,不重复发分
+      const next = nextLessonAfter(CUR.id);
+      btn.textContent = allDone ? (doneView ? (next ? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录") : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关") : `完成全部 ${need} 个练习即可通关`;
       if(allDone && wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 答完最后一题:自动滚到通关键+脉冲,治"没注意到能通关了"
     }
   }
@@ -1141,7 +1146,8 @@ function checkComplete(){
   if(allDone && allShown){
     const wasDisabled = btn.disabled;
     const doneView = isDone(CUR.id) && !_reviewMode;
-    btn.disabled=false; btn.textContent = doneView ? "✓ 已通关 · 返回目录" : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关";
+    const next = nextLessonAfter(CUR.id);
+    btn.disabled=false; btn.textContent = doneView ? (next ? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录") : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关";
     if(wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 修"点不开":答完最后一题,自动滚到通关键并脉冲提醒
   }
   else { btn.disabled=true; btn.classList.remove("pulse"); const left = need.filter(i=>!answered[i]).length; btn.textContent = `还差 ${left} 个练习`; }
@@ -1149,8 +1155,12 @@ function checkComplete(){
 
 function completeLesson(){
   const wasDone = isDone(CUR.id);
-  // 回看已通关的关:按钮=返回目录,不重复发分/不重复升掌握度
-  if(wasDone && !_reviewMode){ renderHome(); return; }
+  // 回看已通关的关:直接进入下一节,不重复发分/不重复升掌握度
+  if(wasDone && !_reviewMode){
+    const next = nextLessonAfter(CUR.id);
+    if(next) openLesson(next.id); else renderHome();
+    return;
+  }
   // 复习模式:重新答对全部练习才走到这——升一档掌握度,排下次复习
   if(_reviewMode){
     _reviewMode = false;
@@ -1193,17 +1203,16 @@ function completeLesson(){
     cert.classList.remove("hidden");
     return;
   }
-  const idx = FLAT_IDS.indexOf(CUR.id);
-  const next = idx < FLAT_IDS.length-1 ? FLAT[idx+1] : null;
+  const next = nextLessonAfter(CUR.id);
   const modal = document.getElementById("modal");
   document.getElementById("modalEmoji").textContent = CUR.milestone ? "🏆" : "🎉";
   document.getElementById("modalTitle").textContent = CUR.milestone?"拿下一个成品!":"通关!";
   document.getElementById("modalDesc").textContent = next
     ? (CONFIG.unlockMode === "manual"
       ? (isUnlocked(next.id) ? "本关已完成。下一关已由老师开放，回到关卡地图后可进入。" : "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。")
-      : "本关已完成，下一关已经自动解锁。")
+      : "本节已完成，下一节已经自动解锁。")
     : "最后一关已完成，全部课程通关。";
-  document.getElementById("modalBtn").textContent = CONFIG.unlockMode === "manual" ? "返回关卡地图" : "进入下一关";
+  document.getElementById("modalBtn").textContent = CONFIG.unlockMode === "manual" ? "返回关卡地图" : "进入下一节";
   modal._next = CONFIG.unlockMode === "manual" || !next ? null : next.id;
   modal.classList.remove("hidden");
 }

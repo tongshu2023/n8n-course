@@ -40,10 +40,47 @@ test("教师模式保留等待放行提示，不冒充全部结课", () => {
   assert.match(html, /下一关等待老师开放/);
 });
 
-test("自学模式通关后自动进入下一关", () => {
+test("自学模式通关后自动进入下一节", () => {
   const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
   assert.ok(completeLesson, "应存在 completeLesson");
-  assert.match(completeLesson[0], /下一关已经自动解锁/);
-  assert.match(completeLesson[0], /进入下一关/);
+  assert.match(completeLesson[0], /下一节已经自动解锁/);
+  assert.match(completeLesson[0], /进入下一节/);
   assert.match(completeLesson[0], /modal\._next = CONFIG\.unlockMode === "manual" \|\| !next \? null : next\.id/);
+});
+
+test("回看已通关小节时直接进入下一节，末节才返回目录", () => {
+  assert.match(html, /function nextLessonAfter\(id\)/);
+  assert.match(html, /next \? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录"/);
+  const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
+  assert.ok(completeLesson, "应存在 completeLesson");
+  assert.match(completeLesson[0], /if\(wasDone && !_reviewMode\)\{[\s\S]*?if\(next\) openLesson\(next\.id\); else renderHome\(\);/);
+});
+
+test("已通关按钮的真实点击分支会打开下一节，末节才回目录", () => {
+  const nextLessonSource = html.match(/function nextLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  const completeLessonSource = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
+  assert.ok(nextLessonSource && completeLessonSource, "应能读取实际跳转函数");
+
+  const opened = [];
+  let homeCount = 0;
+  const makeCompleteLesson = new Function(
+    "isDone", "CUR", "_reviewMode", "FLAT_IDS", "FLAT", "openLesson", "renderHome",
+    `${nextLessonSource[0]}; ${completeLessonSource[0]}; return completeLesson;`
+  );
+  const flat = [{ id: "lesson-1" }, { id: "lesson-2" }];
+  const completeFirst = makeCompleteLesson(
+    () => true, { id: "lesson-1" }, false, flat.map(item => item.id), flat,
+    id => opened.push(id), () => { homeCount += 1; }
+  );
+  completeFirst();
+  assert.deepEqual(opened, ["lesson-2"]);
+  assert.equal(homeCount, 0);
+
+  const completeLast = makeCompleteLesson(
+    () => true, { id: "lesson-2" }, false, flat.map(item => item.id), flat,
+    id => opened.push(id), () => { homeCount += 1; }
+  );
+  completeLast();
+  assert.deepEqual(opened, ["lesson-2"]);
+  assert.equal(homeCount, 1);
 });
