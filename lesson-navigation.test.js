@@ -108,3 +108,33 @@ test("同一个主按钮会按状态继续内容或完成关卡", () => {
   makeAdvance({ disabled: false, mode: "complete" })();
   assert.deepEqual(calls, [["step", 3], ["complete"]]);
 });
+
+test("积分动画报错时，答对后仍会先推进到下一环节", () => {
+  const safeAwardSource = html.match(/function safeAwardXP\(amount, anchor, isCorrect\)\{[\s\S]*?\n\}/);
+  const finishSource = html.match(/function finishAnsweredStep\(i, amount, anchor\)\{[\s\S]*?\n\}/);
+  assert.ok(safeAwardSource, "应存在不阻塞学习主链的积分保护函数");
+  assert.ok(finishSource, "应存在答对后的统一收口函数");
+
+  const calls = [];
+  const safeAwardXP = new Function(
+    "awardXP", "console",
+    `${safeAwardSource[0]}; return safeAwardXP;`
+  )(
+    () => {
+      calls.push("award");
+      throw new Error("模拟旧设备积分动画异常");
+    },
+    { warn: () => calls.push("warn") }
+  );
+  const finishAnsweredStep = new Function(
+    "autoStepNext", "safeAwardXP", "checkComplete",
+    `${finishSource[0]}; return finishAnsweredStep;`
+  )(
+    () => calls.push("advance"),
+    safeAwardXP,
+    () => calls.push("complete")
+  );
+
+  assert.doesNotThrow(() => finishAnsweredStep(4, 10, {}));
+  assert.deepEqual(calls, ["advance", "award", "warn", "complete"]);
+});

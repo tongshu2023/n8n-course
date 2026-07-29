@@ -935,6 +935,13 @@ function updateStepState(){
     btn.classList.toggle("pulse", state.mode === "complete" && !state.disabled);
   }
 }
+function safeAwardXP(amount, anchor, isCorrect){
+  try{
+    awardXP(amount, anchor, isCorrect);
+  }catch(e){
+    console.warn("xp effect failed; learning flow continues", e);
+  }
+}
 
 function renderBlock(b, i){
   switch(b.type){
@@ -1037,9 +1044,7 @@ function answerQuiz(i, oi){
     saveAnswer(CUR.id, i, "quiz", b.opts[origIdx], true);
     b.opts.forEach((_,k)=>document.getElementById(`opt-${i}-${k}`).disabled=true);
     document.getElementById(`dm-${i}`).classList.remove("hidden");
-    awardXP(b.xp||10, btn, true);
-    autoStepNext(i);
-    checkComplete();
+    finishAnsweredStep(i, b.xp||10, btn);
   } else {
     btn.classList.add("wrong"); fb.style.color="var(--brand)"; resetCombo();
     // 答错给"为什么错"诊断(顶级课核心):优先用该选项专属解释,没有则回退通用提示
@@ -1063,9 +1068,7 @@ function checkFill(i){
     document.getElementById(`fill-${i}`).disabled = true;
     fb.style.color="var(--ok)"; fb.textContent = "✓ " + (b.fb||"正确!");
     answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
-    awardXP(b.xp||10, document.getElementById(`fill-${i}`), true);
-    autoStepNext(i);
-    checkComplete();
+    finishAnsweredStep(i, b.xp||10, document.getElementById(`fill-${i}`));
   } else {
     resetCombo();
     fb.style.color="var(--brand)"; fb.textContent = b.hintFb||"还不对,提示:" + (b.hint||"注意格式");
@@ -1110,9 +1113,7 @@ function pickNode(i, idx){
       answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
       saveAnswer(CUR.id, i, "order", b.nodes.map(n=>n.name).join(" → "), true);
       document.querySelectorAll(`#slots-${i} .node-chip`).forEach(c=>c.style.cursor="default");
-      awardXP(b.xp||15, slots, true);
-      autoStepNext(i);
-      checkComplete();
+      finishAnsweredStep(i, b.xp||15, slots);
     } else {
       resetCombo();
       fb.style.color="var(--brand)"; fb.textContent="顺序不对,想想数据从哪开始、到哪结束。再点一下取出调整。";
@@ -1141,9 +1142,7 @@ function checkThink(i){
   if(val.length >= (b.min||10)){
     if(!answered[i]){ answered[i]=true; document.getElementById(`dm-${i}`).classList.remove("hidden");
       fb.textContent = b.fb||"✓ 想法已记录,带着它去学下面的内容。";
-      awardXP(b.xp||10, document.getElementById(`think-${i}`), true);
-      autoStepNext(i);
-      checkComplete(); }
+      finishAnsweredStep(i, b.xp||10, document.getElementById(`think-${i}`)); }
   } else {
     if(answered[i]){ answered[i]=false; document.getElementById(`dm-${i}`).classList.add("hidden"); checkComplete(); }
     fb.textContent="";
@@ -1158,6 +1157,12 @@ function autoStepNext(i){
     stepNext(next);
   }
   updateStepState();
+}
+function finishAnsweredStep(i, amount, anchor){
+  // 学习推进是主链，积分动画只是装饰；任何积分异常都不能把学员卡在“已答对”。
+  autoStepNext(i);
+  safeAwardXP(amount, anchor, true);
+  checkComplete();
 }
 function checkComplete(){
   updateStepState();
@@ -1187,7 +1192,7 @@ function completeLesson(){
   }
   markDone(CUR.id);
   if(CUR.milestone) bumpMastery(CUR.id, true);   // 成品关:首次通关=熟悉,以后每复习对一次升一级,并排下次复习
-  awardXP(CUR.milestone ? 50 : 25, document.getElementById("completeBtn"));
+  safeAwardXP(CUR.milestone ? 50 : 25, document.getElementById("completeBtn"));
   const allDone = getDone().size >= FLAT.length;
   if(allDone){
     // 全课完成 → 结课证书
