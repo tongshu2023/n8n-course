@@ -373,6 +373,33 @@ const COURSE = {
         ],
       },
       {
+        id:"2-future-letter", title:"🌌 综合练习:来自未来的回信",
+        subtitle:"把今天的困扰交给 AI,让未来的自己回一封邮件",
+        canDo:"独立复用手动触发、字段、表达式、DeepSeek API 和邮件发送,搭出一条完整工作流",
+        goal:"把第 1 章的发邮件和第 2 章的 AI 调用串起来,完成一次换场景的综合练习",
+        blocks:[
+          { type:"hook", q:"如果未来的你真的能寄一封信回来,他最想提醒今天的你什么?", sub:"这次不再照着做普通周报。你把现在的困扰和想去的方向交给 AI,让「未来的自己」写好回信,再由 n8n 自动寄到你的邮箱。" },
+          { type:"text", h:"这关只换故事,不加新知识", html:`<p>整条工作流是:<b>手动触发 → 填写自己的信息 → DeepSeek 写回信 → Send Email 发给自己</b>。</p><p>你会再次使用刚学过的 5 件事:Edit Fields 填字段、表达式取字段、Basic LLM Chain 调 AI、DeepSeek API 提供大脑、Send Email 把结果送回来。能独立搭通,才说明这些动作真的长到你手上了。</p>` },
+          { type:"callout", variant:"tip", html:`<b>给未来的自己这份「岗位说明书」:</b><br><code>你是来自{{ $json.未来年份 }}年的我。<br><br>现在的我正在经历:{{ $json.现在的困扰 }}<br>我希望未来实现:{{ $json.未来目标 }}<br><br>请以“未来的我”的口吻,给现在的我写一封真诚、具体、有画面感的回信。<br>告诉我:未来的生活是什么样的、我是怎样一步步走到那里的,以及今天最应该开始做的一件小事。<br>不要空喊口号,控制在 500 字以内。</code>` },
+          { type:"lab", desc:"目标:从空白画布搭出「来自未来的回信」,执行后在自己的邮箱里收到 AI 写来的信。", steps:[
+            "<b>第一步:新建工作流,放 Manual Trigger(手动触发)。</b>这封信先由你亲手按下发送键,方便检查每一步。",
+            "<b>第二步:接 Edit Fields(Set),填 3 个字段。</b><code>未来年份</code>=「2031 年」;<code>现在的困扰</code>=「总想做自媒体,但一直没有开始」;<code>未来目标</code>=「拥有自己的个人品牌和稳定收入」。先用示例跑通,第二次再换成你自己的真实答案。",
+            "<b>第三步:先执行 Edit Fields,看右侧 OUTPUT。</b>确认三个字段都出现、没有错别字。接 Basic LLM Chain,把 Source for Prompt 改成 <b>Define below</b>,再把上方提示词粘进 Prompt。三个花括号里的字段尽量从 INPUT 面板直接拖进去,别凭记忆猜。",
+            "<b>第四步:给 Basic LLM Chain 接上 DeepSeek Chat Model。</b>直接复用上一关保存好的 Credential(凭证),模型选 <code>deepseek-chat</code>。如果显示 401,回去检查 API Key;如果连接超时,先查网络。",
+            "<b>第五步:在 AI 后面接 Send Email → Send an Email。</b>复用第 1 章配好的 QQ 邮箱 SMTP 凭证;From Email 和 To Email 都填你自己的邮箱;Subject 写「一封来自未来的回信」;Email Format 改成 <b>Text</b>。",
+            "<b>第六步:把 AI 回信装进邮件正文。</b>先执行 Basic LLM Chain,在 OUTPUT 里确认 AI 正文的字段名是 <code>text</code>;再把邮件的 Text 框切到 <b>Expression</b>,从 INPUT 面板拖入这个字段,结果通常是 <code>{{ $json.text }}</code>。",
+            "<b>第七步:点 Execute workflow,去邮箱验收。</b>同时满足三件事才算通关:① 邮件真的收到;② 正文不是花括号原文或 undefined;③ 回信提到了你填的困扰、目标,并给出今天能开始的一件小事。",
+            "<b>第八步:把三个字段换成你的真实答案,再跑一次。</b>第一遍证明流程能跑,第二遍才让这个数字员工真正属于你。"
+          ]},
+          { type:"order", q:"「来自未来的回信」这条工作流,节点顺序应该是什么?", nodes:[
+            { emoji:"👆", name:"Manual Trigger 手动触发" }, { emoji:"🧩", name:"Edit Fields 填未来年份/困扰/目标" }, { emoji:"🤖", name:"Basic LLM Chain + DeepSeek 写回信" }, { emoji:"✉️", name:"Send Email 发给自己" }
+          ], fb:"对了!触发 → 准备信息 → AI 加工 → 发送结果。换成任何 AI 场景,骨架都还是这四步。" },
+          { type:"quiz", tag:"找茬·排错训练", q:"AI 已经写出了回信,但收到的邮件正文是 {{ $json.text }} 这串字符本身。最可能漏了什么?", opts:["邮件正文框没有从 Fixed 切到 Expression","DeepSeek 余额太多","未来年份填得太远","邮箱不支持 AI 内容"], answer:0, fb:"对!花括号原样出现,说明它被当成普通文字。把正文框切到 Expression,再从 INPUT 面板拖入 text 字段。", wrongFb:"看到花括号原样输出,先查 Fixed / Expression 模式。", whys:["","余额不会让表达式失效","年份不影响字段替换","邮箱只接收文字,不管文字是不是 AI 写的"] },
+          { type:"think", tag:"回信落地", q:"读完未来的回信,你今天愿意开始的那件小事是什么?", hint:"只写一个 10 分钟内能开始的动作,例如:打开备忘录写下第一条选题。", min:10 },
+          { type:"golden", q:"真正有用的未来,不是 AI 替你预测出来的;是你读完信后,今天愿意开始的那一步。", author:"来自未来的回信" }
+        ],
+      },
+      {
         id:"2-err", title:"🔧 模块2 排错卡:接 AI 三大坑",
         subtitle:"网络、凭证、AI 返回乱码,提前搞定",
         canDo:"AI 报超时、401、返回乱码时,一眼认出是网络、凭证还是提示词的锅",
