@@ -63,10 +63,6 @@
   }
   /* ---- 步进式讲解:一次只露一块,治"全铺上去" ---- */
   .stepped{display:none !important}
-  .step-btn{text-align:center;margin:10px 0 6px}
-  .btn-step{background:var(--bg2);border:1px solid var(--line);color:var(--txt);font-size:14px;
-    padding:10px 28px;border-radius:14px;font-weight:500;transition:.15s;cursor:pointer}
-  .btn-step:hover{background:var(--bg3);border-color:var(--txt2)}
   /* ---- 连击爽感 + 通关键脉冲 ---- */
   .combo-float{position:fixed;pointer-events:none;z-index:201;font-weight:800;font-size:14px;color:#fff;
     background:#e8590c;padding:3px 11px;border-radius:99px;white-space:nowrap;transform:translateX(-50%);
@@ -272,6 +268,14 @@
   .btn-back{background:var(--bg2);color:var(--txt)}.btn-back:hover{background:var(--bg3)}
   .btn-complete{background:var(--brand);color:#fff}.btn-complete:hover{opacity:.86}
   .btn-complete:disabled{background:var(--bg3);color:var(--lock);cursor:not-allowed}
+  .lesson-head-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:8px}
+  .lesson-head-nav .crumb{margin-bottom:0}
+  .lesson-head-back{flex:0 0 auto;background:transparent;color:var(--txt2);font-size:13px;font-weight:500;padding:7px 12px;border:1px solid var(--line);border-radius:980px}
+  .lesson-head-back:hover{background:var(--bg2);color:var(--txt)}
+  @media(max-width:640px){
+    .lesson-actions{gap:8px}
+    .lesson-actions button{padding:13px 10px;font-size:14px}
+  }
 
   /* 通关弹层 */
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.32);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
@@ -839,17 +843,17 @@ function openLesson(id, review){
   const chTitle = CUR._ch.title;
   _msCount = 0;
   let html = `<div class="lesson-head">
-    <div class="crumb">${chTitle}</div>
+    <div class="lesson-head-nav"><div class="crumb">${chTitle}</div><button class="lesson-head-back" onclick="renderHome()">← 返回课程</button></div>
     <h2>${CUR.title}</h2>
     ${CUR.goal?`<div class="goal">🎯 <b>这一关你会</b>：${CUR.goal}</div>`:''}</div>`;
   CUR.blocks.forEach((b, i) => {
     const hidden = i >= _visUpTo ? ' stepped' : '';
-    html += `<div class="block${hidden}" id="blk-${i}">${renderBlock(b, i)}${i < CUR.blocks.length-1 ? `<div class="step-btn"><button class="btn-step" id="step-${i}" onclick="stepNext(${i+1})">继续 ▸</button></div>` : ''}</div>`;
+    html += `<div class="block${hidden}" id="blk-${i}">${renderBlock(b, i)}</div>`;
   });
   if(CUR.canDo) html += `<div class="can-do stepped" id="blk-cando"><div class="cd-eyebrow">✦ 学完这一关,你现在能</div><div class="cd-text">${CUR.canDo}</div></div>`;
-  html += `<div class="lesson-actions stepped" id="blk-actions">
+  html += `<div class="lesson-actions" id="blk-actions">
     <button class="btn-back" onclick="renderHome()">← 返回</button>
-    <button class="btn-complete" id="completeBtn" disabled onclick="completeLesson()">全部完成,点此通关</button>
+    <button class="btn-complete" id="completeBtn" onclick="advanceLessonFlow()">继续下一环节 →</button>
   </div>`;
   v.innerHTML = html;
   // 渲染后初始化交互
@@ -870,42 +874,65 @@ function stepNext(n){
   for(let i = n; i < Math.min(_visUpTo, CUR.blocks.length); i++){
     const el = document.getElementById(`blk-${i}`); if(el) el.classList.remove("stepped");
   }
-  // 当前块的"继续"按钮隐藏
-  const prevBtn = document.getElementById(`step-${n-1}`); if(prevBtn) prevBtn.style.display = "none";
   document.getElementById(`blk-${n}`)?.scrollIntoView({behavior:"smooth",block:"center"});
   updateStepState();
   // 如果新露出的块是练习类,预初始化
   const b = CUR.blocks[n]; if(b && b.type==='order'){ initOrder(n, b); }
 }
+function computeLessonFlowState(blocks, visibleCount, answeredMap, doneView, reviewMode, hasNext){
+  const total = blocks.length;
+  const shown = Math.min(Math.max(visibleCount, 0), total);
+  const allShown = shown >= total;
+  const need = blocks.map((b,i)=>ANSWERABLE.has(b.type)?i:-1).filter(i=>i>=0);
+  const left = need.filter(i=>!answeredMap[i]).length;
+  if(!allShown){
+    const currentIndex = Math.max(0, shown - 1);
+    const waitsForAnswer = ANSWERABLE.has(blocks[currentIndex]?.type) && !answeredMap[currentIndex];
+    return {
+      mode:"advance",
+      allShown:false,
+      disabled:waitsForAnswer,
+      label:waitsForAnswer ? "完成当前练习后继续" : "继续下一环节 →",
+      left
+    };
+  }
+  const allDone = left === 0;
+  return {
+    mode:"complete",
+    allShown:true,
+    disabled:!allDone,
+    label:allDone
+      ? (doneView ? (hasNext ? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录") : reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关")
+      : `还差 ${left} 个练习`,
+    left
+  };
+}
+function lessonFlowState(){
+  const doneView = isDone(CUR.id) && !_reviewMode;
+  return computeLessonFlowState(CUR.blocks, _visUpTo, answered, doneView, _reviewMode, !!nextLessonAfter(CUR.id));
+}
+function advanceLessonFlow(){
+  if(!CUR) return;
+  const state = lessonFlowState();
+  if(state.disabled) return;
+  if(state.mode === "advance"){
+    stepNext(_visUpTo);
+    return;
+  }
+  completeLesson();
+}
 function updateStepState(){
-  const total = CUR.blocks.length;
-  const allShown = _visUpTo >= total;
-  // 更新步进按钮状态
-  CUR.blocks.forEach((b,i)=>{
-    const vis = i < _visUpTo;
-    if(!vis) return;
-    const btn = document.getElementById(`step-${i}`);
-    if(btn){
-      // 隐藏"继续"按钮:①全露完了 ②当前块本身就是练习(靠答对自动推,不可点跳过)
-      if(allShown) btn.style.display = "none";
-      else if(ANSWERABLE.has(b.type)) btn.style.display = "none";
-    }
-  });
+  const state = lessonFlowState();
+  const allShown = state.allShown;
   // 全部露出→显示能力卡+通关按钮
   if(allShown){
     const cd = document.getElementById("blk-cando"); if(cd) cd.classList.remove("stepped");
-    const act = document.getElementById("blk-actions"); if(act) act.classList.remove("stepped");
-    const btn = document.getElementById("completeBtn");
-    if(btn){
-      const need = CUR.blocks.filter(b => ANSWERABLE.has(b.type)).length;
-      const allDone = need === 0 || need === [...Array(CUR.blocks.length).keys()].filter(i=>answered[i]).length;
-      const wasDisabled = btn.disabled;
-      btn.disabled = !allDone;
-      const doneView = isDone(CUR.id) && !_reviewMode;   // 回看已通关的关:直接去下一节,不重复发分
-      const next = nextLessonAfter(CUR.id);
-      btn.textContent = allDone ? (doneView ? (next ? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录") : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关") : `完成全部 ${need} 个练习即可通关`;
-      if(allDone && wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 答完最后一题:自动滚到通关键+脉冲,治"没注意到能通关了"
-    }
+  }
+  const btn = document.getElementById("completeBtn");
+  if(btn){
+    btn.disabled = state.disabled;
+    btn.textContent = state.label;
+    btn.classList.toggle("pulse", state.mode === "complete" && !state.disabled);
   }
 }
 
@@ -1133,24 +1160,7 @@ function autoStepNext(i){
   updateStepState();
 }
 function checkComplete(){
-  const need = CUR.blocks.map((b,i)=>ANSWERABLE.has(b.type)?i:-1).filter(i=>i>=0);
-  const allDone = need.every(i=>answered[i]);
-  const allShown = _visUpTo >= CUR.blocks.length;
-  // 步进模式下,全露出 + 全做完才亮通关按钮
-  if(allShown){
-    const cd = document.getElementById("blk-cando"); if(cd) cd.classList.remove("stepped");
-    const act = document.getElementById("blk-actions"); if(act) act.classList.remove("stepped");
-  }
-  const btn = document.getElementById("completeBtn");
-  if(!btn) return;
-  if(allDone && allShown){
-    const wasDisabled = btn.disabled;
-    const doneView = isDone(CUR.id) && !_reviewMode;
-    const next = nextLessonAfter(CUR.id);
-    btn.disabled=false; btn.textContent = doneView ? (next ? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录") : _reviewMode ? "✅ 复习完成!" : "🎉 全部完成,点此通关";
-    if(wasDisabled && !doneView){ btn.classList.add("pulse"); btn.scrollIntoView({behavior:"smooth",block:"center"}); }  // 修"点不开":答完最后一题,自动滚到通关键并脉冲提醒
-  }
-  else { btn.disabled=true; btn.classList.remove("pulse"); const left = need.filter(i=>!answered[i]).length; btn.textContent = `还差 ${left} 个练习`; }
+  updateStepState();
 }
 
 function completeLesson(){
@@ -1235,9 +1245,7 @@ document.addEventListener('keydown', (e)=>{
   if(e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;   // 思考题/填空输入时不拦
   if(e.key==='ArrowRight' || e.key==='ArrowDown' || e.key===' '){
     e.preventDefault();
-    const btns = [...document.querySelectorAll('.btn-step')].filter(b=>b.offsetParent!==null);  // 当前可见的"继续"
-    if(btns.length){ btns[btns.length-1].click(); }
-    else { const cb=document.getElementById('completeBtn'); if(cb && !cb.disabled) cb.click(); }
+    const cb=document.getElementById('completeBtn'); if(cb && !cb.disabled) cb.click();
   } else if(e.key==='ArrowLeft' || e.key==='ArrowUp'){
     e.preventDefault();
     window.scrollBy({top: -window.innerHeight*0.6, behavior:'smooth'});

@@ -51,7 +51,7 @@ test("自学模式通关后自动进入下一节", () => {
 
 test("回看已通关小节时直接进入下一节，末节才返回目录", () => {
   assert.match(html, /function nextLessonAfter\(id\)/);
-  assert.match(html, /next \? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录"/);
+  assert.match(html, /hasNext \? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录"/);
   const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
   assert.ok(completeLesson, "应存在 completeLesson");
   assert.match(completeLesson[0], /if\(wasDone && !_reviewMode\)\{[\s\S]*?if\(next\) openLesson\(next\.id\); else renderHome\(\);/);
