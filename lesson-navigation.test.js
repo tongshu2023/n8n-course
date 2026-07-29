@@ -138,3 +138,69 @@ test("积分动画报错时，答对后仍会先推进到下一环节", () => {
   assert.doesNotThrow(() => finishAnsweredStep(4, 10, {}));
   assert.deepEqual(calls, ["advance", "award", "warn", "complete"]);
 });
+
+test("未通关课程重新进入时不直接泄露保存过的正确答案", () => {
+  const restoreSource = html.match(/function restoreAnswers\(lid, revealSolved\)\{[\s\S]*?\n\}/);
+  assert.ok(restoreSource, "应存在区分未通关与回看模式的答案恢复函数");
+
+  const lesson = lessons.find(item => item.id === "2-1");
+  assert.ok(lesson, "应存在用户反馈的第二章表达式课程");
+  const elements = {
+    "fill-5": { value: "" }
+  };
+  const solved = [];
+  const restoreAnswers = new Function(
+    "getAnswers", "document", "CUR", "ANSWERABLE", "solveBlockUI",
+    `${restoreSource[0]}; return restoreAnswers;`
+  )(
+    () => ({
+      "2-1": {
+        4: { t: "quiz", v: "上一步数据包裹里那个字段的名字", c: true },
+        5: { t: "fill", v: "{{ $json.title }}", c: true }
+      }
+    }),
+    { getElementById: id => elements[id] || null },
+    { blocks: lesson.blocks },
+    ANSWERABLE,
+    index => solved.push(index)
+  );
+
+  restoreAnswers("2-1", false);
+  assert.deepEqual(solved, [], "未通关时不能把保存过的正确题直接渲染成已答对");
+  assert.equal(elements["fill-5"].value, "", "未通关时不能回填标准填空答案");
+
+  restoreAnswers("2-1", true);
+  assert.deepEqual(solved, [4, 5], "只有已通关回看才允许恢复已解状态");
+});
+
+test("答对后即使平滑滚动异常，也会先把下一题真正显示出来", () => {
+  const stepSource = html.match(/function stepNext\(n\)\{[\s\S]*?\n\}/);
+  assert.ok(stepSource, "应存在下一环节显隐函数");
+
+  const blocks = Array.from({ length: 5 }, (_, index) => ({
+    type: index === 3 ? "fill" : "text"
+  }));
+  const visible = [];
+  const elements = Object.fromEntries(blocks.map((_, index) => [
+    `blk-${index}`,
+    {
+      classList: { remove: name => visible.push([index, name]) },
+      scrollIntoView: () => { throw new Error("模拟旧浏览器滚动异常"); }
+    }
+  ]));
+  const calls = [];
+  const stepNext = new Function(
+    "CUR", "document", "updateStepState", "initOrder", "_visUpTo",
+    `${stepSource[0]}; return stepNext;`
+  )(
+    { blocks },
+    { getElementById: id => elements[id] || null },
+    () => calls.push("state"),
+    index => calls.push(["order", index]),
+    3
+  );
+
+  assert.doesNotThrow(() => stepNext(3));
+  assert.ok(visible.some(([index, name]) => index === 3 && name === "stepped"), "下一题必须先移除隐藏状态");
+  assert.deepEqual(calls, ["state"]);
+});

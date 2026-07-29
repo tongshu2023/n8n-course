@@ -527,21 +527,23 @@ function solveBlockUI(i, b){
       if(ffb){ ffb.style.color="var(--ok)"; ffb.textContent="✓ "+(b.fb||"正确!"); }
     }
 }
-function restoreAnswers(lid){
+function restoreAnswers(lid, revealSolved){
   var a = getAnswers();
   if (!a[lid]) return;
   var saved = a[lid];
   for (var bi in saved) {
     var r = saved[bi];
     var i = parseInt(bi);
+    // 未通关课程重新进入时只恢复开放题草稿，不回填标准答案。
+    // 否则旧的正确记录会直接把选择/填空题答案亮出来，还会绕过本次学习推进。
     if (r.t === "think") {
       var ta = document.getElementById("think-" + i);
       if (ta) ta.value = r.v;
-    } else if (r.t === "fill") {
+    } else if (r.t === "fill" && !r.c) {
       var fi = document.getElementById("fill-" + i);
       if (fi) fi.value = r.v;
     }
-    if (r.c && CUR.blocks[i] && ANSWERABLE.has(CUR.blocks[i].type)) {
+    if (revealSolved && r.c && CUR.blocks[i] && ANSWERABLE.has(CUR.blocks[i].type)) {
       solveBlockUI(i, CUR.blocks[i]);   // 渲染成已解态,不然按钮看着能点实际点不动
     }
   }
@@ -859,7 +861,7 @@ function openLesson(id, review){
   // 渲染后初始化交互
   CUR.blocks.forEach((b,i)=>{ if(b.type==='order') initOrder(i, b); });
   if(!_reviewMode){
-    restoreAnswers(CUR.id);
+    restoreAnswers(CUR.id, isDone(id));
     if(isDone(id)) markReviewSolved();
   }
   updateStepState();
@@ -869,15 +871,21 @@ function openLesson(id, review){
 var _visUpTo = 1;
 var quizOrder = {};   // quiz选项洗牌映射,防答案全在B
 function stepNext(n){
-  _visUpTo = Math.max(_visUpTo, n + 1);
-  // 露出下一块
-  for(let i = n; i < Math.min(_visUpTo, CUR.blocks.length); i++){
+  if(!CUR || !CUR.blocks || !CUR.blocks.length) return;
+  const targetIndex = Math.min(Math.max(n, 0), CUR.blocks.length - 1);
+  _visUpTo = Math.max(_visUpTo, targetIndex + 1);
+  // 以当前状态为准重放所有应显示的块，修复刷新/旧进度留下的显隐不一致。
+  for(let i = 0; i < Math.min(_visUpTo, CUR.blocks.length); i++){
     const el = document.getElementById(`blk-${i}`); if(el) el.classList.remove("stepped");
   }
-  document.getElementById(`blk-${n}`)?.scrollIntoView({behavior:"smooth",block:"center"});
   updateStepState();
+  const target = document.getElementById(`blk-${targetIndex}`);
+  if(target && typeof target.scrollIntoView === "function"){
+    try{ target.scrollIntoView({behavior:"smooth",block:"center"}); }
+    catch(e){ try{ target.scrollIntoView(); }catch(_e){} }
+  }
   // 如果新露出的块是练习类,预初始化
-  const b = CUR.blocks[n]; if(b && b.type==='order'){ initOrder(n, b); }
+  const b = CUR.blocks[targetIndex]; if(b && b.type==='order'){ initOrder(targetIndex, b); }
 }
 function computeLessonFlowState(blocks, visibleCount, answeredMap, doneView, reviewMode, hasNext){
   const total = blocks.length;
