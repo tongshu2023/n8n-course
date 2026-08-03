@@ -21,6 +21,15 @@ test("自学模式无需班级口令即可直接进入课程", () => {
   assert.match(html, /logoutBtn[\s\S]*?CONFIG\.unlockMode !== "manual"/);
 });
 
+test("后台闸门刷新首页时保留用户滚动位置", () => {
+  assert.match(html, /onChange: function\(state\)\{[\s\S]*?renderHome\(\{ preserveScroll: true \}\);/);
+  const renderHome = html.match(/function renderHome\(options\)\{[\s\S]*?\n\}/);
+  assert.ok(renderHome, "应存在可保留滚动位置的首页渲染函数");
+  assert.match(renderHome[0], /const savedScrollY = preserveScroll \? window\.scrollY : 0;/);
+  assert.match(renderHome[0], /if\(!preserveScroll\) window\.scrollTo\(0,0\);/);
+  assert.match(renderHome[0], /window\.scrollTo\(0, Math\.min\(savedScrollY, maxScrollY\)\);/);
+});
+
 test("关卡入口自身校验远端闸门", () => {
   const openLesson = html.match(/function openLesson\(id, review\)\{[\s\S]*?\n\}/);
   assert.ok(openLesson, "应存在 openLesson");

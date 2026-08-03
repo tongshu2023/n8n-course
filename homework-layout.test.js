@@ -10,7 +10,7 @@ test("作业入口会切换到独立宽屏容器", () => {
   assert.match(html, /#app\.homework-mode \.wrap\{max-width:1240px/);
   assert.match(html, /#app\.homework-mode \.topbar-inner\{max-width:1240px/);
   assert.match(html, /function showHomework\(\)\{[\s\S]*?classList\.add\("homework-mode"\)/);
-  assert.match(html, /function renderHome\(\)\{[\s\S]*?classList\.remove\("homework-mode"\)/);
+  assert.match(html, /function renderHome\(options\)\{[\s\S]*?classList\.remove\("homework-mode"\)/);
   assert.match(html, /function openLesson\(id, review\)\{[\s\S]*?classList\.remove\("homework-mode"\)/);
 });
 

@@ -572,7 +572,10 @@ const gateClient = new CourseGate.GateClient({
     gateState = state;
     const app = document.getElementById("app");
     const home = document.getElementById("view-home");
-    if(app && !app.classList.contains("hidden") && home && !home.classList.contains("hidden")) renderHome();
+    // 闸门会定时后台刷新。首页重绘时保留学员当前位置，避免每次刷新都被送回页首。
+    if(app && !app.classList.contains("hidden") && home && !home.classList.contains("hidden")){
+      renderHome({ preserveScroll: true });
+    }
   }
 });
 
@@ -709,8 +712,10 @@ function enterTrial(){
 }
 
 /* ---------- 首页:章节 + 关卡 ---------- */
-function renderHome(){
-  window.scrollTo(0,0);
+function renderHome(options){
+  const preserveScroll = !!(options && options.preserveScroll);
+  const savedScrollY = preserveScroll ? window.scrollY : 0;
+  if(!preserveScroll) window.scrollTo(0,0);
   if(window.AnnotationLayer) window.AnnotationLayer.setPage("course-home");
   document.getElementById("app").classList.remove("homework-mode");
   document.getElementById("view-lesson").classList.add("hidden");
@@ -762,6 +767,14 @@ function renderHome(){
   });
   home.innerHTML = html;
   updateBar();
+  if(preserveScroll){
+    const restoreScroll = function(){
+      const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      window.scrollTo(0, Math.min(savedScrollY, maxScrollY));
+    };
+    if(typeof requestAnimationFrame === "function") requestAnimationFrame(restoreScroll);
+    else restoreScroll();
+  }
 }
 function showHomework(){
   if(window.AnnotationLayer) window.AnnotationLayer.setPage("course-homework");
