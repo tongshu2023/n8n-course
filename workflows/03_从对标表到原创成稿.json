@@ -1,0 +1,14 @@
+{
+  "name": "03 从对标规律到原创成稿",
+  "nodes": [
+    {"id":"note-03-write","name":"使用说明","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[0,0],"parameters":{"content":"## 从对标规律到原创成稿\n\n只借被验证过的用户需求，不复制对方标题、句式、经历和段落。\n\n上手：填写五格任务单 → 配好 DeepSeek → 执行 → 在最后一个节点下载 Markdown。","height":250,"width":390}},
+    {"id":"trigger-03-write","name":"手动触发","type":"n8n-nodes-base.manualTrigger","typeVersion":1,"position":[460,260],"parameters":{}},
+    {"id":"set-03-write","name":"填写创作任务","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[680,260],"parameters":{"assignments":{"assignments":[{"id":"audience","name":"目标读者","type":"string","value":"第一次接触 AI 自动化的普通上班族"},{"id":"problem","name":"核心问题","type":"string","value":"想提高效率，但不知道第一条自动化应该从哪里开始"},{"id":"experience","name":"我的经历","type":"string","value":"我带零基础学员时发现，大家最容易犯的错是一上来就做复杂流程，结果第一个报错就放弃"},{"id":"opinion","name":"我的观点","type":"string","value":"第一条工作流只解决一个重复动作，十分钟内看到结果，比功能齐全更重要"},{"id":"format","name":"输出形式","type":"string","value":"800 字公众号短文，含标题、开头、3 个步骤和结尾行动"},{"id":"feedback","name":"我的修改意见","type":"string","value":"删掉空话，语气像有经验的朋友，不使用夸张承诺"}]},"options":{}}},
+    {"id":"chain-03-write","name":"AI 撰写原创成稿","type":"@n8n/n8n-nodes-langchain.chainLlm","typeVersion":1.5,"position":[920,260],"parameters":{"promptType":"define","text":"=你是严谨的中文内容编辑。请根据任务单写一份原创成稿。\n\n目标读者：{{ $json.目标读者 }}\n核心问题：{{ $json.核心问题 }}\n我的经历：{{ $json.我的经历 }}\n我的观点：{{ $json.我的观点 }}\n输出形式：{{ $json.输出形式 }}\n修改意见：{{ $json.我的修改意见 }}\n\n硬规则：\n1. 只借对标内容验证过的用户需求，不得复刻任何对标标题、句式、结构或个人经历；\n2. 事实不足时不要编造，用“需要你补充”标记；\n3. 必须让读者读完能采取一个具体行动；\n4. 直接输出 Markdown 成稿。"}},
+    {"id":"model-03-write","name":"DeepSeek 大模型","type":"@n8n/n8n-nodes-langchain.lmChatDeepSeek","typeVersion":1,"position":[920,480],"parameters":{"model":"deepseek-chat","options":{}},"credentials":{"deepSeekApi":{"id":"deepseek-cred","name":"DeepSeek 账号"}}},
+    {"id":"name-03-write","name":"整理文件名","type":"n8n-nodes-base.code","typeVersion":2,"position":[1160,260],"parameters":{"jsCode":"const text=$json.text||'';\nconst first=(text.split('\\n').find(x=>x.trim())||'原创成稿').replace(/^#+\\s*/,'').replace(/[\\\\/:*?\"<>|]/g,'_').slice(0,30);\nreturn [{json:{成稿:text,文件名:first+'.md'}}];"}},
+    {"id":"file-03-write","name":"转成 Markdown 文件","type":"n8n-nodes-base.convertToFile","typeVersion":1.1,"position":[1390,260],"parameters":{"operation":"toText","sourceProperty":"成稿","options":{"fileName":"={{ $json.文件名 }}"}}}
+  ],
+  "connections":{"手动触发":{"main":[[{"node":"填写创作任务","type":"main","index":0}]]},"填写创作任务":{"main":[[{"node":"AI 撰写原创成稿","type":"main","index":0}]]},"AI 撰写原创成稿":{"main":[[{"node":"整理文件名","type":"main","index":0}]]},"整理文件名":{"main":[[{"node":"转成 Markdown 文件","type":"main","index":0}]]},"DeepSeek 大模型":{"ai_languageModel":[[{"node":"AI 撰写原创成稿","type":"ai_languageModel","index":0}]]}},
+  "settings":{"executionOrder":"v1"}
+}

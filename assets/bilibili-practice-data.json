@@ -1,0 +1,11 @@
+{
+  "notice": "教学备用数据：仅用于平台风控时练习拆条、整理、计算和导出；标题与数字均为虚构示例，不代表真实账号表现。",
+  "data": [
+    {"is_demo":true,"title":"【教学样本】零基础第一次搭自动化，先学这三步","author":"示例UP主","pubdate":1785686400,"duration":426,"stat":{"view":128000,"danmaku":326,"reply":581,"like":12600,"coin":4200,"favorite":9800,"share":1600},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00001"},
+    {"is_demo":true,"title":"【教学样本】我把每天两小时重复工作交给了AI","author":"示例UP主","pubdate":1785513600,"duration":618,"stat":{"view":92000,"danmaku":214,"reply":403,"like":8800,"coin":3100,"favorite":7600,"share":1200},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00002"},
+    {"is_demo":true,"title":"【教学样本】不会写提示词？用岗位说明书就够了","author":"示例UP主","pubdate":1785254400,"duration":355,"stat":{"view":156000,"danmaku":481,"reply":762,"like":15400,"coin":5100,"favorite":13100,"share":2300},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00003"},
+    {"is_demo":true,"title":"【教学样本】一张表看懂十个AI工具怎么选","author":"示例UP主","pubdate":1784995200,"duration":503,"stat":{"view":76000,"danmaku":173,"reply":298,"like":6900,"coin":2400,"favorite":8200,"share":980},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00004"},
+    {"is_demo":true,"title":"【教学样本】自动化失败最多的五个原因","author":"示例UP主","pubdate":1784736000,"duration":742,"stat":{"view":64000,"danmaku":152,"reply":337,"like":5700,"coin":2200,"favorite":6100,"share":720},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00005"},
+    {"is_demo":true,"title":"【教学样本】我的一周AI工作流真实复盘","author":"示例UP主","pubdate":1784476800,"duration":889,"stat":{"view":48000,"danmaku":119,"reply":245,"like":4200,"coin":1900,"favorite":3700,"share":510},"pic":"https://i0.hdslb.com/bfs/archive/placeholder.jpg","bvid":"BV1DEMO00006"}
+  ]
+}

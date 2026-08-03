@@ -451,7 +451,7 @@
 </div>
 
 <script src="gate-client.js?v=20260716a"></script>
-<script src="course-data.js?v=20260729b"></script>
+<script src="course-data.js?v=20260803-ch34"></script>
 <script src="homeworks.js?v=20260706b"></script>
 <script src="annotation-layer.js?v=20260729a"></script>
 <script>
@@ -980,6 +980,9 @@ function renderBlock(b, i){
     case "lab": {
       const steps = (b.steps||[]).map(s=>`<li>${s}</li>`).join("");
       const wfImg = b.workflow && WF_IMG[b.workflow];
+      const wfDownload = b.workflow
+        ? `<a class="btn-dl" href="workflows/${encodeURIComponent(b.workflow)}" download style="display:inline-flex;margin:12px 0 2px;text-decoration:none">⬇ 下载工作流模板</a>`
+        : '';
       const shot = wfImg ? `<div class="wf-preview"><img src="${wfImg}" alt="工作流画布预览" loading="lazy" /></div>` : '';
       // 半引导模式(challenge):只亮出需求+节点清单,手把手步骤折叠成"救援"——撤支架,逼你先自己想连法
       const chips = (b.nodeList||[]).map(n=>`<span class="lab-chip">${n}</span>`).join("");
@@ -991,6 +994,7 @@ function renderBlock(b, i){
       return `<div class="sec"><h4>动手实操${b.milestone?'（里程碑成品）':''}</h4>
         <div class="lab"><div class="lab-goal">${b.desc}</div>
         ${shot}
+        ${wfDownload}
         ${stepsHtml}
         <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
     }

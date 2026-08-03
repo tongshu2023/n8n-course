@@ -12,7 +12,7 @@ test("生产配置恢复自学自动解锁模式", () => {
   assert.equal(config.unlockMode, "auto");
   assert.equal(config.openUpTo, 1);
   assert.match(html, /gate-client\.js/);
-  assert.match(html, /course-data\.js\?v=20260729b/);
+  assert.match(html, /course-data\.js\?v=20260803-ch34/);
 });
 
 test("自学模式无需班级口令即可直接进入课程", () => {

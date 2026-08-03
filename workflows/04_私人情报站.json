@@ -1,0 +1,28 @@
+{
+  "name": "04 私人情报站（双源 + 清洗 + AI简报 + 推送）",
+  "nodes": [
+    {"id":"note-04-radar","name":"使用说明","type":"n8n-nodes-base.stickyNote","typeVersion":1,"position":[-260,-160],"parameters":{"content":"## 私人情报站\n\n先用「手动触发」跑通，再启用「每天早上8点」。\n\n1. 在「监控任务」改主题和关键词\n2. 配 DeepSeek 凭证\n3. 在「推送到群」填自己的 Webhook，并把该节点启用\n4. 手机真收到一次后再切 Active\n\nWebhook 是钥匙，不要截图公开。","height":330,"width":400}},
+    {"id":"manual-04-radar","name":"手动触发","type":"n8n-nodes-base.manualTrigger","typeVersion":1,"position":[220,120],"parameters":{}},
+    {"id":"schedule-04-radar","name":"每天早上8点","type":"n8n-nodes-base.scheduleTrigger","typeVersion":1.2,"position":[220,340],"parameters":{"rule":{"interval":[{"triggerAtHour":8}]}}},
+    {"id":"set-04-radar","name":"监控任务","type":"n8n-nodes-base.set","typeVersion":3.4,"position":[450,220],"parameters":{"assignments":{"assignments":[{"id":"topic","name":"主题","type":"string","value":"AI 与工作效率"},{"id":"keywords","name":"关键词","type":"string","value":"AI,人工智能,自动化,n8n,效率"},{"id":"limit","name":"最多保留条数","type":"number","value":12},{"id":"question","name":"接收人最关心的问题","type":"string","value":"哪些变化会影响普通人的工作方式，今天值得采取什么行动"}]},"options":{}}},
+    {"id":"http-04-bili","name":"B站热门","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[700,100],"parameters":{"url":"https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all","sendHeaders":true,"headerParameters":{"parameters":[{"name":"User-Agent","value":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126 Safari/537.36"},{"name":"Referer","value":"https://www.bilibili.com/"}]},"options":{"timeout":15000}}},
+    {"id":"split-04-bili","name":"拆开B站列表","type":"n8n-nodes-base.splitOut","typeVersion":1,"position":[930,100],"parameters":{"fieldToSplitOut":"data.list","options":{}}},
+    {"id":"norm-04-bili","name":"统一B站字段","type":"n8n-nodes-base.code","typeVersion":2,"position":[1160,100],"parameters":{"jsCode":"const d=$json;\nreturn [{json:{title:d.title||'',summary:d.desc||'',url:d.bvid?'https://www.bilibili.com/video/'+d.bvid:'',source:'B站热门',publishedAt:d.pubdate?new Date(d.pubdate*1000).toISOString():'',score:Number(d.stat?.view||0)}}];"}},
+    {"id":"rss-04-radar","name":"行业RSS","type":"n8n-nodes-base.rssFeedRead","typeVersion":1.1,"position":[700,340],"parameters":{"url":"https://sspai.com/feed","options":{}}},
+    {"id":"norm-04-rss","name":"统一RSS字段","type":"n8n-nodes-base.code","typeVersion":2,"position":[930,340],"parameters":{"jsCode":"return $input.all().map(item=>{const d=item.json;return {json:{title:d.title||'',summary:(d.contentSnippet||d.content||'').replace(/<[^>]+>/g,' ').slice(0,240),url:d.link||'',source:'行业RSS',publishedAt:d.isoDate||d.pubDate||'',score:0}}});"}},
+    {"id":"merge-04-radar","name":"双源合流","type":"n8n-nodes-base.merge","typeVersion":3,"position":[1390,220],"parameters":{"mode":"append"}},
+    {"id":"clean-04-radar","name":"清洗筛选并聚合","type":"n8n-nodes-base.code","typeVersion":2,"position":[1620,220],"parameters":{"jsCode":"const cfg=$('监控任务').first().json;\nconst keys=String(cfg.关键词||'').split(/[,，]/).map(x=>x.trim().toLowerCase()).filter(Boolean);\nconst seen=new Set();\nconst rows=$input.all().map(x=>x.json).filter(r=>{const id=r.url||r.title;if(!id||seen.has(id))return false;seen.add(id);const hay=(r.title+' '+r.summary).toLowerCase();return !keys.length||keys.some(k=>hay.includes(k));}).sort((a,b)=>(b.score||0)-(a.score||0)).slice(0,Number(cfg.最多保留条数)||12);\nconst material=rows.map((r,i)=>`${i+1}. [${r.source}] ${r.title}\\n摘要：${r.summary}\\n时间：${r.publishedAt}\\n链接：${r.url}`).join('\\n\\n');\nreturn [{json:{主题:cfg.主题,关注问题:cfg.接收人最关心的问题,候选条数:rows.length,材料:material}}];"}},
+    {"id":"chain-04-radar","name":"AI 蒸馏成行动简报","type":"@n8n/n8n-nodes-langchain.chainLlm","typeVersion":1.5,"position":[1850,220],"parameters":{"promptType":"define","text":"=你是我的私人情报分析员。主题：{{ $json.主题 }}。我最关心：{{ $json.关注问题 }}。\n\n请从 {{ $json.候选条数 }} 条候选中选出真正重要的 3~5 条。每条必须包含：\n- 发生了什么（一句话）\n- 为什么与我有关\n- 原始链接\n\n最后给出“今天建议做什么”，最多 3 项。材料不足或结论不确定时明确写“需核实”，不要编造。全文控制在 600 字内。\n\n候选材料：\n{{ $json.材料 }}"}},
+    {"id":"model-04-radar","name":"DeepSeek 大模型","type":"@n8n/n8n-nodes-langchain.lmChatDeepSeek","typeVersion":1,"position":[1850,440],"parameters":{"model":"deepseek-chat","options":{}},"credentials":{"deepSeekApi":{"id":"deepseek-cred","name":"DeepSeek 账号"}}},
+    {"id":"push-04-radar","name":"推送到群（填Webhook后启用）","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[2090,220],"disabled":true,"parameters":{"method":"POST","url":"YOUR_WEBHOOK_URL_HERE","sendBody":true,"specifyBody":"json","jsonBody":"={{ JSON.stringify({ msgtype: 'text', text: { content: '📰 私人情报站 ' + $now.format('MM月dd日') + '\\n\\n' + $json.text } }) }}","options":{"timeout":15000}}}
+  ],
+  "connections":{
+    "手动触发":{"main":[[{"node":"监控任务","type":"main","index":0}]]},"每天早上8点":{"main":[[{"node":"监控任务","type":"main","index":0}]]},
+    "监控任务":{"main":[[{"node":"B站热门","type":"main","index":0},{"node":"行业RSS","type":"main","index":0}]]},
+    "B站热门":{"main":[[{"node":"拆开B站列表","type":"main","index":0}]]},"拆开B站列表":{"main":[[{"node":"统一B站字段","type":"main","index":0}]]},"统一B站字段":{"main":[[{"node":"双源合流","type":"main","index":0}]]},
+    "行业RSS":{"main":[[{"node":"统一RSS字段","type":"main","index":0}]]},"统一RSS字段":{"main":[[{"node":"双源合流","type":"main","index":1}]]},
+    "双源合流":{"main":[[{"node":"清洗筛选并聚合","type":"main","index":0}]]},"清洗筛选并聚合":{"main":[[{"node":"AI 蒸馏成行动简报","type":"main","index":0}]]},"AI 蒸馏成行动简报":{"main":[[{"node":"推送到群（填Webhook后启用）","type":"main","index":0}]]},
+    "DeepSeek 大模型":{"ai_languageModel":[[{"node":"AI 蒸馏成行动简报","type":"ai_languageModel","index":0}]]}
+  },
+  "settings":{"executionOrder":"v1","timezone":"Asia/Shanghai"}
+}
