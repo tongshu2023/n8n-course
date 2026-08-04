@@ -11,13 +11,15 @@ const course = new Function(`${source}; return COURSE;`)();
 const chapter3 = course.chapters.find(chapter => chapter.id === "ch3");
 const chapter4 = course.chapters.find(chapter => chapter.id === "ch4");
 
-test("第三章保持四节并形成 B 站取数到原创成稿的闭环", () => {
+test("第三章保持四节并形成 RSS+TikHub 取数到原创成稿的闭环", () => {
   assert.deepEqual(chapter3.lessons.map(lesson => lesson.id), ["3-1", "3-2", "3-3", "3-multi"]);
   const content = JSON.stringify(chapter3);
   for (const required of [
-    "B 站",
+    "RSS",
+    "TikHub",
     "HTTP Request",
-    "03_B站UP主对标表.json",
+    "06_抖音数据获取.json",
+    "Import from File",
     "CSV",
     "借需求",
     "参数化",
@@ -50,8 +52,8 @@ test("每节都写清可带走能力、目标和可完成的练习", () => {
   }
 });
 
-test("B站和简报模板结构完整且不存在真实密钥", () => {
-  for (const name of ["03_B站UP主对标表.json", "03_从对标表到原创成稿.json", "04_私人情报站.json"]) {
+test("取数和简报模板结构完整且不存在真实密钥", () => {
+  for (const name of ["06_抖音数据获取.json", "03_从对标表到原创成稿.json", "04_私人情报站.json"]) {
     const full = path.join("workflows", name);
     const raw = fs.readFileSync(full, "utf8");
     const workflow = JSON.parse(raw);

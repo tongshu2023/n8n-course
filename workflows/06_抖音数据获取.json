@@ -1,0 +1,88 @@
+{
+  "name": "TikHub 数据获取（精简输出）",
+  "nodes": [
+    {
+      "id": "note-tikhub",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-520, -180],
+      "parameters": {
+        "content": "## TikHub API 数据获取（抖音精简演示版）\n\n1. 注册 https://user.tikhub.io 获取 API Key（新用户送 $0.05 免费额度，约 50 次请求）\n2. 把 API Key 填入下方「配置参数」节点\n3. 本工作流仅演示抖音（TikHub 平台本身支持 16+ 平台，但换平台需要改端点，本版不支持直接改 platform 值）\n4. video_id 填抖音视频 ID（19 位数字）\n5. 输出 12 个字段：平台、数据来源、视频标题、作者名称、作者ID、发布时间、时长秒、点赞数、评论数、分享数、收藏数、播放地址",
+        "height": 240,
+        "width": 440
+      }
+    },
+    {
+      "id": "trigger-tikhub",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 220],
+      "parameters": {}
+    },
+    {
+      "id": "set-tikhub",
+      "name": "配置参数",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 220],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "api-key", "name": "api_key", "type": "string", "value": "你的 TikHub API Key" },
+            { "id": "platform", "name": "platform", "type": "string", "value": "douyin" },
+            { "id": "video-id", "name": "video_id", "type": "string", "value": "7668877657760665969" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch-tikhub",
+      "name": "获取视频数据（TikHub API）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [450, 220],
+      "parameters": {
+        "url": "=https://api.tikhub.io/api/v1/{{ $json.platform }}/app/v3/fetch_one_video_v3?aweme_id={{ $json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.api_key }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "extract-tikhub",
+      "name": "检查状态并提取数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [680, 220],
+      "parameters": {
+        "jsCode": "// ========== 1. 状态检查 ==========\nconst root = $json;\nconst code = root.code;\nconst msg = root.message || root.msg || '';\nconst codeStr = String(code);\nif (!['0','200'].includes(codeStr)) {\n  let tip = '';\n  if (codeStr === '401') tip = 'API Key 错误';\n  else if (codeStr === '403') tip = '权限不足';\n  else if (codeStr === '404') tip = '视频 ID 不存在';\n  else if (codeStr === '429') tip = '请求过频或免费额度用完';\n  throw new Error('TikHub 错误: ' + code + ' ' + msg + ' \\n提示: ' + tip);\n}\n\n// ========== 2. 智能定位数据源 ==========\nfunction findDataObj(obj) {\n  if (obj.data && obj.data.aweme_detail) return obj.data.aweme_detail;\n  if (obj.data && typeof obj.data === 'object') return obj.data;\n  return obj;\n}\nconst data = findDataObj(root);\n\n// ========== 3. 安全取值 ==========\nfunction safeGet(obj, path, defaultVal) {\n  if (!obj || typeof obj !== 'object') return defaultVal;\n  const parts = path.split('.');\n  let cur = obj;\n  for (let p of parts) {\n    if (cur && cur[p] !== undefined && cur[p] !== null) cur = cur[p];\n    else return defaultVal;\n  }\n  return cur;\n}\n\n// ========== 4. 提取统计 ==========\nconst stats = safeGet(data, 'statistics', {}) || {};\nconst like = Number(stats.digg_count || stats.like_count || stats.diggCount || 0);\nconst comment = Number(stats.comment_count || stats.commentCount || 0);\nconst share = Number(stats.share_count || stats.shareCount || 0);\nconst favorite = Number(stats.collect_count || stats.favorite_count || stats.collectCount || 0);\n\n// ========== 5. 提取作者 ==========\nconst author = safeGet(data, 'author', {}) || {};\nconst authorName = author.nickname || author.name || author.unique_id || '';\nconst authorId = author.unique_id || author.sec_uid || '';\n\n// ========== 6. 基本信息 ==========\nconst title = safeGet(data, 'desc', '') || safeGet(data, 'title', '');\nconst duration = Number(safeGet(data, 'duration', 0) || safeGet(data, 'video.duration', 0));\nconst pubTime = Number(safeGet(data, 'create_time', 0) || safeGet(data, 'publish_time', 0) || safeGet(data, 'ctime', 0));\nconst pubDate = pubTime ? new Date(pubTime * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '';\n\n// ========== 7. 播放地址 ==========\nconst videoObj = safeGet(data, 'video', {}) || {};\nconst playAddr = (videoObj.play_addr && videoObj.play_addr.url_list && videoObj.play_addr.url_list[0]) || videoObj.play_addr || '';\n\n// ========== 8. 平台 ==========\nconst plat = root.platform || $('配置参数').first().json.platform || 'unknown';\nconst map = { 'douyin':'抖音', 'tiktok':'TikTok', 'bilibili':'B站', 'xiaohongshu':'小红书', 'kuaishou':'快手', 'weibo':'微博', 'zhihu':'知乎' };\nconst platformName = map[plat] || plat;\n\n// ========== 9. 输出（只保留用户指定的12个字段） ==========\nreturn [{\n  json: {\n    '平台': platformName,\n    '数据来源': 'TikHub API',\n    '视频标题': title,\n    '作者名称': authorName,\n    '作者ID': authorId,\n    '发布时间': pubDate,\n    '时长秒': duration,\n    '点赞数': like,\n    '评论数': comment,\n    '分享数': share,\n    '收藏数': favorite,\n    '播放地址': playAddr\n  }\n}];"
+      }
+    },
+    {
+      "id": "csv-tikhub",
+      "name": "转成 CSV 文件",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [920, 220],
+      "parameters": {
+        "operation": "csv",
+        "options": { "fileName": "tikhub-video-data.csv" }
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": { "main": [[{ "node": "配置参数", "type": "main", "index": 0 }]] },
+    "配置参数": { "main": [[{ "node": "获取视频数据（TikHub API）", "type": "main", "index": 0 }]] },
+    "获取视频数据（TikHub API）": { "main": [[{ "node": "检查状态并提取数据", "type": "main", "index": 0 }]] },
+    "检查状态并提取数据": { "main": [[{ "node": "转成 CSV 文件", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
