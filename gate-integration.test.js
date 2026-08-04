@@ -8,11 +8,11 @@ const html = fs.readFileSync("index.html", "utf8");
 const data = fs.readFileSync("course-data.js", "utf8");
 const config = new Function(data + "; return CONFIG;")();
 
-test("生产配置恢复自学自动解锁模式", () => {
-  assert.equal(config.unlockMode, "auto");
+test("生产配置为老师手动闸门模式", () => {
+  assert.equal(config.unlockMode, "manual");
   assert.equal(config.openUpTo, 1);
   assert.match(html, /gate-client\.js/);
-  assert.match(html, /course-data\.js\?v=20260804-ch4/);
+  assert.match(html, /course-data\.js\?v=20260804-manual/);
 });
 
 test("自学模式无需班级口令即可直接进入课程", () => {
