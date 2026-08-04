@@ -1,15 +1,527 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="refresh" content="0;url=https://gsgcyx8xbw.coze.site/control.html">
-  <link rel="canonical" href="https://gsgcyx8xbw.coze.site/control.html">
-  <title>教师关卡控制台</title>
-</head>
-<body>
-  <p>正在打开教师关卡控制台……</p>
-  <p><a href="https://gsgcyx8xbw.coze.site/control.html">如果没有自动跳转，请点这里</a></p>
-  <script>location.replace("https://gsgcyx8xbw.coze.site/control.html");</script>
-</body>
-</html>
+<!DOCTYPE html><html lang="zh-CN"><head><!-- Coze Coding Analytics -->
+<script>
+(function(){
+  function randomUUID(){
+    if(typeof crypto!=="undefined"&&typeof crypto.randomUUID==="function"){
+      return crypto.randomUUID();
+    }
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g,function(c){
+      return(+c^(crypto.getRandomValues(new Uint8Array(1))[0]&(15>>(+c/4)))).toString(16);
+    });
+  }
+
+  function encode(obj){return btoa(JSON.stringify(obj))}
+  function decode(str){try{return JSON.parse(atob(str))}catch(e){return null}}
+
+  function getDeviceId(){
+    var storageKey="__coze_coding_device_info";
+    try{
+      var info=decode(localStorage.getItem(storageKey));
+      if(info&&typeof info.did==="string"){return info.did}
+    }catch(e){}
+    var newInfo={did:randomUUID()};
+    try{localStorage.setItem(storageKey,encode(newInfo))}catch(e){}
+    return newInfo.did;
+  }
+
+  function sendPageViewEvent(){
+    var deviceId=getDeviceId();
+    var projectId="7662937137595170858";
+    var reportURL="https://code.coze.cn/api/coding/deployment/analytics/report?project_id="+encodeURIComponent(projectId)+"&did="+encodeURIComponent(deviceId);
+    try{
+      fetch(reportURL,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          events:[{
+            type:"page_view",
+            url:window.location.href,
+            path:window.location.pathname,
+            referrer:document.referrer,
+            timestamp:Date.now()
+          }]
+        })
+      }).catch(function(){});
+    }catch(e){}
+  }
+
+  if(document.readyState==="complete"){
+    sendPageViewEvent();
+  }else{
+    document.addEventListener("readystatechange",function(){
+      if(document.readyState==="complete"){sendPageViewEvent()}
+    });
+  }
+})();
+</script>
+<!-- WebPro SDK -->
+<script>
+(function(n,e,r,t,a,o,s,i,c,l,f,m,p,u){o="precollect";s="getAttribute";i="addEventListener";c="PerformanceObserver";l=function(e){f=[].slice.call(arguments);f.push(Date.now(),location.href);(e==o?l.p.a:l.q).push(f)};l.q=[];l.p={a:[]};n[a]=l;m=document.createElement("script");m.src=r+"?aid="+t+"&globalName="+a;m.crossOrigin="anonymous";e.getElementsByTagName("head")[0].appendChild(m);if(i in n){l.pcErr=function(e){e=e||n.event;p=e.target||e.srcElement;if(p instanceof Element||p instanceof HTMLElement){n[a](o,"st",{tagName:p.tagName,url:p[s]("href")||p[s]("src")})}else{n[a](o,"err",e.error||e.message)}};l.pcRej=function(e){e=e||n.event;n[a](o,"reject",e.reason||e.detail&&e.detail.reason)};n[i]("error",l.pcErr,true);n[i]("unhandledrejection",l.pcRej,true)}if("PerformanceLongTaskTiming"in n){u=l.pp={entries:[]};u.observer=new PerformanceObserver(function(e){u.entries=u.entries.concat(e.getEntries())});u.observer.observe({entryTypes:["longtask"]})}})(window,document,"https://apm.volccdn.com/mars-web/apmplus/web/browser.cn.js",1001891,"apmPlus");
+</script>
+<script>
+window.apmPlus("context.set", "project_id", "7662937137595170858");
+window.apmPlus("init",{
+  aid: 1001891,
+  token: '26a8704bd4d34b1698085c787d0c95d0'
+});
+window.apmPlus("start");
+</script>
+
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+    <meta name="theme-color" content="#111827"/>
+    <title>教师控制台 · n8n 课程</title>
+    <style>
+      :root {
+        --bg: #f6f7fb;
+        --card: #fff;
+        --fg: #111827;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --accent: #4f46e5;
+        --accent-fg: #fff;
+        --danger: #dc2626;
+        --danger-fg: #fff;
+        --ok: #059669;
+        --lock: #9ca3af;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg); }
+      body {
+        font: 15px/1.55 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+              "Microsoft Yahei", system-ui, sans-serif;
+        min-height: 100vh;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right)
+                 env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+      header {
+        position: sticky; top: 0; z-index: 5;
+        background: var(--card);
+        border-bottom: 1px solid var(--line);
+        padding: 12px 16px;
+      }
+      header h1 { margin: 0; font-size: 16px; }
+      header .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+      main { padding: 16px; max-width: 720px; margin: 0 auto; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+      input[type="password"] {
+        width: 100%; padding: 12px; font-size: 16px;
+        border: 1px solid var(--line); border-radius: 10px;
+        background: #fff; color: var(--fg);
+      }
+      button {
+        appearance: none; border: 0; border-radius: 10px;
+        padding: 12px 14px; font-size: 15px; font-weight: 600;
+        cursor: pointer; touch-action: manipulation;
+      }
+      .btn-primary  { background: var(--accent); color: var(--accent-fg); }
+      .btn-danger   { background: var(--danger); color: var(--danger-fg); }
+      .btn-outline  { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+      .btn-primary:disabled, .btn-danger:disabled, .btn-outline:disabled {
+        opacity: 0.5; cursor: not-allowed;
+      }
+      .row-actions { display: flex; gap: 8px; margin-top: 12px; }
+      .row-actions button { flex: 1; padding: 10px 8px; font-size: 14px; }
+      .quick-row { display: flex; gap: 10px; }
+      .quick-row button { flex: 1; padding: 14px 8px; font-size: 15px; }
+      .status {
+        font-size: 13px; color: var(--muted); margin-top: 8px;
+        min-height: 18px; word-break: break-word;
+      }
+      .status.err { color: var(--danger); }
+      .status.ok  { color: var(--ok); }
+
+      #panel { display: none; }
+
+      /* Lesson list */
+      .chapter { margin-top: 18px; }
+      .chapter h2 { font-size: 14px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+      .lesson {
+        display: grid;
+        grid-template-columns: 44px 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        background: var(--card);
+      }
+      .lesson .idx {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        color: var(--fg);
+        text-align: center;
+      }
+      .lesson .title {
+        font-size: 14px;
+        color: var(--fg);
+        line-height: 1.35;
+        overflow: hidden;
+      }
+      .lesson .title small { display: block; font-size: 12px; color: var(--muted); }
+      .lesson .badge {
+        font-size: 12px; padding: 2px 8px; border-radius: 999px;
+        border: 1px solid var(--line); color: var(--muted);
+        white-space: nowrap;
+      }
+      .lesson.open   .badge { background: #ecfdf5; color: var(--ok); border-color: #a7f3d0; }
+      .lesson.locked .badge { background: #f3f4f6; color: var(--lock); }
+      .lesson .row-actions { grid-column: 1 / -1; }
+
+      footer { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 0; }
+
+      @media (min-width: 720px) {
+        .lesson { grid-template-columns: 56px 1fr auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>教师控制台</h1>
+      <div class="meta" id="meta">加载中…</div>
+    </header>
+
+    <main>
+      <!-- login card, shown only when unauthenticated -->
+      <section id="login" class="card" hidden="">
+        <label for="pw">管理员密码</label>
+        <input id="pw" type="password" autocomplete="current-password" inputmode="text" spellcheck="false" placeholder="请输入密码"/>
+        <div style="margin-top: 12px;">
+          <button id="loginBtn" class="btn-primary" type="button" style="width: 100%;">登录</button>
+        </div>
+        <div id="loginMsg" class="status"></div>
+      </section>
+
+      <!-- admin panel, shown only when authenticated -->
+      <section id="panel">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:12px;color:var(--muted);">当前开放到</div>
+              <div style="font-size:28px;font-weight:700;line-height:1.1;">
+                第 <span id="curOpen">–</span> / <span id="curTotal">38</span> 关
+              </div>
+              <div class="meta" id="curMeta"></div>
+            </div>
+            <button id="logoutBtn" class="btn-outline" type="button">退出登录</button>
+          </div>
+          <div class="quick-row" style="margin-top: 14px;">
+            <button id="nextBtn" class="btn-primary" type="button">开放下一关</button>
+            <button id="prevBtn" class="btn-danger" type="button">收回最后一关</button>
+          </div>
+          <div id="quickMsg" class="status"></div>
+        </div>
+
+        <div id="lessonList"></div>
+      </section>
+
+      <footer>
+        <div>登录状态每 5 分钟自动检查。密码不会保存到浏览器。</div>
+      </footer>
+    </main>
+
+    <!-- COURSE.chapters[].lessons[] is our only source of truth for the row list. -->
+    <script src="/course-data.js"></script>
+    <script>
+      "use strict";
+
+      const TOTAL = 38;
+      const loginEl   = document.getElementById("login");
+      const panelEl   = document.getElementById("panel");
+      const metaEl    = document.getElementById("meta");
+      const pwEl      = document.getElementById("pw");
+      const loginBtn  = document.getElementById("loginBtn");
+      const loginMsg  = document.getElementById("loginMsg");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const curOpen   = document.getElementById("curOpen");
+      const curTotal  = document.getElementById("curTotal");
+      const curMeta   = document.getElementById("curMeta");
+      const nextBtn   = document.getElementById("nextBtn");
+      const prevBtn   = document.getElementById("prevBtn");
+      const quickMsg  = document.getElementById("quickMsg");
+      const listEl    = document.getElementById("lessonList");
+
+      let gate = { openUpTo: 1, total: TOTAL, version: 0, updatedAt: null };
+      const flat = flattenLessons();
+
+      function flattenLessons() {
+        const rows = [];
+        // course-data.js declares `const COURSE = {...}` at top level, which
+        // in classic scripts creates a lexical global that is NOT a property
+        // of `window`. Read the bare identifier through a typeof guard so
+        // ReferenceError is impossible even if the file failed to load.
+        const src = (typeof COURSE !== "undefined") ? COURSE : null;
+        try {
+          for (const ch of (src && src.chapters) || []) {
+            for (const lesson of (ch.lessons || [])) {
+              rows.push({
+                chapter: ch.title || "",
+                chapterIcon: ch.icon || "",
+                id: lesson.id,
+                title: lesson.title || lesson.id,
+                subtitle: lesson.subtitle || ""
+              });
+            }
+          }
+        } catch (_) {}
+        return rows;
+      }
+
+      function setStatus(el, msg, kind) {
+        el.textContent = msg || "";
+        el.classList.remove("err", "ok");
+        if (kind) el.classList.add(kind);
+      }
+
+      function fmt(ts) {
+        if (!ts) return "尚未更新";
+        try {
+          const d = new Date(ts);
+          if (Number.isNaN(d.getTime())) return String(ts);
+          return d.toLocaleString("zh-CN", { hour12: false });
+        } catch (_) { return String(ts); }
+      }
+
+      async function fetchJSON(url, options) {
+        const opts = Object.assign({
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" }
+        }, options || {});
+        opts.headers = Object.assign({}, opts.headers, (options && options.headers) || {});
+        const res = await fetch(url, opts);
+        let body = null;
+        try { body = await res.json(); } catch (_) {}
+        return { res, body };
+      }
+
+      async function checkSession() {
+        try {
+          const { body } = await fetchJSON("/api/admin/session");
+          return !!(body && body.authenticated);
+        } catch (_) { return false; }
+      }
+
+      async function refreshGate() {
+        const { res, body } = await fetchJSON("/api/gates?_=" + Date.now(), {
+          cache: "no-store"
+        });
+        if (!res.ok || !body) throw new Error("读取闸门失败：" + res.status);
+        gate = {
+          openUpTo: Number(body.openUpTo) || 1,
+          total:    Number(body.total) || TOTAL,
+          version:  Number(body.version) || 0,
+          updatedAt: body.updatedAt || null
+        };
+        renderGate();
+      }
+
+      function renderGate() {
+        curOpen.textContent  = gate.openUpTo;
+        curTotal.textContent = gate.total;
+        curMeta.textContent  = "版本 v" + gate.version + " · 最近更新 " + fmt(gate.updatedAt);
+        nextBtn.disabled = gate.openUpTo >= gate.total;
+        prevBtn.disabled = gate.openUpTo <= 1;
+        renderLessons();
+      }
+
+      function renderLessons() {
+        if (!flat.length) {
+          listEl.innerHTML =
+            '<div class="card" style="color:var(--muted);">未能从 course-data.js 中解析关卡数据。</div>';
+          return;
+        }
+
+        // Group by chapter, preserving order.
+        const byChapter = [];
+        const seen = new Map();
+        flat.forEach((row, i) => {
+          const key = row.chapter;
+          let bucket = seen.get(key);
+          if (!bucket) {
+            bucket = { chapter: key, icon: row.chapterIcon, items: [] };
+            seen.set(key, bucket);
+            byChapter.push(bucket);
+          }
+          bucket.items.push({ ...row, ordinal: i + 1 });
+        });
+
+        listEl.innerHTML = "";
+        for (const ch of byChapter) {
+          const sec = document.createElement("section");
+          sec.className = "chapter";
+          const h2 = document.createElement("h2");
+          h2.textContent = (ch.icon ? ch.icon + " " : "") + ch.chapter;
+          sec.appendChild(h2);
+          for (const item of ch.items) {
+            sec.appendChild(renderLesson(item));
+          }
+          listEl.appendChild(sec);
+        }
+      }
+
+      function renderLesson(item) {
+        const isOpen = item.ordinal <= gate.openUpTo;
+        const div = document.createElement("div");
+        div.className = "lesson " + (isOpen ? "open" : "locked");
+        div.dataset.ordinal = String(item.ordinal);
+
+        const idx = document.createElement("div");
+        idx.className = "idx"; idx.textContent = item.ordinal;
+
+        const title = document.createElement("div");
+        title.className = "title";
+        title.innerHTML =
+          escapeHtml(item.title) +
+          (item.subtitle ? '<small>' + escapeHtml(item.subtitle) + '</small>' : '');
+
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = isOpen ? "已开放" : "未开放";
+
+        const actions = document.createElement("div");
+        actions.className = "row-actions";
+
+        const openHereBtn = document.createElement("button");
+        openHereBtn.className = "btn-outline";
+        openHereBtn.type = "button";
+        openHereBtn.textContent = "开放到这里";
+        openHereBtn.disabled = item.ordinal === gate.openUpTo;
+        openHereBtn.addEventListener("click", () => writeGate(item.ordinal, div));
+
+        const closeFromBtn = document.createElement("button");
+        closeFromBtn.className = "btn-outline";
+        closeFromBtn.type = "button";
+        closeFromBtn.textContent = "关闭此关及以后";
+        closeFromBtn.disabled = item.ordinal <= 1;
+        closeFromBtn.addEventListener("click", () => writeGate(item.ordinal - 1, div));
+
+        actions.appendChild(openHereBtn);
+        actions.appendChild(closeFromBtn);
+
+        div.appendChild(idx);
+        div.appendChild(title);
+        div.appendChild(badge);
+        div.appendChild(actions);
+        return div;
+      }
+
+      function escapeHtml(s) {
+        return String(s || "").replace(/[&<>"']/g, (c) => (
+          { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+        ));
+      }
+
+      async function writeGate(target, sourceEl) {
+        target = Math.max(1, Math.min(TOTAL, Number(target) || 1));
+        setStatus(quickMsg, "正在写入…");
+        disableWriters(true);
+        try {
+          const { res, body } = await fetchJSON("/api/gates", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ openUpTo: target })
+          });
+          if (!res.ok) {
+            const detail = (body && (body.message || body.error)) || ("HTTP " + res.status);
+            throw new Error(detail);
+          }
+          // Re-GET the truth so we don't fake success on stale data.
+          await refreshGate();
+          setStatus(quickMsg, "已更新到第 " + gate.openUpTo + " 关 · 版本 v" + gate.version, "ok");
+        } catch (e) {
+          setStatus(quickMsg, "写入失败：" + (e && e.message ? e.message : e), "err");
+        } finally {
+          disableWriters(false);
+        }
+      }
+
+      function disableWriters(state) {
+        [nextBtn, prevBtn, ...listEl.querySelectorAll("button")].forEach((b) => {
+          b.disabled = state;
+        });
+        if (!state) renderGate();
+      }
+
+      nextBtn.addEventListener("click",  () => writeGate(gate.openUpTo + 1));
+      prevBtn.addEventListener("click",  () => writeGate(gate.openUpTo - 1));
+
+      loginBtn.addEventListener("click", async () => {
+        const password = pwEl.value;
+        if (!password) { setStatus(loginMsg, "请输入密码。", "err"); return; }
+        loginBtn.disabled = true;
+        setStatus(loginMsg, "正在登录…");
+        try {
+          const { res, body } = await fetchJSON("/api/admin/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password })
+          });
+          if (!res.ok) {
+            const msg = (body && (body.message || body.error)) || ("HTTP " + res.status);
+            throw new Error(msg);
+          }
+          pwEl.value = "";
+          setStatus(loginMsg, "登录成功", "ok");
+          await enterPanel();
+        } catch (e) {
+          setStatus(loginMsg, "登录失败：" + (e && e.message ? e.message : e), "err");
+        } finally {
+          loginBtn.disabled = false;
+        }
+      });
+
+      pwEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") loginBtn.click();
+      });
+
+      logoutBtn.addEventListener("click", async () => {
+        try { await fetchJSON("/api/admin/logout", { method: "POST" }); } catch (_) {}
+        showLogin();
+      });
+
+      async function enterPanel() {
+        loginEl.hidden = true;
+        panelEl.style.display = "block";
+        metaEl.textContent = "已登录 · " + (
+          (typeof COURSE !== "undefined" && COURSE && COURSE.title) || "n8n 课程"
+        );
+        try {
+          await refreshGate();
+          setStatus(quickMsg, "");
+        } catch (e) {
+          setStatus(quickMsg, "读取失败：" + (e && e.message ? e.message : e), "err");
+        }
+      }
+
+      function showLogin() {
+        loginEl.hidden = false;
+        panelEl.style.display = "none";
+        metaEl.textContent = "请先登录管理员账号";
+        setStatus(loginMsg, "");
+        setTimeout(() => pwEl.focus(), 50);
+      }
+
+      // Boot
+      (async () => {
+        const authed = await checkSession();
+        if (authed) { await enterPanel(); } else { showLogin(); }
+      })();
+
+      // Re-verify session periodically so a stale cookie doesn't leave a
+      // teacher clicking on a dead panel.
+      setInterval(async () => {
+        const authed = await checkSession();
+        if (!authed && panelEl.style.display === "block") showLogin();
+      }, 5 * 60 * 1000);
+    </script>
+  
+
+</body></html>
