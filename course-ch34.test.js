@@ -28,19 +28,24 @@ test("第三章保持四节并形成 RSS+TikHub 取数到原创成稿的闭环",
   ]) assert.match(content, new RegExp(required));
 });
 
-test("第四章保持三节并与第三章形成写和读的明确区分", () => {
+test("第四章保持三节并围绕三大结构与逐字稿流水线", () => {
   assert.deepEqual(chapter4.lessons.map(lesson => lesson.id), ["4-1", "4-clean", "4-2"]);
   const content = JSON.stringify(chapter4);
   for (const required of [
-    "AI 替你读",
-    "第三章是 AI 替你写",
-    "Merge",
-    "Remove Duplicates",
-    "聚合",
-    "Schedule Trigger",
-    "04_私人情报站.json",
-    "求职",
-    "采购"
+    "顺序",
+    "分支",
+    "循环",
+    "IF",
+    "1966",
+    "异步",
+    "task_id",
+    "小票",
+    "paraformer",
+    "轮询",
+    "等 30 秒",
+    "04_抖音逐字稿流水线.json",
+    "逐字稿",
+    "13 列"
   ]) assert.match(content, new RegExp(required));
 });
 
@@ -53,7 +58,7 @@ test("每节都写清可带走能力、目标和可完成的练习", () => {
 });
 
 test("取数和简报模板结构完整且不存在真实密钥", () => {
-  for (const name of ["06_抖音数据获取.json", "03_从对标表到原创成稿.json", "04_私人情报站.json"]) {
+  for (const name of ["06_抖音数据获取.json", "03_从对标表到原创成稿.json", "04_抖音逐字稿流水线.json"]) {
     const full = path.join("workflows", name);
     const raw = fs.readFileSync(full, "utf8");
     const workflow = JSON.parse(raw);

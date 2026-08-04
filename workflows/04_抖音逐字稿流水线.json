@@ -1,0 +1,208 @@
+{
+  "name": "TikHub 数据获取 + 逐字稿（阿里百炼版）",
+  "nodes": [
+    {
+      "id": "note-tikhub",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-520, -220],
+      "parameters": {
+        "content": "## 抖音数据 + 逐字稿（v1）\n\n**需要 2 个 Key，都填「配置参数」节点：**\n1. TikHub Key：注册 https://user.tikhub.io（免费额度，仅演示抖音）\n2. 阿里百炼 Key：注册 https://bailian.console.aliyun.com → API-KEY\n\n**流程**：TikHub 拿 12 个字段 → 把「播放地址」交给百炼 Paraformer 转写（异步：提交任务 → 等 30 秒 → 查询，没好就再等）→ 逐字稿并进表格 → 出 CSV（13 列）\n\n**视频 ID**：抖音分享链接里的 19 位数字",
+        "height": 300,
+        "width": 460
+      }
+    },
+    {
+      "id": "trigger-tikhub",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 220],
+      "parameters": {}
+    },
+    {
+      "id": "set-tikhub",
+      "name": "配置参数",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 220],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "api-key", "name": "api_key", "type": "string", "value": "你的 TikHub API Key" },
+            { "id": "dashscope-key", "name": "dashscope_key", "type": "string", "value": "你的阿里百炼 API Key（sk-开头）" },
+            { "id": "platform", "name": "platform", "type": "string", "value": "douyin" },
+            { "id": "video-id", "name": "video_id", "type": "string", "value": "7668877657760665969" }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fetch-tikhub",
+      "name": "获取视频数据（TikHub API）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 220],
+      "parameters": {
+        "url": "=https://api.tikhub.io/api/v1/{{ $json.platform }}/app/v3/fetch_one_video_v3?aweme_id={{ $json.video_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.api_key }}" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "extract-tikhub",
+      "name": "检查状态并提取数据",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 220],
+      "parameters": {
+        "jsCode": "// ========== 1. 状态检查 ==========\nconst root = $json;\nconst code = root.code;\nconst msg = root.message || root.msg || '';\nconst codeStr = String(code);\nif (!['0','200'].includes(codeStr)) {\n  let tip = '';\n  if (codeStr === '401') tip = 'API Key 错误';\n  else if (codeStr === '403') tip = '权限不足';\n  else if (codeStr === '404') tip = '视频 ID 不存在';\n  else if (codeStr === '429') tip = '请求过频或免费额度用完';\n  throw new Error('TikHub 错误: ' + code + ' ' + msg + ' \\n提示: ' + tip);\n}\n\n// ========== 2. 智能定位数据源 ==========\nfunction findDataObj(obj) {\n  if (obj.data && obj.data.aweme_detail) return obj.data.aweme_detail;\n  if (obj.data && typeof obj.data === 'object') return obj.data;\n  return obj;\n}\nconst data = findDataObj(root);\n\n// ========== 3. 安全取值 ==========\nfunction safeGet(obj, path, defaultVal) {\n  if (!obj || typeof obj !== 'object') return defaultVal;\n  const parts = path.split('.');\n  let cur = obj;\n  for (let p of parts) {\n    if (cur && cur[p] !== undefined && cur[p] !== null) cur = cur[p];\n    else return defaultVal;\n  }\n  return cur;\n}\n\n// ========== 4. 提取统计 ==========\nconst stats = safeGet(data, 'statistics', {}) || {};\nconst like = Number(stats.digg_count || stats.like_count || stats.diggCount || 0);\nconst comment = Number(stats.comment_count || stats.commentCount || 0);\nconst share = Number(stats.share_count || stats.shareCount || 0);\nconst favorite = Number(stats.collect_count || stats.favorite_count || stats.collectCount || 0);\n\n// ========== 5. 提取作者 ==========\nconst author = safeGet(data, 'author', {}) || {};\nconst authorName = author.nickname || author.name || author.unique_id || '';\nconst authorId = author.unique_id || author.sec_uid || '';\n\n// ========== 6. 基本信息 ==========\nconst title = safeGet(data, 'desc', '') || safeGet(data, 'title', '');\nconst duration = Number(safeGet(data, 'duration', 0) || safeGet(data, 'video.duration', 0));\nconst pubTime = Number(safeGet(data, 'create_time', 0) || safeGet(data, 'publish_time', 0) || safeGet(data, 'ctime', 0));\nconst pubDate = pubTime ? new Date(pubTime * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '';\n\n// ========== 7. 播放地址 ==========\nconst videoObj = safeGet(data, 'video', {}) || {};\nconst playAddr = (videoObj.play_addr && videoObj.play_addr.url_list && videoObj.play_addr.url_list[0]) || videoObj.play_addr || '';\nif (!playAddr) {\n  throw new Error('没拿到播放地址，逐字稿这一段跑不了。先检查视频 ID 是否正确。');\n}\n\n// ========== 8. 平台 ==========\nconst plat = root.platform || $('配置参数').first().json.platform || 'unknown';\nconst map = { 'douyin':'抖音', 'tiktok':'TikTok', 'bilibili':'B站', 'xiaohongshu':'小红书', 'kuaishou':'快手', 'weibo':'微博', 'zhihu':'知乎' };\nconst platformName = map[plat] || plat;\n\n// ========== 9. 输出（12个字段） ==========\nreturn [{\n  json: {\n    '平台': platformName,\n    '数据来源': 'TikHub API',\n    '视频标题': title,\n    '作者名称': authorName,\n    '作者ID': authorId,\n    '发布时间': pubDate,\n    '时长秒': duration,\n    '点赞数': like,\n    '评论数': comment,\n    '分享数': share,\n    '收藏数': favorite,\n    '播放地址': playAddr\n  }\n}];"
+      }
+    },
+    {
+      "id": "asr-submit",
+      "name": "提交转写任务（百炼）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('配置参数').first().json.dashscope_key }}" },
+            { "name": "X-DashScope-Async", "value": "enable" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'paraformer-v2', input: { file_urls: [ $json['播放地址'] ] }, parameters: { language_hints: ['zh'] } }) }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "asr-wait",
+      "name": "等 30 秒",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1100, 220],
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "asr-query",
+      "name": "查询转写结果（百炼）",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1320, 220],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://dashscope.aliyuncs.com/api/v1/tasks/{{ $('提交转写任务（百炼）').first().json.output.task_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('配置参数').first().json.dashscope_key }}" }
+          ]
+        },
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "asr-check",
+      "name": "转写失败就报错",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 220],
+      "parameters": {
+        "jsCode": "// 异步任务就像取餐小票：提交后拿到 task_id（小票号），凭小票来问「好了没」\nconst out = $json.output || {};\nconst status = out.task_status || '';\nif (status === 'FAILED' || status === 'CANCELED' || status === 'UNKNOWN') {\n  const detail = JSON.stringify(out).slice(0, 500);\n  throw new Error('转写任务失败（' + status + '）。常见原因：① 播放地址过期（重跑一次前面的 TikHub 节点拿新地址）② 百炼 Key 错误或未开通。原始返回: ' + detail);\n}\nif (status === 'SUCCEEDED') {\n  const sub = (out.results && out.results[0]) || {};\n  if (sub.subtask_status && sub.subtask_status !== 'SUCCEEDED') {\n    throw new Error('转写子任务失败: ' + JSON.stringify(sub).slice(0, 500));\n  }\n  if (!sub.transcription_url) {\n    throw new Error('任务成功但没拿到 transcription_url，原始返回: ' + JSON.stringify(out).slice(0, 500));\n  }\n}\nreturn [{ json: $json }];"
+      }
+    },
+    {
+      "id": "asr-if",
+      "name": "转写完成了吗",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1760, 220],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.output.task_status }}",
+              "rightValue": "SUCCEEDED",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "asr-download",
+      "name": "下载逐字稿 JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1980, 120],
+      "parameters": {
+        "url": "={{ $json.output.results[0].transcription_url }}",
+        "options": {
+          "timeout": 30000,
+          "response": { "response": { "responseFormat": "json" } }
+        }
+      }
+    },
+    {
+      "id": "merge-final",
+      "name": "合并成最终一行",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 120],
+      "parameters": {
+        "jsCode": "// 把 12 个字段和逐字稿并成一行\nconst info = $('检查状态并提取数据').first().json;\nconst trans = $json;\nlet text = '';\nif (trans.transcripts && trans.transcripts[0]) {\n  const t = trans.transcripts[0];\n  if (t.text) {\n    text = t.text;\n  } else if (Array.isArray(t.sentences)) {\n    text = t.sentences.map(s => s.text).join('');\n  }\n}\nif (!text) {\n  throw new Error('逐字稿为空。可能是纯音乐/无人声视频，或结果结构变了。原始返回前500字: ' + JSON.stringify(trans).slice(0, 500));\n}\nreturn [{ json: Object.assign({}, info, { '逐字稿': text }) }];"
+      }
+    },
+    {
+      "id": "csv-tikhub",
+      "name": "转成 CSV 文件",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [2420, 120],
+      "parameters": {
+        "operation": "csv",
+        "options": { "fileName": "douyin-video-with-transcript.csv" }
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": { "main": [[{ "node": "配置参数", "type": "main", "index": 0 }]] },
+    "配置参数": { "main": [[{ "node": "获取视频数据（TikHub API）", "type": "main", "index": 0 }]] },
+    "获取视频数据（TikHub API）": { "main": [[{ "node": "检查状态并提取数据", "type": "main", "index": 0 }]] },
+    "检查状态并提取数据": { "main": [[{ "node": "提交转写任务（百炼）", "type": "main", "index": 0 }]] },
+    "提交转写任务（百炼）": { "main": [[{ "node": "等 30 秒", "type": "main", "index": 0 }]] },
+    "等 30 秒": { "main": [[{ "node": "查询转写结果（百炼）", "type": "main", "index": 0 }]] },
+    "查询转写结果（百炼）": { "main": [[{ "node": "转写失败就报错", "type": "main", "index": 0 }]] },
+    "转写失败就报错": { "main": [[{ "node": "转写完成了吗", "type": "main", "index": 0 }]] },
+    "转写完成了吗": {
+      "main": [
+        [{ "node": "下载逐字稿 JSON", "type": "main", "index": 0 }],
+        [{ "node": "等 30 秒", "type": "main", "index": 0 }]
+      ]
+    },
+    "下载逐字稿 JSON": { "main": [[{ "node": "合并成最终一行", "type": "main", "index": 0 }]] },
+    "合并成最终一行": { "main": [[{ "node": "转成 CSV 文件", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
