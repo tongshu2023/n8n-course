@@ -3,6 +3,14 @@
 
   const CACHE_KEY = "dew_gate_state_v1";
 
+  function isPrepMode(search, token) {
+    try {
+      return new URLSearchParams(String(search || "")).get("prep") === String(token || "");
+    } catch (_) {
+      return false;
+    }
+  }
+
   function clampOpenUpTo(value, total, fallback) {
     const safeTotal = Math.max(1, Number(total) || 1);
     const parsed = Number.parseInt(value, 10);
@@ -154,7 +162,7 @@
     }
   }
 
-  const api = { CACHE_KEY, clampOpenUpTo, sanitizeState, isUnlocked, GateClient };
+  const api = { CACHE_KEY, clampOpenUpTo, sanitizeState, isPrepMode, isUnlocked, GateClient };
   root.CourseGate = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
