@@ -584,6 +584,7 @@ const gateClient = new CourseGate.GateClient({
 });
 
 function gateNoticeHtml(){
+  if(PREP_MODE) return "";
   if(CONFIG.unlockMode !== "manual"){
     return `<div class="gate-banner"><div class="gate-copy"><strong>🚀 自学模式已开启</strong><p>完成当前关后会自动解锁下一关，不用再等待老师放行。</p></div></div>`;
   }
