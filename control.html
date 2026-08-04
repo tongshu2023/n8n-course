@@ -142,7 +142,7 @@
             <div>
               <div style="font-size:12px;color:var(--muted);">当前开放到</div>
               <div style="font-size:28px;font-weight:700;line-height:1.1;">
-                第 <span id="curOpen">–</span> / <span id="curTotal">38</span> 关
+                第 <span id="curOpen">–</span> / <span id="curTotal">–</span> 关
               </div>
               <div class="meta" id="curMeta"></div>
             </div>
@@ -168,7 +168,10 @@
     <script>
       "use strict";
 
-      const TOTAL = 38;
+      // 总关数以 course-data.js 为唯一真源,加减关卡不用改这里;course-data 加载失败时兜底 39
+      const TOTAL = (typeof COURSE !== "undefined" && COURSE.chapters)
+        ? COURSE.chapters.reduce((n, ch) => n + (ch.lessons || []).length, 0)
+        : 39;
       const loginEl   = document.getElementById("login");
       const panelEl   = document.getElementById("panel");
       const metaEl    = document.getElementById("meta");
@@ -355,7 +358,7 @@
       }
 
       async function writeGate(target, sourceEl) {
-        target = Math.max(1, Math.min(TOTAL, Number(target) || 1));
+        target = Math.max(1, Math.min(gate.total || TOTAL, Number(target) || 1));
         setStatus(quickMsg, "正在写入…");
         disableWriters(true);
         try {
