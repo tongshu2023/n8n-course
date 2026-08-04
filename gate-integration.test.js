@@ -12,7 +12,11 @@ test("生产配置为老师手动闸门模式", () => {
   assert.equal(config.unlockMode, "manual");
   assert.equal(config.openUpTo, 1);
   assert.match(html, /gate-client\.js/);
-  assert.match(html, /course-data\.js\?v=20260804-manual/);
+  assert.match(html, /course-data\.js\?v=20260804-lockfix/);
+});
+
+test("锁定优先:老师收回的关卡不显示已通关且不可点击", () => {
+  assert.match(html, /dn = un && isDone\(ls\.id\)/);
 });
 
 test("自学模式无需班级口令即可直接进入课程", () => {
