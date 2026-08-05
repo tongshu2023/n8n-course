@@ -550,26 +550,22 @@ const COURSE = {
         ]
       },
       {
-        id:"4-clean", title:"异步任务:先拿小票,再来取货",
-        subtitle:"有些活儿不是立等可取——学会和「慢服务」打交道",
-        canDo:"看懂「提交任务 → 拿 task_id → 凭票查询」的异步三步,并亲手把一条抖音视频提交给转写服务",
-        goal:"理解同步与异步的区别,拿到百炼钥匙,为下一关的轮询循环备好一切",
+        id:"4-clean", title:"拿到逐字稿任务凭证",
+        subtitle:"先提交视频,再查询转写结果",
+        canDo:"把一条抖音视频提交给转写服务,拿到 task_id 并查询结果",
+        goal:"拿到百炼钥匙,跑通提交与查询,为下一关的轮询循环备好一切",
         blocks:[
-          { type:"hook", q:"你去快餐店点单,店员会让你站在收银台前盯着后厨等 3 分钟吗?", sub:"不会——他给你一张取餐小票,你先去坐着,好了叫号。程序世界管这叫「异步」。今天要用的语音转写服务,就是这么干活的。" },
-          { type:"text", h:"同步 vs 异步:一秒能答的当场答,答不了的给小票", html:`<p><b>同步</b>=现问现答。3-2 里调 TikHub,几百毫秒数据就回来了,工作流原地等一下就好。</p><p><b>异步</b>=活儿太重,当场干不完。把一条几十秒的视频从头听到尾、写成文字,服务器要干几十秒——它不让你干等,而是<b>立刻回你一张「小票」:task_id</b>。你先忙别的,过会儿凭票来问:「好了没?」</p><p>这一关的目标就是拿到逐字稿的入场券:<b>3-2 的表告诉你哪条视频火(数据),逐字稿告诉你它是怎么讲的(内容)</b>——对标分析的两条腿,这就去装第二条。</p>` },
           { type:"callout", variant:"tip", html:`<b>这次用的服务:阿里云百炼的 paraformer 语音识别。</b>三个理由:国内直连不用梯子;直接吃视频链接(mp4 都不用你转格式,把 3-2 表里的「播放地址」递给它就行);新账号有免费额度。和 TikHub 一样,又是一次「注册 → 拿 Key → 填参数 → 跑通」——3-2 学的四步打法,原样再走一遍。` },
-          { type:"lab", workflow:"04_抖音逐字稿流水线.json", downloadFirst:true, desc:"注册百炼拿 Key,然后在 3-2 工作流上手动体验一次完整的「小票流程」:提交任务 → 拿 task_id → 凭票查询。", steps:[
+          { type:"lab", workflow:"04_抖音逐字稿流水线.json", downloadFirst:true, desc:"注册百炼拿 Key,然后在 3-2 工作流上手动跑通:提交任务 → 拿 task_id → 查询结果。", steps:[
             "<b>注册阿里云百炼,拿到你的第二把钥匙。</b>打开 <code>https://bailian.console.aliyun.com</code>,支付宝/淘宝账号登录,提示开通就点开通(免费)→ 右上角「API-KEY」→ 创建 → 复制那串 <code>sk-</code> 开头的字符。顺手看一眼控制台里 paraformer 的免费额度有多少。老规矩:Key 只填在 n8n 里,不发群、不截图。",
             "<b>在 3-2 的流上接一个 HTTP Request,改名「提交转写任务」。</b>接在「检查状态并提取数据」后面。Method 选 <code>POST</code>,URL 填 <code>https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription</code>。",
-            "<b>Send Headers 打开,加 3 个头。</b>① <code>Authorization</code> → 值切 Expression 填 <code>Bearer sk-你的百炼Key</code>(Bearer 后有个空格);② <code>X-DashScope-Async</code> → <code>enable</code>——这个头的意思就是「我不等,先给我小票」;③ <code>Content-Type</code> → <code>application/json</code>。",
+            "<b>Send Headers 打开,加 3 个头。</b>① <code>Authorization</code> → 值切 Expression 填 <code>Bearer sk-你的百炼Key</code>(Bearer 后有个空格);② <code>X-DashScope-Async</code> → <code>enable</code>;③ <code>Content-Type</code> → <code>application/json</code>。",
             "<b>Send Body 打开,类型选 JSON,粘贴任务单。</b>值切 Expression 后粘贴:<code>{ \"model\": \"paraformer-v2\", \"input\": { \"file_urls\": [\"{{ $json['播放地址'] }}\"] }, \"parameters\": { \"language_hints\": [\"zh\"] } }</code>——翻译成人话:「用 paraformer-v2 这个员工,把这个地址的视频听写成中文」。",
-            "<b>执行到此节点,小票到手。</b>输出里看到 <code>task_status: PENDING</code>(排队中)和一串 <code>task_id</code>——任务已经在阿里的服务器上跑了,这串字符就是你的取货凭证。",
-            "<b>再接一个 HTTP Request,改名「查询转写结果」,凭票取货。</b>Method 选 <code>POST</code>,URL 切 Expression 填 <code>https://dashscope.aliyuncs.com/api/v1/tasks/{{ $('提交转写任务').first().json.output.task_id }}</code>,Headers 只加 Authorization(同第 3 步)。等个半分钟再执行这个节点:<code>task_status</code> 变成 <code>SUCCEEDED</code>,还多了一个 <code>transcription_url</code>——转写好的文字就放在这个链接里,24 小时有效。",
+            "<b>执行到此节点,拿到任务凭证。</b>输出里看到 <code>task_status: PENDING</code>(排队中)和一串 <code>task_id</code>——任务已经在阿里的服务器上跑了,查询结果时就用这串字符。",
+            "<b>再接一个 HTTP Request,改名「查询转写结果」。</b>Method 选 <code>POST</code>,URL 切 Expression 填 <code>https://dashscope.aliyuncs.com/api/v1/tasks/{{ $('提交转写任务').first().json.output.task_id }}</code>,Headers 只加 Authorization(同第 3 步)。等个半分钟再执行这个节点:<code>task_status</code> 变成 <code>SUCCEEDED</code>,还多了一个 <code>transcription_url</code>——转写好的文字就放在这个链接里,24 小时有效。",
             "<b>最后想一个问题:</b>如果你手快,查询时它还是 <code>RUNNING</code>(干着呢)怎么办?你的直觉一定是「再等等,过会儿再查一次」——恭喜,你刚刚在脑子里发明了「轮询」。下一关,把这个直觉搭到画布上,让工作流自己等、自己问。"
           ]},
-          { type:"quiz", tag:"小测", q:"为什么转写接口不当场把逐字稿给你,而是先回一个 task_id?", opts:["因为服务器坏了","因为转写要干几十秒,先回小票不占着通道,你凭票再来取","因为要多收一次费","因为 JSON 装不下文字"], answer:1, fb:"对!活儿重的服务都这么设计:立刻给凭证、后台慢慢干。快递单号、体检报告单、餐厅取餐器,全是同一个逻辑。", wrongFb:"想想快餐店为什么给你小票而不是让你站柜台等。", whys:["接口正常工作才会发小票","","计费按任务算,和小票无关","JSON 装得下,问题是当场生产不出来"] },
           { type:"quiz", tag:"判断题", q:"提交任务后马上查询,返回 RUNNING。最合理的下一步是?", opts:["等一会儿再查一次","立刻连查 100 次逼它快点","报错说服务坏了","重新提交一个新任务"], answer:0, fb:"对!给服务器干活的时间,隔一会儿问一次——这就是下一关要自动化的「轮询」。", wrongFb:"RUNNING 的意思是「正在干」,不是「出问题了」。", whys:["","连环夺命问不会让它变快,还浪费请求次数","RUNNING 是正常状态","重复提交=重复排队,更慢还多花额度"] },
-          { type:"callout", variant:"analogy", html:`<b>迁移卡 · 认出小票模式,慢服务都不慌。</b><br>快递下单给运单号、医院抽血给取报告码、AI 生成视频给任务 ID——凡是「活儿重、当场给不了」的服务,都是这套「提交 → 凭证 → 查询」。以后接任何接口,只要文档里出现 task_id,你就知道:该搭轮询了。` }
         ]
       },
       {
@@ -591,7 +587,7 @@ const COURSE = {
             { emoji:"📮", name:"提交转写任务" }, { emoji:"⏳", name:"等 30 秒" }, { emoji:"🔍", name:"查询转写结果" }, { emoji:"🔀", name:"完成了吗(IF)" }, { emoji:"📄", name:"下载逐字稿" }, { emoji:"📊", name:"并进表格出 CSV" }
           ], fb:"对!提交 → 等待 → 查询 → 判断,没好就绕回等待,好了才下载并表。顺序、分支、循环,一个不缺。" },
           { type:"quiz", tag:"找茬·排错训练", q:"流水线转了 5 分钟还在循环里打转,最该怎么排查?", opts:["再等 5 分钟,总会好的","手动停掉,点开「查询转写结果」看 task_status 是什么","删掉重新导入模板","换一个 API 服务"], answer:1, fb:"对!先看状态再动手:RUNNING=视频长,属正常;FAILED=多半是播放地址过期(抖音地址有时效),整条流重跑一遍拿新地址就好。", wrongFb:"循环不停,第一件事是看「它到底在等什么」。", whys:["FAILED 时等多久都没用","","重新导入不解决地址过期","服务没问题,先诊断再换药"] },
-          { type:"quiz", tag:"小测", q:"IF 的 false 出口为什么连回「等 30 秒」,而不是直接连回「查询转写结果」?", opts:["连哪都一样","给服务器留干活时间;不等就查,等于连环夺命问,费额度还没结果","等 30 秒是为了好看","不连回去也行"], answer:1, fb:"对!轮询的礼貌是「间隔」。疯狂连问不会让任务变快,只会白烧请求次数。", wrongFb:"想想上一关快餐店的比喻:催单要不要间隔?", whys:["少了等待就是死循环连问","","等待是轮询的核心设计","不连回去,没转写完流程就断了"] },
+          { type:"quiz", tag:"小测", q:"IF 的 false 出口为什么连回「等 30 秒」,而不是直接连回「查询转写结果」?", opts:["连哪都一样","给服务器留干活时间;不等就查,等于连环夺命问,费额度还没结果","等 30 秒是为了好看","不连回去也行"], answer:1, fb:"对!轮询的礼貌是「间隔」。疯狂连问不会让任务变快,只会白烧请求次数。", wrongFb:"转写需要时间,两次查询之间要不要留出间隔?", whys:["少了等待就是死循环连问","","等待是轮询的核心设计","不连回去,没转写完流程就断了"] },
           { type:"callout", variant:"warn", html:`<b>避坑四连:</b><br>① 「提交转写任务」报 <code>401</code>=百炼 Key 错或没开通,回上一关第 1 步。<br>② 报 <code>FAILED</code> 提到文件问题=播放地址过期,<b>整条流重跑</b>拿新地址(地址是临时的,表里存的跑完就可能失效)。<br>③ 逐字稿一列是空的=多半挑了纯音乐/无人声视频,换条口播的。<br>④ 双击各节点看配置没问题、就是跑不通?检查表达式框里是不是丢了 Expression 模式(fx)——花括号被当成普通文字,是全课最常见的坑。` },
           { type:"callout", variant:"analogy", html:`<b>方法论卡 · 「提交 → 轮询 → 取结果」是万能姿势。</b><br>AI 生成视频、批量翻译一百份文档、大文件 OCR、渲染导出……所有慢服务都是这一套。今天这条流水线的后半段,以后可以整块搬走:换掉提交的 URL 和参数,轮询和取货的骨架一个字不用改。这就是把「模式」学到手的好处——学一次,处处用。` },
           { type:"text", h:"闭环:逐字稿到手,对标才算拆到骨头", html:`<p>回到 3-3 的五格说明书:把逐字稿贴进「素材」格,让 AI 拆三样——<b>开头 3 秒的钩子是什么、正文用什么结构推进、结尾怎么让人行动</b>。再对照表里的收藏数,你就知道:这个讲法,市场真的买账。</p><p>还是那条原创边界:<b>借需求、借结构逻辑,不借句子</b>。拆出来的骨架,填你自己的经历和判断。</p>` },
