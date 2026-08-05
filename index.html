@@ -451,7 +451,7 @@
 </div>
 
 <script src="gate-client.js?v=20260804-prep"></script>
-<script src="course-data.js?v=20260804-lockfix"></script>
+<script src="course-data.js?v=20260805-ch4-download"></script>
 <script src="homeworks.js?v=20260706b"></script>
 <script src="annotation-layer.js?v=20260729a"></script>
 <script>
@@ -998,9 +998,9 @@ function renderBlock(b, i){
            ${steps?`<details class="lab-rescue"><summary>🆘 卡住超过 10 分钟?点开救援步骤</summary><ol class="lab-steps">${steps}</ol></details>`:''}`
         : `<ol class="lab-steps">${steps}</ol>`;
       return `<div class="sec"><h4>动手实操${b.milestone?'（里程碑成品）':''}</h4>
-        <div class="lab"><div class="lab-goal">${b.desc}</div>
+        <div class="lab">${b.downloadFirst ? wfDownload : ''}<div class="lab-goal">${b.desc}</div>
         ${shot}
-        ${wfDownload}
+        ${b.downloadFirst ? '' : wfDownload}
         ${stepsHtml}
         <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
     }

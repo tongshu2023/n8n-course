@@ -1,0 +1,206 @@
+{
+  "name": "TikHub 数据获取（精简输出）",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "fileName": "douyin-video-with-transcript.csv"
+        }
+      },
+      "id": "4356b322-24ed-41a8-bf91-3a444563b297",
+      "name": "转成 CSV 文件",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        3344,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "douyin-video-with-transcript.csv"
+        }
+      },
+      "id": "f9375641-b86b-4c98-89bc-022ab6a921d8",
+      "name": "转成 CSV 文件2",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -352,
+        4192
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7c4f41c7-536e-4a53-aa4d-d190dbcad656",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -15792,
+        8864
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "douyin-video-with-transcript.csv"
+        }
+      },
+      "id": "5fcf5cf2-6f19-4536-b262-6423aac42b8e",
+      "name": "转成 CSV 文件3",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -9120,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## TikHub API 数据获取（抖音精简演示版）\n\n1. 注册 https://user.tikhub.io 获取 API Key（新用户送 $0.05 免费额度，约 50 次请求）\n2. 把 API Key 填入下方「配置参数」节点\n3. 本工作流仅演示抖音（TikHub 平台本身支持 16+ 平台，但换平台需要改端点，本版不支持直接改 platform 值）\n4. video_id 填抖音视频 ID（19 位数字）\n5. 输出 12 个字段：平台、数据来源、视频标题、作者名称、作者ID、发布时间、时长秒、点赞数、评论数、分享数、收藏数、播放地址\n6. 新增分支：收藏数 > 1000 自动标「重点研究」，否则标「先放放」",
+        "height": 260,
+        "width": 480
+      },
+      "id": "06527a83-4396-49f3-a973-e2afa24229d5",
+      "name": "使用说明1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -16320,
+        8464
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -15584,
+        8864
+      ],
+      "id": "97a66845-2984-43c3-9bca-851110f68d5b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "afedf261-41b3-4a89-891c-714aac3a2447",
+              "leftValue": null,
+              "rightValue": null,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -15376,
+        8864
+      ],
+      "id": "a2fe5e8a-aeb3-4b0a-b4e3-300cd5dc0044",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  item.json.myNewField = 1;\n  item.json.debugMsg = '成年';   // 把\"成年\"塞进数据里\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -15136,
+        8800
+      ],
+      "id": "429771d7-b950-45ca-a9c5-6bab20c6b4f5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  item.json.myNewField = 1;\n  item.json.debugMsg = '未成年';   // 把\"成年\"塞进数据里\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -15120,
+        8960
+      ],
+      "id": "47b8df7e-112a-43a0-b430-567b2db74610",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "06e3a4e3-40c8-4de5-aff4-103e13a3e6a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2263a70304308c6ae0096dea66e5e02f23868fd10b320f2cb877d6b94beaa1df"
+  },
+  "id": "tjyWRj6O7Bt7Xy4H",
+  "tags": []
+}

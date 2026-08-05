@@ -536,7 +536,7 @@ const COURSE = {
             { emoji:"🔀", front:"分支", back:"IF 节点=岔路口。条件成立走 true,不成立走 false。「收藏数过万才值得研究」「转写完成才继续」都是它。" },
             { emoji:"🔁", front:"循环", back:"连线接回去=转圈。「没好?回去再等一轮」。下一关的转写轮询就靠它,不写一行代码。" }
           ]},
-          { type:"lab", desc:"给你的抖音对标表开一个岔路口:收藏破千的视频自动标「重点研究」,其余标「先放放」。全程在 3-2 的工作流上加,5 分钟。", steps:[
+          { type:"lab", workflow:"04_抖音收藏分支练习.json", downloadFirst:true, desc:"给你的抖音对标表开一个岔路口:收藏破千的视频自动标「重点研究」,其余标「先放放」。全程在 3-2 的工作流上加,5 分钟。", steps:[
             "<b>打开 3-2 搭好的抖音数据工作流。</b>点「检查状态并提取数据」右边的「+」,搜 <code>IF</code> 加进来,双击节点标题改名「值得对标吗」。",
             "<b>设条件:收藏数 > 1000。</b>点开 IF 节点,左值切 Expression(fx)填 <code>{{ $json['收藏数'] }}</code>,类型选 <b>Number</b>,操作选 <b>larger</b>,右值填 <code>1000</code>。",
             "<b>给两个出口各接一个 Edit Fields。</b>true 出口接一个,加字段 <code>判定</code>,值填 <code>重点研究</code>;false 出口再接一个,同样加 <code>判定</code>,值填 <code>先放放</code>。记得两个节点都打开 Include Other Input Fields(这次要保留原字段,只是多贴一张标签)。",
