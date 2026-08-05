@@ -41,12 +41,19 @@ test("关卡入口自身校验远端闸门", () => {
   assert.match(openLesson[0], /等待老师/);
 });
 
-test("教师模式仍返回地图，不自动越过老师闸门", () => {
+test("教师模式只在下一关未开放或章节结束时返回地图", () => {
   const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
   assert.ok(completeLesson, "应存在 completeLesson");
-  assert.match(completeLesson[0], /CONFIG\.unlockMode === "manual"/);
+  assert.match(completeLesson[0], /const readyNext = nextReadyLessonAfter\(CUR\.id\)/);
   assert.match(completeLesson[0], /返回关卡地图/);
-  assert.match(completeLesson[0], /modal\._next = CONFIG\.unlockMode === "manual" \|\| !next \? null : next\.id/);
+  assert.match(completeLesson[0], /modal\._next = readyNext \? readyNext\.id : null/);
+});
+
+test("教师已开放同章下一关时直接进入", () => {
+  const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
+  assert.ok(completeLesson, "应存在 completeLesson");
+  assert.match(completeLesson[0], /下一关已由老师开放，可以直接进入/);
+  assert.match(completeLesson[0], /readyNext \? "进入下一关" : "返回关卡地图"/);
 });
 
 test("教师模式保留等待放行提示，不冒充全部结课", () => {
@@ -57,44 +64,111 @@ test("教师模式保留等待放行提示，不冒充全部结课", () => {
 test("自学模式通关后自动进入下一节", () => {
   const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
   assert.ok(completeLesson, "应存在 completeLesson");
-  assert.match(completeLesson[0], /下一节已经自动解锁/);
-  assert.match(completeLesson[0], /进入下一节/);
-  assert.match(completeLesson[0], /modal\._next = CONFIG\.unlockMode === "manual" \|\| !next \? null : next\.id/);
+  assert.match(completeLesson[0], /下一关已经自动解锁/);
+  assert.match(completeLesson[0], /进入下一关/);
+  assert.match(completeLesson[0], /modal\._next = readyNext \? readyNext\.id : null/);
 });
 
-test("回看已通关小节时直接进入下一节，末节才返回目录", () => {
+test("回看已通关小节时直接进入同章下一关，章节末尾返回目录", () => {
   assert.match(html, /function nextLessonAfter\(id\)/);
   assert.match(html, /hasNext \? "✓ 已通关 · 进入下一节" : "✓ 已通关 · 返回目录"/);
   const completeLesson = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
   assert.ok(completeLesson, "应存在 completeLesson");
-  assert.match(completeLesson[0], /if\(wasDone && !_reviewMode\)\{[\s\S]*?if\(next\) openLesson\(next\.id\); else renderHome\(\);/);
+  assert.match(completeLesson[0], /if\(wasDone && !_reviewMode\)\{[\s\S]*?nextReadyLessonAfter\(CUR\.id\)[\s\S]*?if\(next\) openLesson\(next\.id\); else renderHome\(\);/);
 });
 
-test("已通关按钮的真实点击分支会打开下一节，末节才回目录", () => {
+test("已通关按钮只打开同章且已开放的下一关", () => {
   const nextLessonSource = html.match(/function nextLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  const nextReadySource = html.match(/function nextReadyLessonAfter\(id\)\{[\s\S]*?\n\}/);
   const completeLessonSource = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
-  assert.ok(nextLessonSource && completeLessonSource, "应能读取实际跳转函数");
+  assert.ok(nextLessonSource && nextReadySource && completeLessonSource, "应能读取实际跳转函数");
 
   const opened = [];
   let homeCount = 0;
   const makeCompleteLesson = new Function(
-    "isDone", "CUR", "_reviewMode", "FLAT_IDS", "FLAT", "openLesson", "renderHome",
-    `${nextLessonSource[0]}; ${completeLessonSource[0]}; return completeLesson;`
+    "isDone", "isUnlocked", "CUR", "_reviewMode", "COURSE", "openLesson", "renderHome",
+    `${nextLessonSource[0]}; ${nextReadySource[0]}; ${completeLessonSource[0]}; return completeLesson;`
   );
-  const flat = [{ id: "lesson-1" }, { id: "lesson-2" }];
+  const course = { chapters: [
+    { lessons: [{ id: "1-1" }, { id: "1-2" }] },
+    { lessons: [{ id: "2-1" }, { id: "2-2" }] }
+  ] };
   const completeFirst = makeCompleteLesson(
-    () => true, { id: "lesson-1" }, false, flat.map(item => item.id), flat,
+    () => true, () => true, { id: "1-1" }, false, course,
     id => opened.push(id), () => { homeCount += 1; }
   );
   completeFirst();
-  assert.deepEqual(opened, ["lesson-2"]);
+  assert.deepEqual(opened, ["1-2"]);
   assert.equal(homeCount, 0);
 
-  const completeLast = makeCompleteLesson(
-    () => true, { id: "lesson-2" }, false, flat.map(item => item.id), flat,
+  const completeLocked = makeCompleteLesson(
+    () => true, () => false, { id: "1-1" }, false, course,
     id => opened.push(id), () => { homeCount += 1; }
   );
-  completeLast();
-  assert.deepEqual(opened, ["lesson-2"]);
+  completeLocked();
+  assert.deepEqual(opened, ["1-2"]);
   assert.equal(homeCount, 1);
+
+  const completeChapterLast = makeCompleteLesson(
+    () => true, () => true, { id: "1-2" }, false, course,
+    id => opened.push(id), () => { homeCount += 1; }
+  );
+  completeChapterLast();
+  assert.deepEqual(opened, ["1-2"]);
+  assert.equal(homeCount, 2);
+});
+
+test("首次通关弹窗的真实按钮去向：同章已开放则下一关，章节结束则地图", () => {
+  const nextLessonSource = html.match(/function nextLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  const nextReadySource = html.match(/function nextReadyLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  const completeLessonSource = html.match(/function completeLesson\(\)\{[\s\S]*?\n\}/);
+  const closeModalSource = html.match(/function closeModal\(\)\{[\s\S]*?\n\}/);
+  assert.ok(nextLessonSource && nextReadySource && completeLessonSource && closeModalSource, "应能读取弹窗真实点击链路");
+
+  const course = { chapters: [
+    { lessons: [{ id: "1-1" }, { id: "1-2" }] },
+    { lessons: [{ id: "2-1" }] }
+  ] };
+  const run = ({ currentId, unlocked }) => {
+    const elements = {
+      modal: { _next: null, classList: { add() {}, remove() {} } },
+      modalEmoji: {},
+      modalTitle: {},
+      modalDesc: {},
+      modalBtn: {},
+      completeBtn: {}
+    };
+    const opened = [];
+    let homeCount = 0;
+    const document = { getElementById: id => elements[id] };
+    const completeLesson = new Function(
+      "isDone", "isUnlocked", "CUR", "_reviewMode", "COURSE", "markDone", "safeAwardXP", "getDone", "FLAT",
+      "document", "CONFIG", "openLesson", "renderHome",
+      `${nextLessonSource[0]}; ${nextReadySource[0]}; ${completeLessonSource[0]}; return completeLesson;`
+    )(
+      () => false, () => unlocked, { id: currentId, milestone: false }, false, course, () => {}, () => {},
+      () => new Set([currentId]), [{}, {}, {}, {}], document, { unlockMode: "manual" },
+      id => opened.push(id), () => { homeCount += 1; }
+    );
+    const closeModal = new Function(
+      "document", "openLesson", "renderHome",
+      `${closeModalSource[0]}; return closeModal;`
+    )(document, id => opened.push(id), () => { homeCount += 1; });
+
+    completeLesson();
+    closeModal();
+    return { elements, opened, homeCount };
+  };
+
+  const withinChapter = run({ currentId: "1-1", unlocked: true });
+  assert.equal(withinChapter.elements.modalBtn.textContent, "进入下一关");
+  assert.match(withinChapter.elements.modalDesc.textContent, /可以直接进入/);
+  assert.deepEqual(withinChapter.opened, ["1-2"]);
+  assert.equal(withinChapter.homeCount, 0);
+
+  const chapterEnd = run({ currentId: "1-2", unlocked: true });
+  assert.equal(chapterEnd.elements.modalBtn.textContent, "返回关卡地图");
+  assert.match(chapterEnd.elements.modalDesc.textContent, /本章已完成/);
+  assert.deepEqual(chapterEnd.opened, []);
+  assert.equal(chapterEnd.homeCount, 1);
 });

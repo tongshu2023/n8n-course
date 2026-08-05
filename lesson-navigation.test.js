@@ -74,6 +74,22 @@ test("未完成末尾练习时不误放行，已通关后可进入下一节或�
   );
 });
 
+test("下一关只在同一章节内连续，章节末尾必须返回地图", () => {
+  const nextLessonSource = html.match(/function nextLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  assert.ok(nextLessonSource, "应存在章节内下一关判断");
+  const nextLessonAfter = new Function(
+    "COURSE",
+    `${nextLessonSource[0]}; return nextLessonAfter;`
+  )(course);
+
+  for (const chapter of course.chapters) {
+    chapter.lessons.forEach((lesson, index) => {
+      const expected = index < chapter.lessons.length - 1 ? chapter.lessons[index + 1] : null;
+      assert.equal(nextLessonAfter(lesson.id)?.id || null, expected?.id || null, `${lesson.id} 的去向应服从章节边界`);
+    });
+  }
+});
+
 test("同一个主按钮会按状态继续内容或完成关卡", () => {
   const advanceSource = html.match(/function advanceLessonFlow\(\)\{[\s\S]*?\n\}/);
   assert.ok(advanceSource, "应存在主导航点击函数");
