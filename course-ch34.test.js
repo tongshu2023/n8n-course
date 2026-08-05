@@ -88,6 +88,14 @@ test("课程页面为所有带模板的实操提供真实下载入口", () => {
   }
 });
 
+test("第四章小票流程在说明上方提供逐字稿工作流下载", () => {
+  const lesson = chapter4.lessons.find(item => item.id === "4-clean");
+  const lab = lesson.blocks.find(item => item.type === "lab");
+  assert.equal(lab.workflow, "04_抖音逐字稿流水线.json");
+  assert.equal(lab.downloadFirst, true);
+  assert.ok(fs.existsSync(path.join("workflows", lab.workflow)));
+});
+
 test("教学备用数据明确标注为虚构样本", () => {
   const sample = JSON.parse(fs.readFileSync(path.join("assets", "bilibili-practice-data.json"), "utf8"));
   assert.match(sample.notice, /教学备用数据/);

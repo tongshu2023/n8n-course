@@ -558,7 +558,7 @@ const COURSE = {
           { type:"hook", q:"你去快餐店点单,店员会让你站在收银台前盯着后厨等 3 分钟吗?", sub:"不会——他给你一张取餐小票,你先去坐着,好了叫号。程序世界管这叫「异步」。今天要用的语音转写服务,就是这么干活的。" },
           { type:"text", h:"同步 vs 异步:一秒能答的当场答,答不了的给小票", html:`<p><b>同步</b>=现问现答。3-2 里调 TikHub,几百毫秒数据就回来了,工作流原地等一下就好。</p><p><b>异步</b>=活儿太重,当场干不完。把一条几十秒的视频从头听到尾、写成文字,服务器要干几十秒——它不让你干等,而是<b>立刻回你一张「小票」:task_id</b>。你先忙别的,过会儿凭票来问:「好了没?」</p><p>这一关的目标就是拿到逐字稿的入场券:<b>3-2 的表告诉你哪条视频火(数据),逐字稿告诉你它是怎么讲的(内容)</b>——对标分析的两条腿,这就去装第二条。</p>` },
           { type:"callout", variant:"tip", html:`<b>这次用的服务:阿里云百炼的 paraformer 语音识别。</b>三个理由:国内直连不用梯子;直接吃视频链接(mp4 都不用你转格式,把 3-2 表里的「播放地址」递给它就行);新账号有免费额度。和 TikHub 一样,又是一次「注册 → 拿 Key → 填参数 → 跑通」——3-2 学的四步打法,原样再走一遍。` },
-          { type:"lab", desc:"注册百炼拿 Key,然后在 3-2 工作流上手动体验一次完整的「小票流程」:提交任务 → 拿 task_id → 凭票查询。", steps:[
+          { type:"lab", workflow:"04_抖音逐字稿流水线.json", downloadFirst:true, desc:"注册百炼拿 Key,然后在 3-2 工作流上手动体验一次完整的「小票流程」:提交任务 → 拿 task_id → 凭票查询。", steps:[
             "<b>注册阿里云百炼,拿到你的第二把钥匙。</b>打开 <code>https://bailian.console.aliyun.com</code>,支付宝/淘宝账号登录,提示开通就点开通(免费)→ 右上角「API-KEY」→ 创建 → 复制那串 <code>sk-</code> 开头的字符。顺手看一眼控制台里 paraformer 的免费额度有多少。老规矩:Key 只填在 n8n 里,不发群、不截图。",
             "<b>在 3-2 的流上接一个 HTTP Request,改名「提交转写任务」。</b>接在「检查状态并提取数据」后面。Method 选 <code>POST</code>,URL 填 <code>https://dashscope.aliyuncs.com/api/v1/services/audio/asr/transcription</code>。",
             "<b>Send Headers 打开,加 3 个头。</b>① <code>Authorization</code> → 值切 Expression 填 <code>Bearer sk-你的百炼Key</code>(Bearer 后有个空格);② <code>X-DashScope-Async</code> → <code>enable</code>——这个头的意思就是「我不等,先给我小票」;③ <code>Content-Type</code> → <code>application/json</code>。",
