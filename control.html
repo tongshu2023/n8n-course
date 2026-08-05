@@ -163,8 +163,10 @@
       </footer>
     </main>
 
-    <!-- COURSE.chapters[].lessons[] is our only source of truth for the row list. -->
-    <script src="/course-data.js"></script>
+    <!-- COURSE.chapters[].lessons[] is our only source of truth for the row list.
+         教师页访问量小,用时间戳击穿缓存:每次打开都拉最新 course-data,
+         课程改版后控制台自动同步,无需 bump 版本号。 -->
+    <script>document.write('<script src="/course-data.js?ts=' + Date.now() + '"><\/script>');</script>
     <script>
       "use strict";
 
