@@ -162,7 +162,7 @@ const HOMEWORKS = [
   {
     week: 6,
     date: "第 6 次课（第 6 周）· 结课",
-    cover: "第6章(6-1,6-2,6-3,6-4,6-5,6-test,6-6)",
+    cover: "第6章(6-1,6-2,6-3,6-test,6-grad)",
     title: "总装：交付你的专属数字员工",
     tasks: [
       {
