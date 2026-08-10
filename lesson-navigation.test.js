@@ -25,8 +25,8 @@ test("每一关从第一屏开始都同时有返回入口和继续按钮", () =>
   assert.doesNotMatch(html, /class="btn-step"/, "同一位置不应叠出第二个继续按钮");
 });
 
-test("39 关的每个内容环节都有明确的下一步状态", () => {
-  assert.equal(lessons.length, 39);
+test("37 关的每个内容环节都有明确的下一步状态", () => {
+  assert.equal(lessons.length, 37);
   for (const lesson of lessons) {
     assert.ok(lesson.blocks.length > 0, `${lesson.id} 不能是空关卡`);
     const answered = {};
@@ -72,6 +72,22 @@ test("未完成末尾练习时不误放行，已通关后可进入下一节或�
     computeLessonFlowState(lesson.blocks, lesson.blocks.length, answered, true, false, false).label,
     "✓ 已通关 · 返回目录"
   );
+});
+
+test("下一关只在同一章节内连续，章节末尾必须返回地图", () => {
+  const nextLessonSource = html.match(/function nextLessonAfter\(id\)\{[\s\S]*?\n\}/);
+  assert.ok(nextLessonSource, "应存在章节内下一关判断");
+  const nextLessonAfter = new Function(
+    "COURSE",
+    `${nextLessonSource[0]}; return nextLessonAfter;`
+  )(course);
+
+  for (const chapter of course.chapters) {
+    chapter.lessons.forEach((lesson, index) => {
+      const expected = index < chapter.lessons.length - 1 ? chapter.lessons[index + 1] : null;
+      assert.equal(nextLessonAfter(lesson.id)?.id || null, expected?.id || null, `${lesson.id} 的去向应服从章节边界`);
+    });
+  }
 });
 
 test("同一个主按钮会按状态继续内容或完成关卡", () => {

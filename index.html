@@ -451,7 +451,7 @@
 </div>
 
 <script src="gate-client.js?v=20260804-prep"></script>
-<script src="course-data.js?v=20260805-ch4-transcript-download"></script>
+<script src="course-data.js?v=20260804-tikhub"></script>
 <script src="homeworks.js?v=20260706b"></script>
 <script src="annotation-layer.js?v=20260729a"></script>
 <script>
@@ -551,7 +551,7 @@ function restoreAnswers(lid, revealSolved){
    // 存已通关 lesson id 的数组
 
 // 扁平化所有关卡(按章节顺序),用于线性解锁
-const WF_IMG = {"01_定时消息推送.json":"assets/wf01.png","02_AI智能写作助手.json":"assets/wf02.png","03_文档内容自动生产线.json":"assets/wf03.png","04_信息监控每日简报.json":"assets/wf04.png","05_发票表单信息提取.json":"assets/wf05.png"};
+const WF_IMG = {"01_定时消息推送.json":"assets/wf01.png","02_AI智能写作助手.json":"assets/wf02.png","03_文档内容自动生产线.json":"assets/wf03.png","04_信息监控每日简报.json":"assets/wf04.png"};
 const FLAT = [];
 COURSE.chapters.forEach((ch, ci) => ch.lessons.forEach((ls, li) => {
   FLAT.push({...ls, _ch: ch, _ci: ci, _li: li});
@@ -584,7 +584,6 @@ const gateClient = new CourseGate.GateClient({
 });
 
 function gateNoticeHtml(){
-  if(PREP_MODE) return "";
   if(CONFIG.unlockMode !== "manual"){
     return `<div class="gate-banner"><div class="gate-copy"><strong>🚀 自学模式已开启</strong><p>完成当前关后会自动解锁下一关，不用再等待老师放行。</p></div></div>`;
   }
@@ -619,8 +618,15 @@ function isUnlocked(id){
 }
 function markDone(id){ const s = getDone(); s.add(id); saveDone(s); }
 function nextLessonAfter(id){
-  const i = FLAT_IDS.indexOf(id);
-  return i >= 0 && i < FLAT.length - 1 ? FLAT[i + 1] : null;
+  for(const chapter of COURSE.chapters){
+    const i = chapter.lessons.findIndex(lesson => lesson.id === id);
+    if(i >= 0) return i < chapter.lessons.length - 1 ? chapter.lessons[i + 1] : null;
+  }
+  return null;
+}
+function nextReadyLessonAfter(id){
+  const next = nextLessonAfter(id);
+  return next && isUnlocked(next.id) ? next : null;
 }
 
 /* ---------- 掌握度 + 间隔重复复习(借鉴 Khan 掌握度 + FSRS 思路) ---------- */
@@ -755,7 +761,7 @@ function renderHome(options){
     html += `<div class="chapter"><div class="ch-head"><div class="ic">${ch.icon}</div>
       <h3>${ch.title}</h3><div class="ch-prog">${done}/${total}</div></div><div class="levels">`;
     ch.lessons.forEach(ls => {
-      const un = isUnlocked(ls.id), dn = un && isDone(ls.id), cur = un && !dn;  // 锁定优先:老师收回的关不显示"已通关",进度保留、放行后恢复
+      const un = isUnlocked(ls.id), dn = isDone(ls.id), cur = un && !dn;
       const mst = masteryOf(ls.id);
       const badge = dn ? (ls.milestone ? (mst>=3?"●":mst>=2?"◐":"○") : "✓") : "";
       let tag = `<span class="lv-tag" style="color:var(--lock)">${CONFIG.unlockMode === "manual" ? '等待老师开放' : '先完成上一关'}</span>`;
@@ -936,7 +942,7 @@ function computeLessonFlowState(blocks, visibleCount, answeredMap, doneView, rev
 }
 function lessonFlowState(){
   const doneView = isDone(CUR.id) && !_reviewMode;
-  return computeLessonFlowState(CUR.blocks, _visUpTo, answered, doneView, _reviewMode, !!nextLessonAfter(CUR.id));
+  return computeLessonFlowState(CUR.blocks, _visUpTo, answered, doneView, _reviewMode, !!nextReadyLessonAfter(CUR.id));
 }
 function advanceLessonFlow(){
   if(!CUR) return;
@@ -998,9 +1004,9 @@ function renderBlock(b, i){
            ${steps?`<details class="lab-rescue"><summary>🆘 卡住超过 10 分钟?点开救援步骤</summary><ol class="lab-steps">${steps}</ol></details>`:''}`
         : `<ol class="lab-steps">${steps}</ol>`;
       return `<div class="sec"><h4>动手实操${b.milestone?'（里程碑成品）':''}</h4>
-        <div class="lab">${b.downloadFirst ? wfDownload : ''}<div class="lab-goal">${b.desc}</div>
+        <div class="lab"><div class="lab-goal">${b.desc}</div>
         ${shot}
-        ${b.downloadFirst ? '' : wfDownload}
+        ${wfDownload}
         ${stepsHtml}
         <div class="embed-note">👉 <b>打开你课前部署好的 n8n 网址</b>(Sealos 是它给你的那个公网域名;本地 Docker 是 <code>http://localhost:5678</code>),跟着上面步骤在里面搭。还没搞定环境?先回「课前准备」那关。</div></div></div>`;
     }
@@ -1201,9 +1207,9 @@ function checkComplete(){
 
 function completeLesson(){
   const wasDone = isDone(CUR.id);
-  // 回看已通关的关:直接进入下一节,不重复发分/不重复升掌握度
+  // 回看已通关的关:同章下一关已开放就直接进入;章节结束或仍未开放才回地图
   if(wasDone && !_reviewMode){
-    const next = nextLessonAfter(CUR.id);
+    const next = nextReadyLessonAfter(CUR.id);
     if(next) openLesson(next.id); else renderHome();
     return;
   }
@@ -1250,16 +1256,15 @@ function completeLesson(){
     return;
   }
   const next = nextLessonAfter(CUR.id);
+  const readyNext = nextReadyLessonAfter(CUR.id);
   const modal = document.getElementById("modal");
   document.getElementById("modalEmoji").textContent = CUR.milestone ? "🏆" : "🎉";
   document.getElementById("modalTitle").textContent = CUR.milestone?"拿下一个成品!":"通关!";
-  document.getElementById("modalDesc").textContent = next
-    ? (CONFIG.unlockMode === "manual"
-      ? (isUnlocked(next.id) ? "本关已完成。下一关已由老师开放，回到关卡地图后可进入。" : "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。")
-      : "本节已完成，下一节已经自动解锁。")
-    : "最后一关已完成，全部课程通关。";
-  document.getElementById("modalBtn").textContent = CONFIG.unlockMode === "manual" ? "返回关卡地图" : "进入下一节";
-  modal._next = CONFIG.unlockMode === "manual" || !next ? null : next.id;
+  document.getElementById("modalDesc").textContent = readyNext
+    ? (CONFIG.unlockMode === "manual" ? "本关已完成。下一关已由老师开放，可以直接进入。" : "本节已完成，下一关已经自动解锁。")
+    : (next ? "本关已完成，下一关等待老师开放。老师放行后，回到关卡地图检查即可。" : "本章已完成，返回关卡地图继续。");
+  document.getElementById("modalBtn").textContent = readyNext ? "进入下一关" : "返回关卡地图";
+  modal._next = readyNext ? readyNext.id : null;
   modal.classList.remove("hidden");
 }
 function closeModal(){
@@ -1272,7 +1277,7 @@ function closeModal(){
 /* 键盘翻页(像 PPT):右/下/空格=推进下一块,左/上=回看。降低"点继续"的鼠标摩擦 */
 document.addEventListener('keydown', (e)=>{
   const modal = document.getElementById('modal');
-  if(modal && !modal.classList.contains('hidden')){   // 通关弹窗:Enter / 右键 / 空格 = 返回关卡地图
+  if(modal && !modal.classList.contains('hidden')){   // 通关弹窗:Enter / 右键 / 空格 = 进入下一关或返回地图
     if(e.key==='Enter' || e.key==='ArrowRight' || e.key===' '){ e.preventDefault(); closeModal(); }
     return;
   }
