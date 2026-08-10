@@ -194,7 +194,11 @@
     display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;border:1px solid var(--line)}
   .flip-f{background:var(--bg2);font-weight:500;font-size:15px;flex-direction:column;gap:6px}
   .flip-f .fe{font-size:23px}
-  .flip-b{background:var(--txt);color:#fff;transform:rotateY(180deg);font-size:12.5px;line-height:1.5}
+  .flip-b{background:var(--txt);color:#fff;transform:rotateY(180deg);font-size:12.5px;line-height:1.5;overflow-y:auto}
+  .flip-bc{margin:auto;max-width:100%}
+  .flip-b::-webkit-scrollbar{width:4px}
+  .flip-b::-webkit-scrollbar-track{background:transparent}
+  .flip-b::-webkit-scrollbar-thumb{background:rgba(255,255,255,.35);border-radius:2px}
 
   /* 实操 */
   .lab{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--bg2)}
@@ -987,7 +991,7 @@ function renderBlock(b, i){
     case "flip": {
       let cards = b.cards.map(c=>`<div class="flip" onclick="this.classList.toggle('on')">
         <div class="flip-in"><div class="flip-f"><div class="fe">${c.emoji||'🔖'}</div>${c.front}</div>
-        <div class="flip-b">${c.back}</div></div></div>`).join("");
+        <div class="flip-b"><div class="flip-bc">${c.back}</div></div></div></div>`).join("");
       return `<div class="sec"><h4>${b.h||'点开卡片记概念'}</h4><div class="flips">${cards}</div></div>`;
     }
     case "lab": {

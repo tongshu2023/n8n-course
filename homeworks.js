@@ -168,14 +168,14 @@ const HOMEWORKS = [
       {
         type: "必做·实操",
         title: "搭一个能对话、有记忆的 AI Agent",
-        desc: "用 Chat Trigger + AI Agent + Chat Model(DeepSeek) + Window Buffer Memory，搭出一个能跟你多轮对话的助理。给它配至少一个工具让它真的能干活（比如 Calculator 计算器、或者把之前的一条工作流串进来）。测两件事：① 先告诉它一个信息（比如「我叫 XX」），隔一句再问「我叫什么？」——看它记不记得 ② 让它算个数，看它会不会自己去调计算器。",
+        desc: "用 Chat Trigger + AI Agent + Chat Model(DeepSeek) + Simple Memory，搭出一个能跟你多轮对话的助理。给它配至少一个工具让它真的能干活（比如 Calculator 计算器、或者把之前的一条工作流串进来）。测两件事：① 先告诉它一个信息（比如「我叫 XX」），隔一句再问「我叫什么？」——看它记不记得 ② 让它算个数，看它会不会自己去调计算器。",
         check: "截对话截图，要能看到两轮以上的连贯对话（证明了记忆有效），以及它调用工具干活的痕迹（证明了 Agent 会自己选工具）。三个要素都到位：Chat Trigger 聊天入口 + 记忆 + 至少一个可用工具。"
       },
       {
         type: "找茬·排错",
         title: "老张的 Agent 一问三不知，每次都反问「你是哪位」",
         desc: "老张搭了 AI Agent，Chat Trigger → AI Agent → 挂了 Chat Model，配了 Calculator 工具。所有东西都齐全。他跟 Agent 说「我叫老张」，Agent 回了句「你好老张」；他接着问「我叫什么」，Agent 说「抱歉，我不知道你的名字」。老张很沮丧：「不是说 Agent 很聪明吗，怎么连刚说过的话都不记得？」请诊断：老张漏了什么？Agent 少了哪个关键部件？",
-        check: "答案：老张漏了 Memory（记忆）。Agent 虽然有大脑（Chat Model）和工具（Calculator），但没有记忆——每次对话它都当全新的，金鱼记忆 7 秒。需要在 Agent 节点的 Memory 接口上挂一个 Window Buffer Memory 节点，它才能记住对话上下文。重点：大脑和记忆是两回事，不是挂了 Chat Model 就有记忆。"
+        check: "答案：老张漏了 Memory（记忆）。Agent 虽然有大脑（Chat Model）和工具（Calculator），但没有记忆——每次对话它都当全新的，金鱼记忆 7 秒。需要在 Agent 节点的 Memory 接口上挂一个 Simple Memory 节点（老教程叫 Window Buffer Memory），它才能记住对话上下文。重点：大脑和记忆是两回事，不是挂了 Chat Model 就有记忆。"
       },
       {
         type: "必做·设计",
