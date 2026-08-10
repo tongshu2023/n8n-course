@@ -551,7 +551,7 @@ function restoreAnswers(lid, revealSolved){
    // 存已通关 lesson id 的数组
 
 // 扁平化所有关卡(按章节顺序),用于线性解锁
-const WF_IMG = {"01_定时消息推送.json":"assets/wf01.png","02_AI智能写作助手.json":"assets/wf02.png","03_文档内容自动生产线.json":"assets/wf03.png","04_信息监控每日简报.json":"assets/wf04.png","05_发票表单信息提取.json":"assets/wf05.png"};
+const WF_IMG = {"01_定时消息推送.json":"assets/wf01.png","02_AI智能写作助手.json":"assets/wf02.png","03_文档内容自动生产线.json":"assets/wf03.png","04_信息监控每日简报.json":"assets/wf04.png"};
 const FLAT = [];
 COURSE.chapters.forEach((ch, ci) => ch.lessons.forEach((ls, li) => {
   FLAT.push({...ls, _ch: ch, _ci: ci, _li: li});

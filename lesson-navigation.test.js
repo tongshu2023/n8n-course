@@ -25,8 +25,8 @@ test("每一关从第一屏开始都同时有返回入口和继续按钮", () =>
   assert.doesNotMatch(html, /class="btn-step"/, "同一位置不应叠出第二个继续按钮");
 });
 
-test("39 关的每个内容环节都有明确的下一步状态", () => {
-  assert.equal(lessons.length, 39);
+test("37 关的每个内容环节都有明确的下一步状态", () => {
+  assert.equal(lessons.length, 37);
   for (const lesson of lessons) {
     assert.ok(lesson.blocks.length > 0, `${lesson.id} 不能是空关卡`);
     const answered = {};

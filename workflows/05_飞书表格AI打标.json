@@ -1,0 +1,280 @@
+{
+  "name": "05 飞书表格 AI 管家 · 成品⑤",
+  "nodes": [
+    {
+      "id": "note-05",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "content": "## 🗂️ 飞书表格 AI 管家（实战三·成品⑤）\n\n**它做什么**：读你的飞书多维表格 → AI 逐行看懂「客户反馈」→ 打上「分类 / 紧急度」标签 → 自动写回表格。几百行人肉归类的活，一杯水的功夫干完。\n\n**上手四步**：\n1. 按课程 5-1 把飞书侧四件事办好（建表 + 建自建应用 + 开 bitable 权限并发布 + 把应用加为表格协作者）\n2. 在「填四样信息」节点里换成你自己的 App ID / App Secret / app_token / table_id\n3. 配 DeepSeek 凭证（同模板 02）\n4. Execute Workflow → 去飞书刷新表格，看标签一行行被填上\n\n**⚠️ 报「权限不足」**：九成是应用没加为表格协作者，或权限开了没发布版本。\n\n**举一反三**：换一张表 + 改一句提示词（分类标准换成你的业务），就是线索意向分级、简历初筛、工单分派——一切「逐行读懂再归类」的活。",
+        "height": 440,
+        "width": 420
+      }
+    },
+    {
+      "id": "trigger-05",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [480, 260],
+      "parameters": {}
+    },
+    {
+      "id": "config-05",
+      "name": "填四样信息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 260],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-appid",
+              "name": "app_id",
+              "type": "string",
+              "value": "换成你的AppID(cli_开头)"
+            },
+            {
+              "id": "cfg-secret",
+              "name": "app_secret",
+              "type": "string",
+              "value": "换成你的AppSecret"
+            },
+            {
+              "id": "cfg-apptoken",
+              "name": "app_token",
+              "type": "string",
+              "value": "换成表格网址/base/后面那串"
+            },
+            {
+              "id": "cfg-tableid",
+              "name": "table_id",
+              "type": "string",
+              "value": "换成表格网址?table=后面tbl开头那串"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "token-05",
+      "name": "拿通行证",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"app_id\": \"{{ $json.app_id }}\", \"app_secret\": \"{{ $json.app_secret }}\" }",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "read-05",
+      "name": "读取表格记录",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 260],
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $json.tenant_access_token }}" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "split-05",
+      "name": "拆成一行一条",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1280, 260],
+      "parameters": {
+        "fieldToSplitOut": "data.items",
+        "options": {}
+      }
+    },
+    {
+      "id": "chain-05",
+      "name": "AI 逐行打标",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1480, 260],
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是客服主管。读下面这条用户反馈,输出 JSON,两个字段:分类(只能从:咨询/售后/故障/建议 四选一)、紧急度(高/中/低)。直接返回纯 JSON,不要```代码块,不要解释。反馈内容:{{ $json.fields.客户反馈 }}"
+      }
+    },
+    {
+      "id": "model-05",
+      "name": "DeepSeek 大模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [1480, 480],
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {}
+      },
+      "credentials": {
+        "deepSeekApi": {
+          "id": "deepseek-cred",
+          "name": "DeepSeek 账号"
+        }
+      }
+    },
+    {
+      "id": "tidy-05",
+      "name": "整理写回内容",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1700, 260],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tidy-rid",
+              "name": "record_id",
+              "type": "string",
+              "value": "={{ $('拆成一行一条').item.json.record_id }}"
+            },
+            {
+              "id": "tidy-cat",
+              "name": "分类",
+              "type": "string",
+              "value": "={{ JSON.parse($json.text.replace(/```json|```/g,'').trim()).分类 }}"
+            },
+            {
+              "id": "tidy-urg",
+              "name": "紧急度",
+              "type": "string",
+              "value": "={{ JSON.parse($json.text.replace(/```json|```/g,'').trim()).紧急度 }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "write-05",
+      "name": "写回飞书表",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1900, 260],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/records/{{ $json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('拿通行证').first().json.tenant_access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"fields\": { \"分类\": \"{{ $json.分类 }}\", \"紧急度\": \"{{ $json.紧急度 }}\" } }",
+        "options": { "timeout": 15000 }
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "填四样信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "填四样信息": {
+      "main": [
+        [
+          {
+            "node": "拿通行证",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拿通行证": {
+      "main": [
+        [
+          {
+            "node": "读取表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取表格记录": {
+      "main": [
+        [
+          {
+            "node": "拆成一行一条",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆成一行一条": {
+      "main": [
+        [
+          {
+            "node": "AI 逐行打标",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 逐行打标": {
+      "main": [
+        [
+          {
+            "node": "整理写回内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理写回内容": {
+      "main": [
+        [
+          {
+            "node": "写回飞书表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 大模型": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 逐行打标",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
