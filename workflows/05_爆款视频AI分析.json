@@ -1,0 +1,346 @@
+{
+  "name": "05 爆款视频 AI 分析 · 成品⑤改装版",
+  "nodes": [
+    {
+      "id": "note-05b",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "parameters": {
+        "content": "## 🔥 爆款视频 AI 分析(成品⑤改装版)\n\n**它做什么**:读你从本地上传到飞书的抖音数据表 → 先自动创建「爆款指数」「爆款归因」两个新列 → AI 逐行看 标题+点赞+评论+收藏+播放地址 → 打出 S/A/B/C 级爆款指数 + 一句话归因 → 写回表格。\n\n**它和成品⑤的区别**:多了「自动建列」两步(表格里原本没有这两列,先调飞书接口把列建出来再写);AI 干的活从「客服打标」换成「爆款分析」。骨架完全一样——这版就是把成品⑤ JSON + 新需求喂给 DeepSeek 改装出来的。\n\n**上手三步**:\n1. 在「填四样信息」里换成你自己的 App ID / App Secret / app_token / table_id(app_token/table_id 用你新导入的那张抖音数据表的)\n2. 确认应用已加为**这张新表**的协作者(新表=新门,要重新请应用进门!)\n3. 配 DeepSeek 凭证 → Execute Workflow → 去飞书刷新,看两个新列被建出来、一行行填满\n\n**⚠️ 第二次执行报「字段已存在」?**正常——列第一次已经建好了。两个建列节点已开「出错也继续」,不影响后面跑。",
+        "height": 480,
+        "width": 440
+      }
+    },
+    {
+      "id": "trigger-05b",
+      "name": "手动触发",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [480, 300],
+      "parameters": {}
+    },
+    {
+      "id": "config-05b",
+      "name": "填四样信息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [680, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-appid",
+              "name": "app_id",
+              "type": "string",
+              "value": "换成你的AppID(cli_开头)"
+            },
+            {
+              "id": "cfg-secret",
+              "name": "app_secret",
+              "type": "string",
+              "value": "换成你的AppSecret"
+            },
+            {
+              "id": "cfg-apptoken",
+              "name": "app_token",
+              "type": "string",
+              "value": "换成表格网址/base/后面那串"
+            },
+            {
+              "id": "cfg-tableid",
+              "name": "table_id",
+              "type": "string",
+              "value": "换成表格网址?table=后面tbl开头那串"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "token-05b",
+      "name": "拿通行证",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"app_id\": \"{{ $json.app_id }}\", \"app_secret\": \"{{ $json.app_secret }}\" }",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "field1-05b",
+      "name": "建「爆款指数」列",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1080, 300],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/fields",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('拿通行证').first().json.tenant_access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"field_name\": \"爆款指数\", \"type\": 1 }",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "field2-05b",
+      "name": "建「爆款归因」列",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1280, 300],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/fields",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('拿通行证').first().json.tenant_access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"field_name\": \"爆款归因\", \"type\": 1 }",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "read-05b",
+      "name": "读取表格记录",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1480, 300],
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('拿通行证').first().json.tenant_access_token }}" }
+          ]
+        },
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "split-05b",
+      "name": "拆成一行一条",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [1680, 300],
+      "parameters": {
+        "fieldToSplitOut": "data.items",
+        "options": {}
+      }
+    },
+    {
+      "id": "chain-05b",
+      "name": "AI 逐行分析爆款",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [1880, 300],
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是短视频爆款分析师。根据下面这条视频的数据,输出 JSON,两个字段:爆款指数(只能从 S级/A级/B级/C级 四选一)、爆款归因(一句话,50字以内,结合标题和数据特征说清它为什么火或不火)。判级参考:点赞≥50万 或 收藏÷点赞≥20% 记 S级;点赞≥10万 记 A级;点赞≥1万 记 B级;其余 C级。高收藏说明内容有「留着再看」的实用价值,归因时要用上这个信号。直接返回纯 JSON,不要```代码块,不要解释。视频数据如下——标题:{{ $json.fields.视频标题 }};点赞数:{{ $json.fields.点赞数 }};评论数:{{ $json.fields.评论数 }};收藏数:{{ $json.fields.收藏数 }};播放地址:{{ $json.fields.播放地址 }}"
+      }
+    },
+    {
+      "id": "model-05b",
+      "name": "DeepSeek 大模型",
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [1880, 520],
+      "parameters": {
+        "model": "deepseek-chat",
+        "options": {}
+      },
+      "credentials": {
+        "deepSeekApi": {
+          "id": "deepseek-cred",
+          "name": "DeepSeek 账号"
+        }
+      }
+    },
+    {
+      "id": "tidy-05b",
+      "name": "整理写回内容",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2100, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tidy-rid",
+              "name": "record_id",
+              "type": "string",
+              "value": "={{ $('拆成一行一条').item.json.record_id }}"
+            },
+            {
+              "id": "tidy-idx",
+              "name": "爆款指数",
+              "type": "string",
+              "value": "={{ JSON.parse($json.text.replace(/```json|```/g,'').trim()).爆款指数 }}"
+            },
+            {
+              "id": "tidy-why",
+              "name": "爆款归因",
+              "type": "string",
+              "value": "={{ JSON.parse($json.text.replace(/```json|```/g,'').trim()).爆款归因 }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "write-05b",
+      "name": "写回飞书表",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2300, 300],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('填四样信息').first().json.app_token }}/tables/{{ $('填四样信息').first().json.table_id }}/records/{{ $json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $('拿通行证').first().json.tenant_access_token }}" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"fields\": { \"爆款指数\": \"{{ $json.爆款指数 }}\", \"爆款归因\": \"{{ $json.爆款归因 }}\" } }",
+        "options": { "timeout": 15000 }
+      }
+    }
+  ],
+  "connections": {
+    "手动触发": {
+      "main": [
+        [
+          {
+            "node": "填四样信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "填四样信息": {
+      "main": [
+        [
+          {
+            "node": "拿通行证",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拿通行证": {
+      "main": [
+        [
+          {
+            "node": "建「爆款指数」列",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "建「爆款指数」列": {
+      "main": [
+        [
+          {
+            "node": "建「爆款归因」列",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "建「爆款归因」列": {
+      "main": [
+        [
+          {
+            "node": "读取表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取表格记录": {
+      "main": [
+        [
+          {
+            "node": "拆成一行一条",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆成一行一条": {
+      "main": [
+        [
+          {
+            "node": "AI 逐行分析爆款",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 逐行分析爆款": {
+      "main": [
+        [
+          {
+            "node": "整理写回内容",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理写回内容": {
+      "main": [
+        [
+          {
+            "node": "写回飞书表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek 大模型": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI 逐行分析爆款",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
