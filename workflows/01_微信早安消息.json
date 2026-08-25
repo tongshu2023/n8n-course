@@ -1,0 +1,69 @@
+{
+  "name": "01 微信早安消息 · 第一个数字员工",
+  "nodes": [
+    {
+      "id": "note-01-wechat",
+      "name": "使用说明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [60, 40],
+      "parameters": {
+        "content": "## 第一个数字员工：微信早安消息\n\n先手动 Execute 跑通，再把定时器设到下一分钟做真实验收。\n\n只改两处：\n1. 配置消息：写你想收到的话\n2. 推送到微信：把 PUSHPLUS_TOKEN_HERE 换成自己的 token\n\n收到微信消息，才算通关。",
+        "height": 290,
+        "width": 390
+      }
+    },
+    {
+      "id": "manual-01-wechat",
+      "name": "先手动试跑",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [420, 240],
+      "parameters": {}
+    },
+    {
+      "id": "set-01-wechat",
+      "name": "配置消息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [650, 240],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message-01-wechat",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $now.toFormat('yyyy-MM-dd') }}，今天最重要的一件事是什么？"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "http-01-wechat",
+      "name": "推送到微信",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [900, 240],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.pushplus.plus/send",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ token: 'PUSHPLUS_TOKEN_HERE', title: '我的第一个数字员工', content: $json.content }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "先手动试跑": {
+      "main": [[{"node": "配置消息", "type": "main", "index": 0}]]
+    },
+    "配置消息": {
+      "main": [[{"node": "推送到微信", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}

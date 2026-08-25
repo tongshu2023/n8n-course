@@ -10,6 +10,7 @@ const html = fs.readFileSync("index.html", "utf8");
 const course = new Function(`${source}; return COURSE;`)();
 const chapter3 = course.chapters.find(chapter => chapter.id === "ch3");
 const chapter4 = course.chapters.find(chapter => chapter.id === "ch4");
+const chapter4Plus = course.chapters.find(chapter => chapter.id === "ch4-plus");
 
 test("第三章保持四节并形成 RSS+TikHub 取数到原创成稿的闭环", () => {
   assert.deepEqual(chapter3.lessons.map(lesson => lesson.id), ["3-1", "3-2", "3-3", "3-multi"]);
@@ -28,24 +29,28 @@ test("第三章保持四节并形成 RSS+TikHub 取数到原创成稿的闭环",
   ]) assert.match(content, new RegExp(required));
 });
 
-test("第四章保持三节并围绕三大结构与逐字稿流水线", () => {
-  assert.deepEqual(chapter4.lessons.map(lesson => lesson.id), ["4-1", "4-clean", "4-2"]);
+test("第四课围绕每日简报，并把现场排错做成固定练习", () => {
+  assert.deepEqual(chapter4.lessons.map(lesson => lesson.id), ["4-1", "4-2", "4-err"]);
   const content = JSON.stringify(chapter4);
   for (const required of [
-    "顺序",
-    "分支",
-    "循环",
-    "IF",
-    "1966",
-    "task_id",
-    "paraformer",
-    "轮询",
-    "等 30 秒",
-    "04_抖音逐字稿流水线.json",
-    "逐字稿",
-    "13 列"
+    "RSS",
+    "抓取资讯源",
+    "AI 蒸馏",
+    "04_信息监控每日简报.json",
+    "Asia/Shanghai",
+    "变量改名",
+    "undefined",
+    "下一分钟"
   ]) assert.match(content, new RegExp(required));
-  assert.doesNotMatch(content, /同步 vs 异步|快餐店点单|异步任务:先拿小票/);
+});
+
+test("逐字稿流水线保留为课后拓展，原模板和下载入口不丢失", () => {
+  assert.ok(chapter4Plus);
+  assert.deepEqual(chapter4Plus.lessons.map(lesson => lesson.id), ["4-plus-1", "4-plus-clean", "4-plus-2"]);
+  const content = JSON.stringify(chapter4Plus);
+  for (const required of ["顺序", "分支", "循环", "IF", "paraformer", "轮询", "04_抖音逐字稿流水线.json", "逐字稿", "13 列"]) {
+    assert.match(content, new RegExp(required));
+  }
 });
 
 test("每节都写清可带走能力、目标和可完成的练习", () => {
@@ -87,8 +92,8 @@ test("课程页面为所有带模板的实操提供真实下载入口", () => {
   }
 });
 
-test("第四章小票流程在说明上方提供逐字稿工作流下载", () => {
-  const lesson = chapter4.lessons.find(item => item.id === "4-clean");
+test("课后拓展的小票流程在说明上方提供逐字稿工作流下载", () => {
+  const lesson = chapter4Plus.lessons.find(item => item.id === "4-plus-clean");
   const lab = lesson.blocks.find(item => item.type === "lab");
   assert.equal(lab.workflow, "04_抖音逐字稿流水线.json");
   assert.equal(lab.downloadFirst, true);
